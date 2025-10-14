@@ -18,7 +18,7 @@
             Sistem Prediksi Waktu Penyelesaian Kegiatan Lapangan
         </p>
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-6">
+        <form method="POST" action="{{ route('login') }}" class="space-y-6" autocomplete="off">
             @csrf
             
             @if($errors->any())
@@ -35,11 +35,12 @@
                     id="username"
                     name="username"
                     type="text"
-                    value="{{ old('username') }}"
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all @error('username') border-red-500 @enderror"
                     placeholder="Masukkan username"
                     required
                     autofocus
+                    autocomplete="off"
+                    value=""
                 >
             </div>
 
@@ -54,6 +55,8 @@
                     class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all @error('password') border-red-500 @enderror"
                     placeholder="Masukkan password"
                     required
+                    autocomplete="off"
+                    value=""
                 >
             </div>
 
@@ -70,6 +73,26 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear all form fields when page loads
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    
+    // Prevent browser autofill
+    setTimeout(function() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    }, 100);
+    
+    // Clear fields on page focus (in case browser tries to autofill)
+    window.addEventListener('focus', function() {
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    });
+});
+</script>
 @endsection
 
 
