@@ -19,27 +19,28 @@
                     <i data-lucide="download" class="w-8 h-8 text-blue-600"></i>
                 </div>
                 <div class="ml-4">
-                    <h2 class="text-xl font-semibold text-gray-900">Export Semua Data</h2>
-                    <p class="text-gray-600">Export semua data sistem ke file CSV</p>
+                    <h2 class="text-xl font-semibold text-gray-900">Export Semua Data Kelompok</h2>
+                    <p class="text-gray-600">Export semua data kelompok dengan tabel laporan dan job pekerjaan</p>
                 </div>
             </div>
             
             <div class="space-y-4">
                 <div class="bg-blue-50 rounded-lg p-4">
-                    <h3 class="font-medium text-blue-900 mb-2">Data yang akan diexport:</h3>
+                    <h3 class="font-medium text-blue-900 mb-2">Data yang akan diexport (DINAMIS):</h3>
                     <ul class="text-sm text-blue-800 space-y-1">
-                        <li>• Semua Kelompok</li>
-                        <li>• Semua Karyawan</li>
-                        <li>• Semua Laporan Karyawan</li>
-                        <li>• Semua Job Pekerjaan</li>
-                        <li>• Semua Prediksi</li>
+                        <li>• <strong>Otomatis menyesuaikan</strong> dengan jumlah kelompok</li>
+                        <li>• Jika ada kelompok baru → otomatis ditambahkan</li>
+                        <li>• Jika ada kelompok dihapus → otomatis tidak muncul</li>
+                        <li>• Tabel Input Laporan untuk setiap kelompok</li>
+                        <li>• Tabel Input Job Pekerjaan untuk setiap kelompok</li>
+                        <li>• Data lengkap dengan informasi kelompok</li>
                     </ul>
                 </div>
                 
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
-                        <p class="text-sm font-medium text-gray-900">Total Data</p>
-                        <p class="text-xs text-gray-600">Semua data sistem</p>
+                        <p class="text-sm font-medium text-gray-900">Total Data (Dinamis)</p>
+                        <p class="text-xs text-gray-600">Otomatis menyesuaikan perubahan</p>
                     </div>
                     <div class="text-right">
                         <p class="text-sm font-medium text-gray-900" x-text="totalData.kelompok + ' Kelompok'"></p>
@@ -52,7 +53,7 @@
                         class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
                     <i data-lucide="download" class="w-5 h-5 mr-2" x-show="!loading"></i>
                     <i data-lucide="loader-2" class="w-5 h-5 mr-2 animate-spin" x-show="loading"></i>
-                    <span x-text="loading ? 'Mengexport...' : 'Export Semua Data'"></span>
+                    <span x-text="loading ? 'Mengexport...' : 'Export Semua Data Kelompok'"></span>
                 </button>
             </div>
         </div>
@@ -317,16 +318,16 @@ document.addEventListener('alpine:init', () => {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `PLN_Galesong_All_Data_${new Date().toISOString().split('T')[0]}.csv`;
+                    a.download = `PLN_Galesong_Semua_Data_Kelompok_${new Date().toISOString().split('T')[0]}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                     
-                    this.showMessage('Export semua data berhasil!', 'success');
+                    this.showMessage('Export semua data kelompok berhasil!', 'success');
                     await this.loadExportHistory();
                 } else {
-                    this.showMessage('Gagal export semua data', 'error');
+                    this.showMessage('Gagal export semua data kelompok', 'error');
                 }
             } catch (error) {
                 console.error('Export error:', error);
@@ -358,7 +359,7 @@ document.addEventListener('alpine:init', () => {
                     const a = document.createElement('a');
                     a.href = url;
                     const kelompokName = this.getSelectedKelompokName().replace(/\s+/g, '_');
-                    a.download = `PLN_Galesong_${kelompokName}_${new Date().toISOString().split('T')[0]}.csv`;
+                    a.download = `PLN_Galesong_${kelompokName}_${new Date().toISOString().split('T')[0]}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
@@ -395,7 +396,7 @@ document.addEventListener('alpine:init', () => {
                     a.href = url;
                     const kelompok = this.kelompokList.find(k => k.id === kelompokId);
                     const kelompokName = kelompok ? kelompok.nama_kelompok.replace(/\s+/g, '_') : 'Kelompok';
-                    a.download = `PLN_Galesong_${kelompokName}_${new Date().toISOString().split('T')[0]}.csv`;
+                    a.download = `PLN_Galesong_${kelompokName}_${new Date().toISOString().split('T')[0]}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
