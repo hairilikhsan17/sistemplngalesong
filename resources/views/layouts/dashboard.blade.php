@@ -54,24 +54,61 @@
                     <!-- User Menu -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open" class="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md">
-                            <div class="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-                                <i data-lucide="user" class="w-4 h-4 text-white"></i>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                                @if(Auth::user()->role === 'atasan')
+                                    @if(Auth::user()->avatar)
+                                        <img src="{{ asset('storage/avatars/' . Auth::user()->avatar) }}" 
+                                             alt="{{ Auth::user()->name ?? Auth::user()->username }}" 
+                                             class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
+                                            <i data-lucide="user" class="w-4 h-4 text-white"></i>
+                                        </div>
+                                    @endif
+                                @else
+                                    @if(Auth::user()->kelompok && Auth::user()->kelompok->avatar)
+                                        <img src="{{ asset('storage/avatars/' . Auth::user()->kelompok->avatar) }}" 
+                                             alt="{{ Auth::user()->kelompok->nama_kelompok }}" 
+                                             class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                            <i data-lucide="users" class="w-4 h-4 text-white"></i>
+                                        </div>
+                                    @endif
+                                @endif
                             </div>
-                            <span class="hidden sm:block text-sm font-medium">{{ Auth::user()->username }}</span>
+                            <span class="hidden sm:block text-sm font-medium">
+                                @if(Auth::user()->role === 'atasan')
+                                    {{ Auth::user()->name ?? Auth::user()->username }}
+                                @else
+                                    {{ Auth::user()->kelompok->nama_kelompok ?? Auth::user()->username }}
+                                @endif
+                            </span>
                             <i data-lucide="chevron-down" class="w-4 h-4"></i>
                         </button>
                         
                         <!-- Dropdown Menu -->
                         <div x-show="open" @click.away="open = false" x-cloak
                              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i data-lucide="user" class="w-4 h-4 inline mr-2"></i>
-                                Profil
-                            </a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>
-                                Pengaturan
-                            </a>
+                            @if(Auth::user()->role === 'atasan')
+                                <a href="{{ route('atasan.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i data-lucide="user" class="w-4 h-4 inline mr-2"></i>
+                                    Profil
+                                </a>
+                                <a href="{{ route('atasan.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>
+                                    Pengaturan
+                                </a>
+                            @else
+                                <a href="{{ route('kelompok.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>
+                                    Profil Kelompok
+                                </a>
+                                <a href="{{ route('kelompok.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>
+                                    Pengaturan
+                                </a>
+                            @endif
                             <div class="border-t border-gray-100"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

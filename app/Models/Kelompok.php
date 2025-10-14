@@ -19,6 +19,7 @@ class Kelompok extends Model
         'id',
         'nama_kelompok',
         'shift',
+        'avatar',
     ];
 
     protected $casts = [

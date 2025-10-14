@@ -149,12 +149,16 @@ Route::get('/test-simple', function () {
         // Admin Settings API Routes
         Route::post('/admin/settings', [App\Http\Controllers\SettingsController::class, 'updateAdminSettings']);
         Route::post('/admin/profile', [App\Http\Controllers\SettingsController::class, 'updateProfile']);
+        Route::get('/admin/profile', [App\Http\Controllers\SettingsController::class, 'getProfile']);
+        Route::delete('/admin/profile/avatar', [App\Http\Controllers\SettingsController::class, 'deleteAvatar']);
         Route::get('/admin/system-stats', [App\Http\Controllers\SettingsController::class, 'getSystemStats']);
         Route::post('/admin/backup', [App\Http\Controllers\SettingsController::class, 'backupSystem']);
         Route::post('/admin/restore', [App\Http\Controllers\SettingsController::class, 'restoreSystem']);
 
         // Kelompok Settings API Routes
         Route::post('/kelompok/settings', [App\Http\Controllers\SettingsController::class, 'updateKelompokSettings']);
+        Route::get('/kelompok/profile', [App\Http\Controllers\SettingsController::class, 'getKelompokProfile']);
+        Route::delete('/kelompok/profile/avatar', [App\Http\Controllers\SettingsController::class, 'deleteKelompokAvatar']);
         Route::post('/kelompok/account', [App\Http\Controllers\SettingsController::class, 'updateAccount']);
         Route::post('/kelompok/notifications', [App\Http\Controllers\SettingsController::class, 'updateNotifications']);
         Route::post('/kelompok/work-schedule', [App\Http\Controllers\SettingsController::class, 'updateWorkSchedule']);

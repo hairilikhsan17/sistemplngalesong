@@ -24,15 +24,40 @@
     <div class="px-6 py-4 bg-gray-50 border-b">
         <div class="flex items-center">
             <div class="flex-shrink-0">
-                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-                    <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+                    @if(Auth::user()->role === 'atasan')
+                        @if(Auth::user()->avatar)
+                            <img src="{{ asset('storage/avatars/' . Auth::user()->avatar) }}" 
+                                 alt="{{ Auth::user()->name ?? Auth::user()->username }}" 
+                                 class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                            </div>
+                        @endif
+                    @else
+                        @if(Auth::user()->kelompok && Auth::user()->kelompok->avatar)
+                            <img src="{{ asset('storage/avatars/' . Auth::user()->kelompok->avatar) }}" 
+                                 alt="{{ Auth::user()->kelompok->nama_kelompok }}" 
+                                 class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <i data-lucide="users" class="w-5 h-5 text-white"></i>
+                            </div>
+                        @endif
+                    @endif
                 </div>
             </div>
             <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->username }}</p>
-                <p class="text-xs text-gray-500 capitalize">{{ Auth::user()->role }}</p>
-                @if(Auth::user()->kelompok)
-                    <p class="text-xs text-gray-500">{{ Auth::user()->kelompok->nama_kelompok }}</p>
+                @if(Auth::user()->role === 'atasan')
+                    <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name ?? Auth::user()->username }}</p>
+                    <p class="text-xs text-gray-500 capitalize">{{ Auth::user()->role }}</p>
+                @else
+                    <p class="text-sm font-medium text-gray-900">{{ Auth::user()->kelompok->nama_kelompok ?? Auth::user()->username }}</p>
+                    <p class="text-xs text-gray-500 capitalize">{{ Auth::user()->role }}</p>
+                    @if(Auth::user()->kelompok)
+                        <p class="text-xs text-gray-500">{{ Auth::user()->kelompok->shift }}</p>
+                    @endif
                 @endif
             </div>
         </div>

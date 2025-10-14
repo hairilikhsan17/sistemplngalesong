@@ -61,116 +61,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- System Settings -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6">Pengaturan Sistem</h2>
-            
-            <form @submit.prevent="updateSystemSettings()" class="space-y-6">
-                <!-- System Name -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Nama Sistem <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" 
-                           x-model="systemSettings.system_name"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-
-                <!-- System Description -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Deskripsi Sistem
-                    </label>
-                    <textarea x-model="systemSettings.system_description"
-                              rows="3"
-                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                </div>
-
-                <!-- Timezone -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Timezone <span class="text-red-500">*</span>
-                    </label>
-                    <select x-model="systemSettings.timezone"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
-                        <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
-                        <option value="Asia/Jayapura">Asia/Jayapura (WIT)</option>
-                    </select>
-                </div>
-
-                <!-- Date Format -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Format Tanggal <span class="text-red-500">*</span>
-                    </label>
-                    <select x-model="systemSettings.date_format"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="d/m/Y">DD/MM/YYYY</option>
-                        <option value="Y-m-d">YYYY-MM-DD</option>
-                        <option value="d-m-Y">DD-MM-YYYY</option>
-                    </select>
-                </div>
-
-                <!-- Default Shift -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Shift Default <span class="text-red-500">*</span>
-                    </label>
-                    <select x-model="systemSettings.default_shift"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="Shift 1">Shift 1</option>
-                        <option value="Shift 2">Shift 2</option>
-                    </select>
-                </div>
-
-                <!-- Max Upload Size -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Maksimal Ukuran Upload (MB) <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" 
-                           x-model="systemSettings.max_upload_size"
-                           min="1" max="50"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-
-                <!-- System Options -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="text-sm font-medium text-gray-900 mb-3">Opsi Sistem</h3>
-                    <div class="space-y-3">
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="systemSettings.auto_backup" class="mr-3">
-                            <span class="text-sm text-gray-700">Backup Otomatis</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="systemSettings.maintenance_mode" class="mr-3">
-                            <span class="text-sm text-gray-700">Mode Maintenance</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Notification Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Email Notifikasi
-                    </label>
-                    <input type="email" 
-                           x-model="systemSettings.notification_email"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" 
-                        :disabled="loading"
-                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
-                    <i data-lucide="save" class="w-4 h-4 mr-2" x-show="!loading"></i>
-                    <i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin" x-show="loading"></i>
-                    <span x-text="loading ? 'Menyimpan...' : 'Simpan Pengaturan'"></span>
-                </button>
-            </form>
-        </div>
+   
 
         <!-- System Management -->
         <div class="space-y-6">
@@ -178,57 +69,109 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-6">Profil Admin</h2>
                 
-                <form @submit.prevent="updateProfile()" class="space-y-4">
-                    <div class="flex items-center space-x-4 mb-4">
-                        <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                            <i data-lucide="user" class="w-8 h-8 text-gray-600"></i>
+                <form @submit.prevent="updateProfile()" class="space-y-6">
+                    <!-- Profile Photo Section -->
+                    <div class="flex items-center space-x-6 mb-6">
+                        <div class="relative">
+                            <div class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                                <img x-show="profileData.avatar_url" 
+                                     :src="profileData.avatar_url" 
+                                     :alt="profileData.name"
+                                     class="w-full h-full object-cover">
+                                <i x-show="!profileData.avatar_url" 
+                                   data-lucide="user" 
+                                   class="w-12 h-12 text-gray-600"></i>
+                            </div>
+                            <button type="button" 
+                                    @click="deleteAvatar()"
+                                    x-show="profileData.avatar_url"
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
                         </div>
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-900" x-text="profileData.name || 'Nama tidak tersedia'"></h3>
+                            <p class="text-sm text-gray-600" x-text="profileData.email || 'Email tidak tersedia'"></p>
+                            <div class="mt-2">
+                                <label for="avatar-upload" 
+                                       class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer">
+                                    <i data-lucide="camera" class="w-4 h-4 mr-2"></i>
+                                    Upload Foto
+                                </label>
+                                <input id="avatar-upload" 
+                                       type="file" 
+                                       accept="image/*" 
+                                       @change="handleAvatarUpload($event)"
+                                       class="hidden">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Form -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <h3 class="font-medium text-gray-900">{{ auth()->user()->name }}</h3>
-                            <p class="text-sm text-gray-600">{{ auth()->user()->email }}</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                            <input type="text" 
+                                   x-model="profileData.name"
+                                   required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" 
+                                   x-model="profileData.email"
+                                   required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
-                        <input type="text" 
-                               x-model="profileData.name"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <!-- Password Section -->
+                    <div class="border-t pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Ubah Password</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
+                                <input type="password" 
+                                       x-model="profileData.current_password"
+                                       placeholder="Masukkan password lama"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
+                                <input type="password" 
+                                       x-model="profileData.new_password"
+                                       placeholder="Masukkan password baru"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
+                                <input type="password" 
+                                       x-model="profileData.new_password_confirmation"
+                                       placeholder="Konfirmasi password baru"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Kosongkan jika tidak ingin mengubah password</p>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email" 
-                               x-model="profileData.email"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" 
+                                @click="loadProfile()"
+                                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 mr-2 inline"></i>
+                            Refresh
+                        </button>
+                        <button type="submit" 
+                                :disabled="loading"
+                                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center">
+                            <i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin" x-show="loading"></i>
+                            <i data-lucide="save" class="w-4 h-4 mr-2" x-show="!loading"></i>
+                            <span x-text="loading ? 'Menyimpan...' : 'Update Profil'"></span>
+                        </button>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password Lama</label>
-                        <input type="password" 
-                               x-model="profileData.current_password"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru</label>
-                        <input type="password" 
-                               x-model="profileData.new_password"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
-                        <input type="password" 
-                               x-model="profileData.new_password_confirmation"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-
-                    <button type="submit" 
-                            :disabled="loading"
-                            class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
-                        Update Profil
-                    </button>
                 </form>
             </div>
 
@@ -306,15 +249,20 @@ document.addEventListener('alpine:init', () => {
         },
         
         profileData: {
-            name: '{{ auth()->user()->name }}',
-            email: '{{ auth()->user()->email }}',
+            id: '{{ auth()->user()->id }}',
+            name: '{{ auth()->user()->name ?? "" }}',
+            email: '{{ auth()->user()->email ?? "" }}',
+            avatar: '{{ auth()->user()->avatar ?? "" }}',
+            avatar_url: '{{ auth()->user()->avatar ? asset("storage/avatars/" . auth()->user()->avatar) : "" }}',
             current_password: '',
             new_password: '',
-            new_password_confirmation: ''
+            new_password_confirmation: '',
+            avatar_file: null
         },
         
         async init() {
             await this.loadSystemStats();
+            await this.loadProfile();
         },
         
         async loadSystemStats() {
@@ -354,27 +302,77 @@ document.addEventListener('alpine:init', () => {
             this.loading = false;
         },
         
+        async loadProfile() {
+            try {
+                const response = await fetch('/api/admin/profile', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.profileData = {
+                        ...this.profileData,
+                        ...result.user,
+                        avatar_url: result.user.avatar ? `/storage/avatars/${result.user.avatar}` : '',
+                        current_password: '',
+                        new_password: '',
+                        new_password_confirmation: '',
+                        avatar_file: null
+                    };
+                }
+                
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        },
+
         async updateProfile() {
             this.loading = true;
             
             try {
+                const formData = new FormData();
+                formData.append('name', this.profileData.name);
+                formData.append('email', this.profileData.email);
+                formData.append('current_password', this.profileData.current_password);
+                formData.append('new_password', this.profileData.new_password);
+                formData.append('new_password_confirmation', this.profileData.new_password_confirmation);
+                
+                // Add avatar file if selected
+                if (this.profileData.avatar_file) {
+                    formData.append('avatar', this.profileData.avatar_file);
+                }
+                
                 const response = await fetch('/api/admin/profile', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify(this.profileData)
+                    body: formData
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
                     this.showMessage(result.message, 'success');
-                    // Reset password fields
-                    this.profileData.current_password = '';
-                    this.profileData.new_password = '';
-                    this.profileData.new_password_confirmation = '';
+                    // Update profile data
+                    this.profileData = {
+                        ...this.profileData,
+                        ...result.user,
+                        avatar_url: result.user.avatar ? `/storage/avatars/${result.user.avatar}` : '',
+                        current_password: '',
+                        new_password: '',
+                        new_password_confirmation: '',
+                        avatar_file: null
+                    };
+                    
+                    // Refresh page to update avatar in header and sidebar
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 } else {
                     this.showMessage(result.message, 'error');
                 }
@@ -384,6 +382,66 @@ document.addEventListener('alpine:init', () => {
             }
             
             this.loading = false;
+        },
+
+        handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    this.showMessage('File harus berupa gambar', 'error');
+                    return;
+                }
+                
+                // Validate file size (2MB max)
+                if (file.size > 2 * 1024 * 1024) {
+                    this.showMessage('Ukuran file maksimal 2MB', 'error');
+                    return;
+                }
+                
+                this.profileData.avatar_file = file;
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.profileData.avatar_url = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+
+        async deleteAvatar() {
+            if (!confirm('Apakah Anda yakin ingin menghapus foto profil?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/profile/avatar', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.showMessage(result.message, 'success');
+                    this.profileData.avatar = '';
+                    this.profileData.avatar_url = '';
+                    this.profileData.avatar_file = null;
+                    
+                    // Refresh page to update avatar in header and sidebar
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    this.showMessage(result.message, 'error');
+                }
+                
+            } catch (error) {
+                this.showMessage('Terjadi kesalahan saat menghapus foto profil', 'error');
+            }
         },
         
         async createBackup() {

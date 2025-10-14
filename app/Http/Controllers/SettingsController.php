@@ -86,7 +86,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update kelompok settings
+     * Update kelompok settings with avatar support
      */
     public function updateKelompokSettings(Request $request)
     {
@@ -107,6 +107,7 @@ class SettingsController extends Controller
             'telepon' => 'nullable|string|max:20',
             'email' => 'nullable|email',
             'password' => 'nullable|string|min:6',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notification_settings' => 'array',
             'work_schedule' => 'array'
         ]);
@@ -114,15 +115,30 @@ class SettingsController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update kelompok data
-            $kelompok->update([
+            $updateData = [
                 'nama_kelompok' => $request->nama_kelompok,
                 'shift' => $request->shift,
                 'deskripsi' => $request->deskripsi,
                 'lokasi' => $request->lokasi,
                 'telepon' => $request->telepon,
                 'email' => $request->email,
-            ]);
+            ];
+
+            // Handle avatar upload
+            if ($request->hasFile('avatar')) {
+                // Delete old avatar if exists
+                if ($kelompok->avatar) {
+                    Storage::disk('public')->delete('avatars/' . $kelompok->avatar);
+                }
+                
+                $avatar = $request->file('avatar');
+                $fileName = 'kelompok_avatar_' . $kelompok->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
+                $avatar->storeAs('avatars', $fileName, 'public');
+                $updateData['avatar'] = $fileName;
+            }
+
+            // Update kelompok data
+            $kelompok->update($updateData);
 
             // Update password if provided
             if ($request->password) {
@@ -144,7 +160,13 @@ class SettingsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pengaturan kelompok berhasil diperbarui!'
+                'message' => 'Pengaturan kelompok berhasil diperbarui!',
+                'kelompok' => [
+                    'id' => $kelompok->id,
+                    'nama_kelompok' => $kelompok->nama_kelompok,
+                    'shift' => $kelompok->shift,
+                    'avatar' => $kelompok->avatar
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -152,6 +174,125 @@ class SettingsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memperbarui pengaturan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete kelompok avatar
+     */
+    public function deleteKelompokAvatar()
+    {
+        try {
+            $kelompok = auth()->user()->kelompok;
+            
+            if (!$kelompok) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kelompok tidak ditemukan!'
+                ], 404);
+            }
+            
+            if ($kelompok->avatar) {
+                // Delete file from storage
+                Storage::disk('public')->delete('avatars/' . $kelompok->avatar);
+                
+                // Update database
+                $kelompok->update(['avatar' => null]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Foto profil kelompok berhasil dihapus!'
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada foto profil untuk dihapus!'
+            ], 404);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto profil: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get kelompok profile data
+     */
+    public function getKelompokProfile()
+    {
+        try {
+            $kelompok = auth()->user()->kelompok;
+            
+            if (!$kelompok) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kelompok tidak ditemukan!'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'kelompok' => [
+                    'id' => $kelompok->id,
+                    'nama_kelompok' => $kelompok->nama_kelompok,
+                    'shift' => $kelompok->shift,
+                    'avatar' => $kelompok->avatar,
+                    'deskripsi' => $kelompok->deskripsi,
+                    'lokasi' => $kelompok->lokasi,
+                    'telepon' => $kelompok->telepon,
+                    'email' => $kelompok->email,
+                    'created_at' => $kelompok->created_at->format('Y-m-d H:i:s')
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data kelompok: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update account password for kelompok
+     */
+    public function updateAccount(Request $request)
+    {
+        $user = auth()->user();
+        
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+            'new_password_confirmation' => 'required|string|min:6'
+        ]);
+
+        try {
+            // Verify current password
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Password lama tidak sesuai!'
+                ], 400);
+            }
+
+            // Update password
+            $user->update([
+                'password' => Hash::make($request->new_password)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password berhasil diperbarui!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui password: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -397,7 +538,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update user profile
+     * Update user profile with CRUD functionality
      */
     public function updateProfile(Request $request)
     {
@@ -413,11 +554,13 @@ class SettingsController extends Controller
 
         try {
             // Verify current password if changing password
-            if ($request->new_password && !Hash::check($request->current_password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Password lama tidak sesuai!'
-                ], 400);
+            if ($request->new_password) {
+                if (!$request->current_password || !Hash::check($request->current_password, $user->password)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Password lama tidak sesuai!'
+                    ], 400);
+                }
             }
 
             $updateData = [
@@ -432,6 +575,11 @@ class SettingsController extends Controller
 
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
+                // Delete old avatar if exists
+                if ($user->avatar) {
+                    Storage::disk('public')->delete('avatars/' . $user->avatar);
+                }
+                
                 $avatar = $request->file('avatar');
                 $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
                 $avatar->storeAs('avatars', $fileName, 'public');
@@ -442,13 +590,81 @@ class SettingsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Profil berhasil diperbarui!'
+                'message' => 'Profil berhasil diperbarui!',
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar
+                ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memperbarui profil: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete user avatar
+     */
+    public function deleteAvatar()
+    {
+        try {
+            $user = auth()->user();
+            
+            if ($user->avatar) {
+                // Delete file from storage
+                Storage::disk('public')->delete('avatars/' . $user->avatar);
+                
+                // Update database
+                $user->update(['avatar' => null]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Foto profil berhasil dihapus!'
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada foto profil untuk dihapus!'
+            ], 404);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto profil: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user profile data
+     */
+    public function getProfile()
+    {
+        try {
+            $user = auth()->user();
+            
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'role' => $user->role,
+                    'created_at' => $user->created_at->format('Y-m-d H:i:s')
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data profil: ' . $e->getMessage()
             ], 500);
         }
     }
