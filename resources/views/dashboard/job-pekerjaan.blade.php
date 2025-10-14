@@ -268,7 +268,7 @@
                         class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
                     Batal
                 </button>
-                <button onclick="confirmDelete()" 
+                <button onclick="confirmDeleteJob()" 
                         class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
                     Hapus
                 </button>
@@ -309,12 +309,18 @@ function loadJobs() {
     if (dayFilter) params.append('day', dayFilter);
     if (params.toString()) url += '?' + params.toString();
     
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     window.csrfToken || 
+                     document.querySelector('input[name="_token"]')?.value;
+    
     fetch(url, {
         method: 'GET',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
     .then(response => response.json())
@@ -548,6 +554,13 @@ function deleteJob(jobId) {
         return;
     }
     
+    // Validate job ID format (should be UUID)
+    if (typeof jobId !== 'string' || jobId.length < 10) {
+        console.error('Invalid job ID format:', jobId);
+        showError('Format ID job tidak valid');
+        return;
+    }
+    
     currentJobId = jobId;
     console.log('Setting currentJobId to:', currentJobId);
     document.getElementById('delete-modal').classList.remove('hidden');
@@ -567,7 +580,7 @@ function closeDeleteModal() {
     currentJobId = null;
 }
 
-function confirmDelete() {
+function confirmDeleteJob() {
     if (!currentJobId) {
         console.error('No currentJobId found');
         showError('ID job tidak ditemukan');
@@ -577,17 +590,34 @@ function confirmDelete() {
     console.log('Deleting job with ID:', currentJobId);
     
     // Show loading state
-    const deleteBtn = document.querySelector('#delete-modal button[onclick="confirmDelete()"]');
+    const deleteBtn = document.querySelector('#delete-modal button[onclick="confirmDeleteJob()"]');
     const originalText = deleteBtn.textContent;
     deleteBtn.textContent = 'Menghapus...';
     deleteBtn.disabled = true;
     
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     window.csrfToken || 
+                     document.querySelector('input[name="_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        showError('CSRF token tidak ditemukan. Silakan refresh halaman.');
+        deleteBtn.textContent = originalText;
+        deleteBtn.disabled = false;
+        return;
+    }
+    
+    console.log('Making DELETE request to:', `/api/job-pekerjaan/${currentJobId}`);
+    console.log('CSRF Token:', csrfToken);
+    
     fetch(`/api/job-pekerjaan/${currentJobId}`, {
         method: 'DELETE',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         credentials: 'same-origin'
     })
@@ -599,7 +629,14 @@ function confirmDelete() {
             // Try to get error message from response
             return response.text().then(text => {
                 console.log('Error response text:', text);
-                throw new Error(`HTTP ${response.status}: ${text}`);
+                let errorMessage = `HTTP ${response.status}`;
+                try {
+                    const errorData = JSON.parse(text);
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = text || errorMessage;
+                }
+                throw new Error(errorMessage);
             });
         }
         
@@ -618,7 +655,7 @@ function confirmDelete() {
         console.log('Delete response data:', data);
         
         // Check for success in various response formats
-        if (data.success === true || data.success === 'true') {
+        if (data.success === true || data.success === 'true' || data.id) {
             showSuccess('Job pekerjaan berhasil dihapus');
             loadJobs();
             closeDeleteModal();
@@ -646,12 +683,24 @@ function handleFormSubmit(e) {
     const url = isEditMode ? `/api/job-pekerjaan/${currentJobId}` : '/api/job-pekerjaan';
     const method = isEditMode ? 'PUT' : 'POST';
     
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     window.csrfToken || 
+                     document.querySelector('input[name="_token"]')?.value;
+    
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        showError('CSRF token tidak ditemukan. Silakan refresh halaman.');
+        return;
+    }
+    
     fetch(url, {
         method: method,
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify(data)
     })

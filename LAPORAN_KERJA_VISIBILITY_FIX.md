@@ -251,3 +251,4 @@ Masalah data visibility pada Input Laporan Kerja telah berhasil diperbaiki denga
 **Data laporan kerja sekarang kelihatan di halaman!** 🎉
 
 User dapat melihat semua laporan kerja yang sudah diinput dan data akan tetap tersimpan dengan baik.
+

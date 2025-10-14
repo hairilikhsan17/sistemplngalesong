@@ -303,3 +303,4 @@ Fitur Input Laporan Kerja telah berhasil diperbaiki dengan:
 -   ✅ **User Experience**: Interface yang lebih intuitif dan user-friendly
 
 Fitur siap digunakan dan akan memudahkan karyawan untuk menginput laporan kerja dengan memilih nama dari sub menu yang tersedia berdasarkan kelompok mereka.
+

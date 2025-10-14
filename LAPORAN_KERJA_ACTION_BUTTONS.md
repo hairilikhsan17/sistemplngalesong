@@ -297,3 +297,4 @@ Fitur tombol aksi pada halaman Input Laporan Kerja telah berhasil ditambahkan de
 **Tombol aksi sekarang terlihat keren dan fungsional!** 🎉
 
 User dapat dengan mudah melakukan berbagai aksi pada laporan kerja mereka dengan interface yang modern dan user-friendly.
+

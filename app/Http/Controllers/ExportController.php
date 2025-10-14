@@ -172,7 +172,7 @@ class ExportController extends Controller
         $sheet->setTitle('Job Pekerjaan');
         
         // Headers
-        $headers = ['ID', 'Perbaikan KWH', 'Pemeliharaan Pengkabelan', 'Pengecekan Gardu', 'Penanganan Gangguan', 'Lokasi', 'Bulan Data', 'Tanggal', 'Waktu Penyelesaian (Jam)', 'Kelompok', 'Created At'];
+        $headers = ['ID', 'Perbaikan KWH', 'Pemeliharaan Pengkabelan', 'Pengecekan Gardu', 'Penanganan Gangguan', 'Lokasi', 'Hari', 'Tanggal', 'Waktu Penyelesaian (Jam)', 'Kelompok', 'Created At'];
         $col = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($col . '1', $header);
@@ -195,7 +195,7 @@ class ExportController extends Controller
             $sheet->setCellValue('D' . $row, $job->pengecekan_gardu);
             $sheet->setCellValue('E' . $row, $job->penanganan_gangguan);
             $sheet->setCellValue('F' . $row, $job->lokasi);
-            $sheet->setCellValue('G' . $row, $job->bulan_data);
+            $sheet->setCellValue('G' . $row, $job->hari);
             $sheet->setCellValue('H' . $row, $job->tanggal->format('Y-m-d'));
             $sheet->setCellValue('I' . $row, $job->waktu_penyelesaian);
             $sheet->setCellValue('J' . $row, $job->kelompok->nama_kelompok);
@@ -249,87 +249,115 @@ class ExportController extends Controller
 
     private function exportKelompokDataToExcel($spreadsheet, $kelompok)
     {
-        // Sheet 1: Info Kelompok
+        // Sheet 1: Data Kelompok Lengkap
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Info Kelompok');
+        $sheet->setTitle('Data Kelompok ' . $kelompok->nama_kelompok);
         
-        $sheet->setCellValue('A1', 'Nama Kelompok');
-        $sheet->setCellValue('B1', $kelompok->nama_kelompok);
-        $sheet->setCellValue('A2', 'Shift');
-        $sheet->setCellValue('B2', $kelompok->shift);
-        $sheet->setCellValue('A3', 'Jumlah Karyawan');
-        $sheet->setCellValue('B3', $kelompok->karyawan->count());
-        $sheet->setCellValue('A4', 'Created At');
-        $sheet->setCellValue('B4', $kelompok->created_at->format('Y-m-d H:i:s'));
+        // Header Info Kelompok
+        $sheet->setCellValue('A1', 'DATA KELOMPOK: ' . strtoupper($kelompok->nama_kelompok));
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('F59E0B');
         
-        // Sheet 2: Karyawan
-        $sheet2 = $spreadsheet->createSheet();
-        $sheet2->setTitle('Karyawan');
+        $sheet->setCellValue('A2', 'Shift: ' . $kelompok->shift);
+        $sheet->setCellValue('A3', 'Jumlah Karyawan: ' . $kelompok->karyawan->count());
+        $sheet->setCellValue('A4', 'Tanggal Export: ' . now()->format('Y-m-d H:i:s'));
         
-        $headers = ['Nama', 'Created At'];
+        // Tabel 1: Input Laporan (dimulai dari baris 6)
+        $startRowLaporan = 6;
+        $sheet->setCellValue('A' . $startRowLaporan, 'TABEL 1: INPUT LAPORAN');
+        $sheet->getStyle('A' . $startRowLaporan)->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A' . $startRowLaporan)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('3B82F6');
+        
+        // Header tabel laporan
+        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Dokumentasi'];
         $col = 'A';
-        foreach ($headers as $header) {
-            $sheet2->setCellValue($col . '1', $header);
+        $headerRow = $startRowLaporan + 1;
+        foreach ($laporanHeaders as $header) {
+            $sheet->setCellValue($col . $headerRow, $header);
             $col++;
         }
         
-        $row = 2;
-        foreach ($kelompok->karyawan as $karyawan) {
-            $sheet2->setCellValue('A' . $row, $karyawan->nama);
-            $sheet2->setCellValue('B' . $row, $karyawan->created_at->format('Y-m-d H:i:s'));
-            $row++;
-        }
+        // Style header tabel laporan
+        $sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E5E7EB');
         
-        // Sheet 3: Laporan Kelompok
-        $sheet3 = $spreadsheet->createSheet();
-        $sheet3->setTitle('Laporan Kelompok');
-        
-        $headers = ['Hari', 'Tanggal', 'Nama', 'Instansi', 'Jabatan', 'Alamat Tujuan', 'Dokumentasi', 'Created At'];
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet3->setCellValue($col . '1', $header);
-            $col++;
-        }
-        
+        // Data laporan
         $laporans = LaporanKaryawan::where('kelompok_id', $kelompok->id)->get();
-        $row = 2;
+        $row = $headerRow + 1;
+        $no = 1;
         foreach ($laporans as $laporan) {
-            $sheet3->setCellValue('A' . $row, $laporan->hari);
-            $sheet3->setCellValue('B' . $row, $laporan->tanggal->format('Y-m-d'));
-            $sheet3->setCellValue('C' . $row, $laporan->nama);
-            $sheet3->setCellValue('D' . $row, $laporan->instansi);
-            $sheet3->setCellValue('E' . $row, $laporan->jabatan);
-            $sheet3->setCellValue('F' . $row, $laporan->alamat_tujuan);
-            $sheet3->setCellValue('G' . $row, $laporan->dokumentasi ?? '-');
-            $sheet3->setCellValue('H' . $row, $laporan->created_at->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('A' . $row, $no);
+            $sheet->setCellValue('B' . $row, $laporan->hari . ' / ' . $laporan->tanggal->format('Y-m-d'));
+            $sheet->setCellValue('C' . $row, $laporan->nama);
+            $sheet->setCellValue('D' . $row, $laporan->instansi);
+            $sheet->setCellValue('E' . $row, $laporan->alamat_tujuan);
+            $sheet->setCellValue('F' . $row, $laporan->dokumentasi ?? '-');
             $row++;
+            $no++;
         }
         
-        // Sheet 4: Job Pekerjaan Kelompok
-        $sheet4 = $spreadsheet->createSheet();
-        $sheet4->setTitle('Job Pekerjaan');
+        // Tabel 2: Input Job Pekerjaan (dimulai 3 baris setelah tabel laporan)
+        $startRowJob = $row + 3;
+        $sheet->setCellValue('A' . $startRowJob, 'TABEL 2: INPUT JOB PEKERJAAN');
+        $sheet->getStyle('A' . $startRowJob)->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A' . $startRowJob)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('8B5CF6');
         
-        $headers = ['Perbaikan KWH', 'Pemeliharaan Pengkabelan', 'Pengecekan Gardu', 'Penanganan Gangguan', 'Lokasi', 'Bulan Data', 'Tanggal', 'Waktu Penyelesaian (Jam)', 'Created At'];
+        // Header tabel job pekerjaan
+        $jobHeaders = ['No', 'Tanggal', 'Hari', 'Perbaikan KWH', 'Pemeliharaan Pengkabelan', 'Pengecekan Gardu', 'Penanganan Gangguan', 'Lokasi', 'Waktu (jam)', 'Created At'];
         $col = 'A';
-        foreach ($headers as $header) {
-            $sheet4->setCellValue($col . '1', $header);
+        $headerRowJob = $startRowJob + 1;
+        foreach ($jobHeaders as $header) {
+            $sheet->setCellValue($col . $headerRowJob, $header);
             $col++;
         }
         
+        // Style header tabel job pekerjaan
+        $sheet->getStyle('A' . $headerRowJob . ':J' . $headerRowJob)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $headerRowJob . ':J' . $headerRowJob)->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('E5E7EB');
+        
+        // Data job pekerjaan
         $jobs = JobPekerjaan::where('kelompok_id', $kelompok->id)->get();
-        $row = 2;
+        $row = $headerRowJob + 1;
+        $no = 1;
         foreach ($jobs as $job) {
-            $sheet4->setCellValue('A' . $row, $job->perbaikan_kwh);
-            $sheet4->setCellValue('B' . $row, $job->pemeliharaan_pengkabelan);
-            $sheet4->setCellValue('C' . $row, $job->pengecekan_gardu);
-            $sheet4->setCellValue('D' . $row, $job->penanganan_gangguan);
-            $sheet4->setCellValue('E' . $row, $job->lokasi);
-            $sheet4->setCellValue('F' . $row, $job->bulan_data);
-            $sheet4->setCellValue('G' . $row, $job->tanggal->format('Y-m-d'));
-            $sheet4->setCellValue('H' . $row, $job->waktu_penyelesaian);
-            $sheet4->setCellValue('I' . $row, $job->created_at->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('A' . $row, $no);
+            $sheet->setCellValue('B' . $row, $job->tanggal->format('Y-m-d'));
+            $sheet->setCellValue('C' . $row, $job->hari);
+            $sheet->setCellValue('D' . $row, $job->perbaikan_kwh);
+            $sheet->setCellValue('E' . $row, $job->pemeliharaan_pengkabelan);
+            $sheet->setCellValue('F' . $row, $job->pengecekan_gardu);
+            $sheet->setCellValue('G' . $row, $job->penanganan_gangguan);
+            $sheet->setCellValue('H' . $row, $job->lokasi);
+            $sheet->setCellValue('I' . $row, $job->waktu_penyelesaian);
+            $sheet->setCellValue('J' . $row, $job->created_at->format('Y-m-d H:i:s'));
             $row++;
+            $no++;
         }
+        
+        // Auto size semua kolom
+        foreach (range('A', 'J') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Set border untuk semua tabel
+        $this->setTableBorders($sheet, 'A' . $headerRow . ':F' . ($headerRow + $laporans->count()));
+        $this->setTableBorders($sheet, 'A' . $headerRowJob . ':J' . ($headerRowJob + $jobs->count()));
+    }
+    
+    private function setTableBorders($sheet, $range)
+    {
+        $sheet->getStyle($range)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
     }
 
     private function downloadExcel($spreadsheet, $filename)
