@@ -147,36 +147,6 @@
             </div>
         </div>
 
-        <!-- Group Prediction -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Prediksi Kelompok</h3>
-            <div x-show="stats.group_prediction" class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Jenis</span>
-                    <span class="text-sm font-medium" x-text="stats.group_prediction?.jenis"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Bulan</span>
-                    <span class="text-sm font-medium" x-text="stats.group_prediction?.bulan"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Prediksi Waktu</span>
-                    <span class="text-sm font-medium" x-text="stats.group_prediction?.prediksi_waktu + ' hari'"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Akurasi</span>
-                    <span class="text-sm font-medium" x-text="stats.group_prediction?.akurasi + '%'"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Dibuat</span>
-                    <span class="text-sm font-medium" x-text="stats.group_prediction?.created_at"></span>
-                </div>
-            </div>
-            <div x-show="!stats.group_prediction" class="text-center py-4">
-                <i data-lucide="trending-up" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
-                <p class="text-sm text-gray-500">Belum ada prediksi untuk kelompok ini</p>
-            </div>
-        </div>
 
         <!-- Recent Laporan -->
         <div class="bg-white rounded-lg shadow-md p-6">
@@ -249,11 +219,7 @@
                 <span class="text-sm font-medium text-green-900">Input Job</span>
             </a>
             
-            <a href="#" onclick="showTab('prediksi')" 
-               class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                <i data-lucide="trending-up" class="w-5 h-5 text-purple-600 mr-3"></i>
-                <span class="text-sm font-medium text-purple-900">Lihat Prediksi</span>
-            </a>
+
             
             <a href="{{ route('kelompok.settings') }}" 
                class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">

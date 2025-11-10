@@ -16,8 +16,30 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js - Load before Alpine.js to ensure it's available -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Verify Chart.js is loaded immediately
+        (function() {
+            function checkChartJs() {
+                if (typeof Chart !== 'undefined') {
+                    console.log('✅ Chart.js loaded successfully, version:', Chart.version || 'unknown');
+                    window.chartJsLoaded = true;
+                } else {
+                    console.warn('⚠️ Chart.js not yet loaded, will check again on window load');
+                    window.chartJsLoaded = false;
+                }
+            }
+            
+            // Check immediately
+            checkChartJs();
+            
+            // Also check on window load
+            window.addEventListener('load', function() {
+                checkChartJs();
+            });
+        })();
+    </script>
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

@@ -8,7 +8,6 @@ use App\Http\Controllers\KelompokController;
 use App\Http\Controllers\KaryawanController;
 use App\Http\Controllers\LaporanKaryawanController;
 use App\Http\Controllers\JobPekerjaanController;
-use App\Http\Controllers\PrediksiController;
 use App\Http\Controllers\ExportController;
 
 /*
@@ -64,8 +63,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/atasan/pemantauan-job-pekerjaan', [App\Http\Controllers\PemantauanJobPekerjaanController::class, 'index'])->name('atasan.pemantauan-job-pekerjaan');
 
-    Route::get('/atasan/statistik-prediksi', [App\Http\Controllers\PrediksiController::class, 'index'])->name('atasan.statistik-prediksi');
-    
     // Excel Management Routes
     Route::get('/atasan/excel', [App\Http\Controllers\ExcelController::class, 'index'])->name('atasan.excel.index');
     Route::get('/atasan/excel/upload', [App\Http\Controllers\ExcelController::class, 'upload'])->name('atasan.excel.upload');
@@ -76,6 +73,19 @@ Route::middleware(['auth'])->group(function () {
     
     // Export Data Routes
     Route::get('/atasan/export-data', [App\Http\Controllers\ExportDataController::class, 'index'])->name('atasan.export-data');
+    
+    // Statistik & Prediksi Routes (Admin only)
+    Route::prefix('admin')->middleware(['auth'])->group(function() {
+        Route::get('statistik', [App\Http\Controllers\Admin\StatistikController::class, 'index'])->name('admin.statistik.index');
+        Route::get('statistik/data', [App\Http\Controllers\Admin\StatistikController::class, 'data'])->name('admin.statistik.data');
+        Route::get('prediksi', [App\Http\Controllers\Admin\PrediksiController::class, 'index'])->name('admin.prediksi.index');
+        Route::get('prediksi/latest', [App\Http\Controllers\Admin\PrediksiController::class, 'getLatest'])->name('admin.prediksi.latest');
+        Route::post('prediksi/generate', [App\Http\Controllers\Admin\PrediksiController::class, 'generate'])->name('admin.prediksi.generate');
+        Route::post('prediksi/reset', [App\Http\Controllers\Admin\PrediksiController::class, 'reset'])->name('admin.prediksi.reset');
+        Route::get('prediksi/export/{format}', [App\Http\Controllers\Admin\PrediksiController::class, 'export'])->name('admin.prediksi.export');
+        Route::get('prediksi/{id}', [App\Http\Controllers\Admin\PrediksiController::class, 'show'])->name('admin.prediksi.show');
+        Route::delete('prediksi/{id}', [App\Http\Controllers\Admin\PrediksiController::class, 'destroy'])->name('admin.prediksi.destroy');
+    });
     
     // Kelompok Settings Routes
     Route::get('/kelompok/pengaturan', [App\Http\Controllers\SettingsController::class, 'kelompokIndex'])->name('kelompok.settings');
@@ -126,20 +136,6 @@ Route::get('/test-simple', function () {
         Route::put('/job-pekerjaan/{id}', [JobPekerjaanController::class, 'update']);
         Route::delete('/job-pekerjaan/{id}', [JobPekerjaanController::class, 'destroy']);
 
-        // Prediksi Routes
-        Route::get('/prediksi', [PrediksiController::class, 'index']);
-        Route::post('/prediksi/generate', [App\Http\Controllers\PrediksiController::class, 'generate']);
-        Route::delete('/prediksi/{id}', [App\Http\Controllers\PrediksiController::class, 'destroy']);
-
-        // Statistics Routes
-        Route::get('/statistik/overview', [App\Http\Controllers\PrediksiController::class, 'getOverview']);
-        Route::get('/statistik/ranking', [App\Http\Controllers\PrediksiController::class, 'getRanking']);
-        Route::get('/statistik/comparison', [App\Http\Controllers\PrediksiController::class, 'getComparison']);
-
-        // Chart Routes
-        Route::get('/charts/performa', [App\Http\Controllers\PrediksiController::class, 'getChartPerforma']);
-        Route::get('/charts/distribusi', [App\Http\Controllers\PrediksiController::class, 'getChartDistribusi']);
-        Route::get('/charts/perbandingan', [App\Http\Controllers\PrediksiController::class, 'getChartPerbandingan']);
 
         // Excel Routes
         Route::post('/excel/upload', [App\Http\Controllers\ExcelController::class, 'store']);

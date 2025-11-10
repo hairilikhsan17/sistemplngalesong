@@ -6,7 +6,6 @@ use App\Models\Kelompok;
 use App\Models\Karyawan;
 use App\Models\LaporanKaryawan;
 use App\Models\JobPekerjaan;
-use App\Models\Prediksi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,12 +61,6 @@ class DashboardController extends Controller
                 'best_performing_group' => $this->getBestPerformingGroup(),
                 'monthly_trend' => $this->getMonthlyTrend(),
                 
-                // Prediction statistics
-                'total_prediksi' => Prediksi::count(),
-                'prediksi_bulan_ini' => Prediksi::whereMonth('bulan', now()->addMonth()->month)
-                    ->whereYear('bulan', now()->addMonth()->year)->count(),
-                'latest_prediction' => $this->getLatestPrediction(),
-                
                 // System health
                 'system_health' => $this->getSystemHealth(),
                 'recent_activities' => $this->getRecentActivities()
@@ -87,9 +80,6 @@ class DashboardController extends Controller
                 'avg_waktu_penyelesaian' => 0,
                 'best_performing_group' => 'Error',
                 'monthly_trend' => [],
-                'total_prediksi' => 0,
-                'prediksi_bulan_ini' => 0,
-                'latest_prediction' => null,
                 'system_health' => ['status' => 'error', 'pending_rate' => 0, 'completion_rate' => 0],
                 'recent_activities' => []
             ];
@@ -151,12 +141,6 @@ class DashboardController extends Controller
                 'best_performing_group' => $this->getBestPerformingGroup(),
                 'monthly_trend' => $this->getMonthlyTrend(),
                 
-                // Prediction statistics
-                'total_prediksi' => Prediksi::count(),
-                'prediksi_bulan_ini' => Prediksi::whereMonth('bulan', now()->addMonth()->month)
-                    ->whereYear('bulan', now()->addMonth()->year)->count(),
-                'latest_prediction' => $this->getLatestPrediction(),
-                
                 // System health
                 'system_health' => $this->getSystemHealth(),
                 'recent_activities' => $this->getRecentActivities()
@@ -191,7 +175,6 @@ class DashboardController extends Controller
                         'monthly_performance' => [],
                         'recent_laporan' => [],
                         'upcoming_tasks' => [],
-                        'group_prediction' => null
                     ]
                 ]);
             }
@@ -227,8 +210,6 @@ class DashboardController extends Controller
                 'recent_laporan' => $this->getGroupRecentLaporan($kelompok->id),
                 'upcoming_tasks' => $this->getUpcomingTasks($kelompok->id),
                 
-                // Prediction for this group
-                'group_prediction' => $this->getGroupPrediction($kelompok->id)
             ];
 
             return response()->json(['stats' => $stats]);
@@ -301,29 +282,6 @@ class DashboardController extends Controller
         return $trend;
     }
 
-    /**
-     * Get latest prediction
-     */
-    private function getLatestPrediction()
-    {
-        $latest = Prediksi::with('kelompok')
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if (!$latest) {
-            return null;
-        }
-
-        return [
-            'id' => $latest->id,
-            'kelompok' => $latest->kelompok->nama_kelompok,
-            'jenis' => $latest->jenis,
-            'bulan' => Carbon::parse($latest->bulan)->format('F Y'),
-            'prediksi_waktu' => $latest->prediksi_waktu,
-            'akurasi' => $latest->akurasi,
-            'created_at' => $latest->created_at->format('d/m/Y H:i')
-        ];
-    }
 
     /**
      * Get system health
@@ -368,21 +326,6 @@ class DashboardController extends Controller
                 'message' => "Laporan baru dari {$report->nama} ({$report->kelompok->nama_kelompok})",
                 'time' => $report->created_at->diffForHumans(),
                 'status' => 'completed'
-            ];
-        }
-
-        // Recent predictions
-        $recentPredictions = Prediksi::with('kelompok')
-            ->orderBy('created_at', 'desc')
-            ->limit(3)
-            ->get();
-
-        foreach ($recentPredictions as $prediction) {
-            $activities[] = [
-                'type' => 'prediksi',
-                'message' => "Prediksi baru untuk {$prediction->kelompok->nama_kelompok}",
-                'time' => $prediction->created_at->diffForHumans(),
-                'status' => 'info'
             ];
         }
 
@@ -453,28 +396,6 @@ class DashboardController extends Controller
         return collect([]);
     }
 
-    /**
-     * Get group prediction
-     */
-    private function getGroupPrediction($kelompokId)
-    {
-        $prediction = Prediksi::where('kelompok_id', $kelompokId)
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if (!$prediction) {
-            return null;
-        }
-
-        return [
-            'id' => $prediction->id,
-            'jenis' => $prediction->jenis,
-            'bulan' => Carbon::parse($prediction->bulan)->format('F Y'),
-            'prediksi_waktu' => $prediction->prediksi_waktu,
-            'akurasi' => $prediction->akurasi,
-            'created_at' => $prediction->created_at->format('d/m/Y H:i')
-        ];
-    }
 
     /**
      * Get monthly reports chart data
@@ -556,32 +477,6 @@ class DashboardController extends Controller
         ];
     }
 
-    /**
-     * Get prediction accuracy chart data
-     */
-    private function getPredictionAccuracyChart()
-    {
-        $predictions = Prediksi::orderBy('created_at', 'desc')->limit(10)->get();
-        
-        $labels = [];
-        $data = [];
-
-        foreach ($predictions as $prediction) {
-            $labels[] = Carbon::parse($prediction->bulan)->format('M Y');
-            $data[] = $prediction->akurasi;
-        }
-
-        return [
-            'labels' => array_reverse($labels),
-            'datasets' => [[
-                'label' => 'Akurasi Prediksi (%)',
-                'data' => array_reverse($data),
-                'borderColor' => 'rgb(168, 85, 247)',
-                'backgroundColor' => 'rgba(168, 85, 247, 0.1)',
-                'tension' => 0.4
-            ]]
-        ];
-    }
 
     /**
      * Get group daily performance
@@ -731,10 +626,7 @@ class DashboardController extends Controller
                 'group_performance' => $this->getGroupPerformanceChart(),
                 
                 // Job completion trend
-                'job_completion' => $this->getJobCompletionChart(),
-                
-                // Prediction accuracy
-                'prediction_accuracy' => $this->getPredictionAccuracyChart()
+                'job_completion' => $this->getJobCompletionChart()
             ];
 
             return $data;
@@ -774,16 +666,6 @@ class DashboardController extends Controller
                         ]
                     ]]
                 ],
-                'prediction_accuracy' => [
-                    'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-                    'datasets' => [[
-                        'label' => 'Akurasi Prediksi (%)',
-                        'data' => [0, 0, 0, 0, 0],
-                        'borderColor' => 'rgb(168, 85, 247)',
-                        'backgroundColor' => 'rgba(168, 85, 247, 0.1)',
-                        'tension' => 0.4
-                    ]]
-                ]
             ];
         }
     }

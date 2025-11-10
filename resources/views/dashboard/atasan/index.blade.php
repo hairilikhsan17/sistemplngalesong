@@ -133,17 +133,10 @@
             </div>
         </div>
 
-        <!-- Prediction Accuracy -->
-        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Akurasi Prediksi</h3>
-            <div class="chart-container">
-                <canvas id="predictionAccuracyChart"></canvas>
-            </div>
-        </div>
     </div>
 
     <!-- Bottom Row -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <!-- Performance Overview -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Performa</h3>
@@ -160,45 +153,6 @@
                     <span class="text-sm text-gray-600">Completion Rate</span>
                     <span class="text-sm font-medium" x-text="stats.system_health?.completion_rate + '%'"></span>
                 </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Total Prediksi</span>
-                    <span class="text-sm font-medium" x-text="stats.total_prediksi"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Latest Prediction -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Prediksi Terbaru</h3>
-            <div x-show="stats.latest_prediction" class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Kelompok</span>
-                    <span class="text-sm font-medium" x-text="stats.latest_prediction?.kelompok"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Jenis</span>
-                    <span class="text-sm font-medium" x-text="stats.latest_prediction?.jenis"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Bulan</span>
-                    <span class="text-sm font-medium" x-text="stats.latest_prediction?.bulan"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Prediksi Waktu</span>
-                    <span class="text-sm font-medium" x-text="stats.latest_prediction?.prediksi_waktu + ' hari'"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Akurasi</span>
-                    <span class="text-sm font-medium" x-text="stats.latest_prediction?.akurasi + '%'"></span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Dibuat</span>
-                    <span class="text-sm font-medium" x-text="stats.latest_prediction?.created_at"></span>
-                </div>
-            </div>
-            <div x-show="!stats.latest_prediction" class="text-center py-4">
-                <i data-lucide="trending-up" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
-                <p class="text-sm text-gray-500">Belum ada prediksi</p>
             </div>
         </div>
 
@@ -211,7 +165,6 @@
                         <div class="flex-shrink-0">
                             <div :class="{
                                 'bg-blue-100 text-blue-600': activity.type === 'laporan',
-                                'bg-purple-100 text-purple-600': activity.type === 'prediksi'
                             }" class="w-6 h-6 rounded-full flex items-center justify-center">
                                 <i :data-lucide="activity.type === 'laporan' ? 'file-text' : 'trending-up'" class="w-3 h-3"></i>
                             </div>
@@ -247,11 +200,7 @@
                 <span class="text-sm font-medium text-green-900">Pantau Laporan</span>
             </a>
             
-            <a href="{{ route('atasan.statistik-prediksi') }}" 
-               class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                <i data-lucide="trending-up" class="w-5 h-5 text-purple-600 mr-3"></i>
-                <span class="text-sm font-medium text-purple-900">Lihat Prediksi</span>
-            </a>
+
             
             <a href="{{ route('atasan.settings') }}" 
                class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
@@ -381,29 +330,7 @@ document.addEventListener('alpine:init', () => {
                 });
             }
             
-            // Prediction Accuracy Chart
-            const predCtx = document.getElementById('predictionAccuracyChart');
-            if (predCtx) {
-                this.charts.prediction = new Chart(predCtx, {
-                    type: 'line',
-                    data: data.prediction_accuracy,
-                    options: {
-                        ...chartOptions,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100
-                            },
-                            x: {
-                                ticks: {
-                                    maxRotation: 45,
-                                    minRotation: 45
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+
             
             // Handle window resize for charts
             window.addEventListener('resize', () => {

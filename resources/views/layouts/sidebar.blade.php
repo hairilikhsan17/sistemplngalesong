@@ -114,13 +114,6 @@
                     <span>Pemantauan Job Pekerjaan</span>
                 </a>
 
-                <!-- Statistik & Prediksi -->
-                <a href="{{ route('atasan.statistik-prediksi') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.statistik-prediksi') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="trending-up" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Statistik & Prediksi</span>
-                </a>
 
                 <!-- Export Data -->
                 <a href="{{ route('atasan.export-data') }}" 
@@ -129,6 +122,70 @@
                     <i data-lucide="download" class="w-5 h-5 mr-3 flex-shrink-0"></i>
                     <span>Export Data</span>
                 </a>
+
+                <!-- Statistik & Prediksi -->
+                <div x-data="{ open: {{ request()->routeIs('admin.statistik.*') || request()->routeIs('admin.prediksi.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" 
+                            class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') || request()->routeIs('admin.prediksi.*') ? 'bg-amber-100 text-amber-700' : '' }}">
+                        <div class="flex items-center">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                            <span>Statistik & Prediksi</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-collapse class="ml-6 space-y-1">
+                        <!-- Statistik Submenu -->
+                        <div x-data="{ openStatistik: {{ request()->routeIs('admin.statistik.*') ? 'true' : 'false' }} }" class="space-y-1">
+                            <button @click="openStatistik = !openStatistik" 
+                                    class="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') ? 'bg-amber-50 text-amber-700' : '' }}">
+                                <div class="flex items-center">
+                                    <i data-lucide="trending-up" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                                    <span>📊 Statistik</span>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" :class="openStatistik ? 'rotate-90' : ''"></i>
+                            </button>
+                            <div x-show="openStatistik" x-collapse class="ml-4 space-y-1">
+                                <a href="{{ route('admin.statistik.index', ['tipe' => 'laporan']) }}" 
+                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') && request()->get('tipe') == 'laporan' ? 'bg-amber-100 text-amber-700' : '' }}">
+                                    <i data-lucide="file-text" class="w-3 h-3 mr-3 flex-shrink-0"></i>
+                                    <span>Laporan Karyawan</span>
+                                </a>
+                                <a href="{{ route('admin.statistik.index', ['tipe' => 'job']) }}" 
+                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') && request()->get('tipe') == 'job' ? 'bg-amber-100 text-amber-700' : '' }}">
+                                    <i data-lucide="briefcase" class="w-3 h-3 mr-3 flex-shrink-0"></i>
+                                    <span>Job Pekerjaan</span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Prediksi Submenu -->
+                        <div x-data="{ openPrediksi: {{ request()->routeIs('admin.prediksi.*') ? 'true' : 'false' }} }" class="space-y-1">
+                            <button @click="openPrediksi = !openPrediksi" 
+                                    class="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.prediksi.*') ? 'bg-amber-50 text-amber-700' : '' }}">
+                                <div class="flex items-center">
+                                    <i data-lucide="activity" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                                    <span>🔮 Prediksi</span>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" :class="openPrediksi ? 'rotate-90' : ''"></i>
+                            </button>
+                            <div x-show="openPrediksi" x-collapse class="ml-4 space-y-1">
+                                <a href="{{ route('admin.prediksi.index', ['tipe' => 'laporan']) }}" 
+                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.prediksi.*') && request()->get('tipe') == 'laporan' ? 'bg-amber-100 text-amber-700' : '' }}">
+                                    <i data-lucide="file-text" class="w-3 h-3 mr-3 flex-shrink-0"></i>
+                                    <span>Laporan Karyawan</span>
+                                </a>
+                                <a href="{{ route('admin.prediksi.index', ['tipe' => 'job']) }}" 
+                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.prediksi.*') && request()->get('tipe') == 'job' ? 'bg-amber-100 text-amber-700' : '' }}">
+                                    <i data-lucide="briefcase" class="w-3 h-3 mr-3 flex-shrink-0"></i>
+                                    <span>Job Pekerjaan</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Upload Excel -->
                 <div x-data="{ open: false }" class="space-y-1">
@@ -190,12 +247,6 @@
                     <span>Input Job Pekerjaan</span>
                 </a>
 
-                <!-- Lihat Prediksi -->
-                <a href="#" onclick="showTab('prediksi')" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                    <i data-lucide="trending-up" class="w-5 h-5 mr-3"></i>
-                    Lihat Prediksi
-                </a>
 
                 <!-- Export Data Kelompok -->
                 <a href="#" onclick="exportKelompokData()" 

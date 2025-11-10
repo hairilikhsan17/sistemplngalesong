@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Kelompok;
 use App\Models\LaporanKaryawan;
 use App\Models\JobPekerjaan;
-use App\Models\Prediksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -35,8 +34,6 @@ class ExportController extends Controller
         // Export Job Pekerjaan
         $this->exportJobPekerjaan($spreadsheet);
         
-        // Export Prediksi
-        $this->exportPrediksi($spreadsheet);
 
         $filename = 'PLN_Galesong_All_Data_' . date('Y-m-d_H-i-s') . '.xlsx';
         
@@ -209,43 +206,6 @@ class ExportController extends Controller
         }
     }
 
-    private function exportPrediksi($spreadsheet)
-    {
-        $sheet = $spreadsheet->createSheet();
-        $sheet->setTitle('Prediksi');
-        
-        // Headers
-        $headers = ['ID', 'Jenis Prediksi', 'Bulan Prediksi', 'Hasil Prediksi', 'Kelompok', 'Created At'];
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue($col . '1', $header);
-            $col++;
-        }
-        
-        // Style headers
-        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
-        $sheet->getStyle('A1:F1')->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('F59E0B');
-        
-        // Data
-        $prediksis = Prediksi::with('kelompok')->get();
-        $row = 2;
-        foreach ($prediksis as $prediksi) {
-            $sheet->setCellValue('A' . $row, $prediksi->id);
-            $sheet->setCellValue('B' . $row, $prediksi->jenis_prediksi === 'laporan_karyawan' ? 'Laporan Karyawan' : 'Job Pekerjaan');
-            $sheet->setCellValue('C' . $row, $prediksi->bulan_prediksi);
-            $sheet->setCellValue('D' . $row, $prediksi->hasil_prediksi);
-            $sheet->setCellValue('E' . $row, $prediksi->kelompok ? $prediksi->kelompok->nama_kelompok : 'Semua Kelompok');
-            $sheet->setCellValue('F' . $row, $prediksi->created_at->format('Y-m-d H:i:s'));
-            $row++;
-        }
-        
-        // Auto size columns
-        foreach (range('A', 'F') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-    }
 
     private function exportKelompokDataToExcel($spreadsheet, $kelompok)
     {

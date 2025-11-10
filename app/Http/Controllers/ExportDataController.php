@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Kelompok;
 use App\Models\LaporanKaryawan;
 use App\Models\JobPekerjaan;
-use App\Models\Prediksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -74,13 +73,11 @@ class ExportDataController extends Controller
             $karyawans = DB::table('karyawan')->get();
             $laporanKaryawans = LaporanKaryawan::with(['kelompok'])->get();
             $jobPekerjaans = JobPekerjaan::with(['kelompok'])->get();
-            $prediksis = Prediksi::with(['kelompok'])->get();
-
             $spreadsheet = new Spreadsheet();
             
             // Export semua data kelompok dengan struktur DINAMIS
             // Otomatis menyesuaikan dengan jumlah kelompok yang ada
-            $this->exportAllKelompokDataToExcel($spreadsheet, $kelompoks, $karyawans, $laporanKaryawans, $jobPekerjaans, $prediksis);
+            $this->exportAllKelompokDataToExcel($spreadsheet, $kelompoks, $karyawans, $laporanKaryawans, $jobPekerjaans);
 
             $filename = 'PLN_Galesong_Semua_Data_Kelompok_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
             
@@ -120,12 +117,10 @@ class ExportDataController extends Controller
             $karyawans = DB::table('karyawan')->where('kelompok_id', $kelompokId)->get();
             $laporanKaryawans = LaporanKaryawan::where('kelompok_id', $kelompokId)->get();
             $jobPekerjaans = JobPekerjaan::where('kelompok_id', $kelompokId)->get();
-            $prediksis = Prediksi::where('kelompok_id', $kelompokId)->get();
-
             $spreadsheet = new Spreadsheet();
             
             // Export data kelompok dengan struktur yang sama seperti export karyawan
-            $this->exportKelompokDataToExcel($spreadsheet, $kelompok, $karyawans, $laporanKaryawans, $jobPekerjaans, $prediksis);
+            $this->exportKelompokDataToExcel($spreadsheet, $kelompok, $karyawans, $laporanKaryawans, $jobPekerjaans);
 
             $filename = 'PLN_Galesong_' . str_replace(' ', '_', $kelompok->nama_kelompok) . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
             
@@ -367,56 +362,7 @@ class ExportDataController extends Controller
         $this->setTableBorders($sheet, 'A3:L' . ($row - 1));
     }
     
-    private function exportPrediksiSheet($spreadsheet, $prediksis)
-    {
-        $sheet = $spreadsheet->createSheet();
-        $sheet->setTitle('Data Prediksi');
-        
-        // Header
-        $sheet->setCellValue('A1', 'DATA PREDIKSI');
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle('A1')->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('F59E0B');
-        
-        // Headers
-        $headers = ['No', 'ID Prediksi', 'Jenis Prediksi', 'Bulan Prediksi', 'Hasil Prediksi', 'Kelompok', 'Created At'];
-        $col = 'A';
-        $row = 3;
-        foreach ($headers as $header) {
-            $sheet->setCellValue($col . $row, $header);
-            $col++;
-        }
-        
-        // Style headers
-        $sheet->getStyle('A3:G3')->getFont()->setBold(true);
-        $sheet->getStyle('A3:G3')->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('E5E7EB');
-        
-        // Data
-        $row = 4;
-        $no = 1;
-        foreach ($prediksis as $prediksi) {
-            $sheet->setCellValue('A' . $row, $no);
-            $sheet->setCellValue('B' . $row, $prediksi->id);
-            $sheet->setCellValue('C' . $row, $prediksi->jenis_prediksi === 'laporan_karyawan' ? 'Laporan Karyawan' : 'Job Pekerjaan');
-            $sheet->setCellValue('D' . $row, $prediksi->bulan_prediksi);
-            $sheet->setCellValue('E' . $row, $prediksi->hasil_prediksi);
-            $sheet->setCellValue('F' . $row, $prediksi->kelompok->nama_kelompok ?? 'Semua Kelompok');
-            $sheet->setCellValue('G' . $row, $prediksi->created_at->format('Y-m-d H:i:s'));
-            $row++;
-            $no++;
-        }
-        
-        // Auto size dan border
-        foreach (range('A', 'G') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-        $this->setTableBorders($sheet, 'A3:G' . ($row - 1));
-    }
-    
-    private function exportKelompokDataToExcel($spreadsheet, $kelompok, $karyawans, $laporanKaryawans, $jobPekerjaans, $prediksis)
+    private function exportKelompokDataToExcel($spreadsheet, $kelompok, $karyawans, $laporanKaryawans, $jobPekerjaans)
     {
         // Sheet 1: Data Kelompok Lengkap
         $sheet = $spreadsheet->getActiveSheet();
@@ -529,7 +475,7 @@ class ExportDataController extends Controller
             ->setBorderStyle(Border::BORDER_THIN);
     }
     
-    private function exportAllKelompokDataToExcel($spreadsheet, $kelompoks, $karyawans, $laporanKaryawans, $jobPekerjaans, $prediksis)
+    private function exportAllKelompokDataToExcel($spreadsheet, $kelompoks, $karyawans, $laporanKaryawans, $jobPekerjaans)
     {
         // Sheet 1: Semua Data Kelompok - DINAMIS
         $sheet = $spreadsheet->getActiveSheet();
