@@ -31,8 +31,15 @@ class SettingsController extends Controller
      */
     public function kelompokIndex()
     {
-        $kelompok = auth()->user()->kelompok;
+        $user = auth()->user();
+        $kelompok = $user->kelompok;
         $karyawans = $kelompok ? $kelompok->karyawan : collect();
+        
+        // If user doesn't have a kelompok, redirect to dashboard with message
+        if (!$kelompok) {
+            return redirect()->route('karyawan.dashboard')
+                ->with('error', 'Anda belum terdaftar dalam kelompok. Silakan hubungi administrator.');
+        }
         
         return view('dashboard.kelompok.settings', compact('kelompok', 'karyawans'));
     }

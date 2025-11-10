@@ -152,20 +152,40 @@ function kelompokManager() {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(this.formData)
                 });
 
-                const result = await response.json();
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // If not JSON, try to get text
+                    const text = await response.text();
+                    throw new Error('Server mengembalikan respons yang tidak valid. Pastikan server berjalan dengan baik.');
+                }
+
                 console.log('Response:', result);
 
-                if (response.ok) {
+                if (response.ok && result.success) {
                     alert(result.message || 'Kelompok berhasil disimpan');
                     this.showKelompokModal = false;
+                    this.formData = { nama_kelompok: '', shift: 'Shift 1', password: '' };
+                    this.editingKelompok = null;
                     location.reload();
                 } else {
-                    const errorMessage = result.message || result.errors ? JSON.stringify(result.errors) : 'Gagal menyimpan kelompok';
+                    let errorMessage = 'Gagal menyimpan kelompok';
+                    if (result.message) {
+                        errorMessage = result.message;
+                    } else if (result.errors) {
+                        const errorList = Object.values(result.errors).flat().join(', ');
+                        errorMessage = errorList || errorMessage;
+                    }
                     alert('Error: ' + errorMessage);
                 }
             } catch (error) {
@@ -181,18 +201,31 @@ function kelompokManager() {
                 const response = await fetch(`/api/kelompok/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     }
                 });
 
-                if (response.ok) {
-                    alert('Kelompok berhasil dihapus');
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                let result;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error('Server mengembalikan respons yang tidak valid.');
+                }
+
+                if (response.ok && result.success) {
+                    alert(result.message || 'Kelompok berhasil dihapus');
                     location.reload();
                 } else {
-                    alert('Gagal menghapus kelompok');
+                    alert(result.message || 'Gagal menghapus kelompok');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan');
+                console.error('Error:', error);
+                alert('Terjadi kesalahan: ' + error.message);
             }
         },
 

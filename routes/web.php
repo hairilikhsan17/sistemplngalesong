@@ -62,6 +62,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/atasan/pemantauan-laporan', [App\Http\Controllers\PemantauanLaporanController::class, 'index'])->name('atasan.pemantauan-laporan');
 
+    Route::get('/atasan/pemantauan-job-pekerjaan', [App\Http\Controllers\PemantauanJobPekerjaanController::class, 'index'])->name('atasan.pemantauan-job-pekerjaan');
+
     Route::get('/atasan/statistik-prediksi', [App\Http\Controllers\PrediksiController::class, 'index'])->name('atasan.statistik-prediksi');
     
     // Excel Management Routes
@@ -111,6 +113,11 @@ Route::get('/test-simple', function () {
         Route::get('/laporan-karyawan/statistics', [App\Http\Controllers\PemantauanLaporanController::class, 'getStatistics']);
         Route::get('/laporan-karyawan/{id}/dokumentasi', [App\Http\Controllers\PemantauanLaporanController::class, 'getDokumentasi']);
         Route::get('/export/laporan-karyawan', [App\Http\Controllers\PemantauanLaporanController::class, 'exportExcel']);
+
+        // Pemantauan Job Pekerjaan Routes
+        Route::get('/pemantauan-job-pekerjaan/statistics', [App\Http\Controllers\PemantauanJobPekerjaanController::class, 'getStatistics']);
+        Route::get('/pemantauan-job-pekerjaan/data', [App\Http\Controllers\PemantauanJobPekerjaanController::class, 'getJobData']);
+        Route::get('/export/job-pekerjaan', [App\Http\Controllers\PemantauanJobPekerjaanController::class, 'exportExcel']);
 
         // Job Pekerjaan Routes
         Route::get('/job-pekerjaan', [JobPekerjaanController::class, 'index']);

@@ -19,6 +19,7 @@ class KelompokController extends Controller
 
     public function store(Request $request)
     {
+        try {
         $request->validate([
             'nama_kelompok' => 'required|string|max:255',
             'shift' => 'required|in:Shift 1,Shift 2',
@@ -31,8 +32,9 @@ class KelompokController extends Controller
             'shift' => $request->shift,
         ]);
 
-        // Create user account for the kelompok
-        $username = strtolower(str_replace(' ', '', $kelompok->nama_kelompok));
+            // Create user account for the kelompok with unique username
+            $baseUsername = strtolower(str_replace(' ', '', $kelompok->nama_kelompok));
+            $username = $this->generateUniqueUsername($baseUsername);
 
         User::create([
             'id' => Str::uuid(),
@@ -47,10 +49,40 @@ class KelompokController extends Controller
             'message' => 'Kelompok berhasil dibuat',
             'data' => $kelompok->load(['karyawan', 'users'])
         ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate unique username by checking if it exists and adding suffix if needed
+     */
+    private function generateUniqueUsername($baseUsername)
+    {
+        $username = $baseUsername;
+        $counter = 1;
+
+        // Check if username exists, if yes, add number suffix
+        while (User::where('username', $username)->exists()) {
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+
+        return $username;
     }
 
     public function update(Request $request, $id)
     {
+        try {
         $request->validate([
             'nama_kelompok' => 'required|string|max:255',
             'shift' => 'required|in:Shift 1,Shift 2',
@@ -73,13 +105,39 @@ class KelompokController extends Controller
             'message' => 'Kelompok berhasil diperbarui',
             'data' => $kelompok->load(['karyawan', 'users'])
         ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
+        try {
         $kelompok = Kelompok::findOrFail($id);
+            
+            // Delete associated users first (to avoid foreign key issues)
+            User::where('kelompok_id', $kelompok->id)->delete();
+            
         $kelompok->delete();
 
-        return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Kelompok berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

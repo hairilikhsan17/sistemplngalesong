@@ -3,17 +3,17 @@
 @section('title', 'Input Laporan')
 
 @section('content')
-<div class="p-6" x-data="laporanData()">
+<div class="p-3 sm:p-4 lg:p-6" x-data="laporanData()">
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
+    <div class="mb-4 sm:mb-6 lg:mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Input Laporan Kerja</h1>
-                <p class="text-gray-600 mt-2">Kelola laporan kerja harian Anda</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Input Laporan Kerja</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">Kelola laporan kerja harian Anda</p>
             </div>
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center">
                 <button @click="showForm = true; resetForm()" 
-                        class="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        class="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center min-h-[44px]">
                     <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
                     Tambah Laporan
                 </button>
@@ -33,11 +33,16 @@
     </div>
 
     <!-- Form Modal -->
-    <div x-show="showForm" x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-gray-900" x-text="editingId ? 'Edit Laporan' : 'Tambah Laporan Baru'"></h3>
-                <button @click="closeForm()" class="text-gray-400 hover:text-gray-600">
+    <div x-show="showForm" 
+         x-transition
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4"
+         @click.self="closeForm()"
+         @keydown.escape="closeForm()">
+        <div class="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 class="text-lg sm:text-xl font-semibold text-gray-900" x-text="editingId ? 'Edit Laporan' : 'Tambah Laporan Baru'"></h3>
+                <button @click="closeForm()" 
+                        class="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </div>
@@ -52,12 +57,12 @@
             </div>
 
             <form @submit.prevent="saveLaporan()">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <!-- Hari -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Hari</label>
                         <select x-model="formData.hari" 
-                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                                 required>
                             <option value="">Pilih Hari</option>
                             <option value="Senin">Senin</option>
@@ -76,7 +81,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
                         <input type="date" 
                                x-model="formData.tanggal"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                                required>
                     </div>
 
@@ -85,7 +90,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama</label>
                         <select x-model="formData.nama" 
                                 @change="onNamaChange()"
-                                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                                 required>
                             <option value="">Pilih Nama Karyawan</option>
                             <template x-for="karyawan in karyawans" :key="karyawan.id">
@@ -101,7 +106,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Instansi</label>
                         <input type="text" 
                                x-model="formData.instansi"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                                placeholder="Masukkan instansi"
                                required>
                     </div>
@@ -111,7 +116,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
                         <input type="text" 
                                x-model="formData.jabatan"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                                placeholder="Masukkan jabatan"
                                required>
                     </div>
@@ -121,18 +126,18 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Alamat/Tujuan</label>
                         <input type="text" 
                                x-model="formData.alamat_tujuan"
-                               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                                placeholder="Masukkan alamat tujuan"
                                required>
                     </div>
                 </div>
 
                 <!-- Dokumentasi -->
-                <div class="mt-6">
+                <div class="mt-4 sm:mt-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi</label>
                     <textarea x-model="formData.dokumentasi"
                               rows="4"
-                              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              class="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile"
                               placeholder="Masukkan dokumentasi kerja (opsional)"></textarea>
                 </div>
 
@@ -179,16 +184,16 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex items-center justify-end space-x-4 mt-6 pt-6 border-t border-gray-200">
+                <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-3 sm:space-x-4 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
                     <button type="button" 
                             @click="closeForm()"
-                            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]">
                         Batal
                     </button>
                     <button type="submit" 
                             :disabled="loading"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span x-show="loading" class="flex items-center">
+                            class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">
+                        <span x-show="loading" class="flex items-center justify-center">
                             <i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>
                             Menyimpan...
                         </span>

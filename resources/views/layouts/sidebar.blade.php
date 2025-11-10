@@ -1,22 +1,24 @@
 <!-- Sidebar Component -->
-<div class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out" 
-     x-data="{ sidebarOpen: false }" 
-     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0"
-     id="sidebar">
-    
+<div class="h-full flex flex-col">
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-amber-600 to-orange-600">
-        <div class="flex items-center">
+    <div class="flex items-center justify-between h-16 px-4 sm:px-6 bg-gradient-to-r from-amber-600 to-orange-600 flex-shrink-0 relative">
+        <div class="flex items-center flex-1 min-w-0">
             <div class="flex-shrink-0">
                 <i data-lucide="zap" class="w-8 h-8 text-white"></i>
             </div>
-            <div class="ml-3">
-                <h1 class="text-lg font-bold text-white">PLN Galesong</h1>
-                <p class="text-xs text-amber-100">Sistem Prediksi</p>
+            <div class="ml-3 min-w-0">
+                <h1 class="text-base sm:text-lg font-bold text-white truncate">PLN Galesong</h1>
+                <p class="text-xs text-amber-100 hidden sm:block">Sistem Prediksi</p>
             </div>
         </div>
-        <button @click="sidebarOpen = false" class="lg:hidden text-white hover:text-amber-200">
-            <i data-lucide="x" class="w-6 h-6"></i>
+        <button x-on:click.stop.prevent="$dispatch('close-sidebar')"
+                x-on:touchstart.stop
+                x-on:touchend.stop.prevent="$dispatch('close-sidebar')"
+                class="lg:hidden text-white hover:text-amber-200 p-2 rounded-md hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ml-2 cursor-pointer select-none"
+                aria-label="Close sidebar"
+                type="button"
+                style="touch-action: manipulation; -webkit-tap-highlight-color: rgba(255,255,255,0.3); position: relative; z-index: 100;">
+            <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
         </button>
     </div>
 
@@ -64,15 +66,16 @@
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="mt-6 px-3">
+    <nav class="mt-6 px-3 flex-1 overflow-y-auto">
         @if(Auth::user()->isAtasan())
             <!-- Atasan Menu -->
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="{{ route('atasan.dashboard') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('atasan.dashboard') ? 'bg-amber-100 text-amber-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
-                    Dashboard
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors min-h-[44px] {{ request()->routeIs('atasan.dashboard') ? 'bg-amber-100 text-amber-700' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Dashboard</span>
                 </a>
 
                 <!-- Manajemen Kelompok & Karyawan -->
@@ -87,32 +90,44 @@
                     </button>
                     <div x-show="open" x-collapse class="ml-6 space-y-1">
                         <a href="{{ route('atasan.manajemen') }}" 
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.manajemen') ? 'bg-amber-50 text-amber-700' : '' }}">
-                            <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i>
-                            Kelompok & Karyawan
+                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.manajemen') ? 'bg-amber-50 text-amber-700' : '' }}">
+                            <i data-lucide="user-plus" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                            <span>Kelompok & Karyawan</span>
                         </a>
                     </div>
                 </div>
 
                 <!-- Pemantauan Laporan -->
                 <a href="{{ route('atasan.pemantauan-laporan') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.pemantauan-laporan') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i>
-                    Pemantauan Laporan
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.pemantauan-laporan') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Pemantauan Laporan</span>
+                </a>
+
+                <!-- Pemantauan Job Pekerjaan -->
+                <a href="{{ route('atasan.pemantauan-job-pekerjaan') }}" 
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.pemantauan-job-pekerjaan') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Pemantauan Job Pekerjaan</span>
                 </a>
 
                 <!-- Statistik & Prediksi -->
                 <a href="{{ route('atasan.statistik-prediksi') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.statistik-prediksi') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="trending-up" class="w-5 h-5 mr-3"></i>
-                    Statistik & Prediksi
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.statistik-prediksi') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="trending-up" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Statistik & Prediksi</span>
                 </a>
 
                 <!-- Export Data -->
                 <a href="{{ route('atasan.export-data') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.export-data') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="download" class="w-5 h-5 mr-3"></i>
-                    Export Data
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.export-data') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="download" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Export Data</span>
                 </a>
 
                 <!-- Upload Excel -->
@@ -127,19 +142,22 @@
                     </button>
                     <div x-show="open" x-collapse class="ml-6 space-y-1">
                         <a href="{{ route('atasan.excel.index') }}" 
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i data-lucide="settings" class="w-4 h-4 mr-3"></i>
-                            Manajemen Excel
+                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
+                            <i data-lucide="settings" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                            <span>Manajemen Excel</span>
                         </a>
                         <a href="{{ route('atasan.excel.upload') }}" 
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i data-lucide="file-plus" class="w-4 h-4 mr-3"></i>
-                            Upload Data Bulan Ini
+                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
+                            <i data-lucide="file-plus" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                            <span>Upload Data Bulan Ini</span>
                         </a>
                         <a href="{{ route('atasan.excel.create') }}" 
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i data-lucide="plus-circle" class="w-4 h-4 mr-3"></i>
-                            Buat File Excel Baru
+                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
+                            <i data-lucide="plus-circle" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                            <span>Buat File Excel Baru</span>
                         </a>
                     </div>
                 </div>
@@ -150,23 +168,26 @@
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="{{ route('karyawan.dashboard') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('karyawan.dashboard') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
-                    Dashboard
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors min-h-[44px] {{ request()->routeIs('karyawan.dashboard') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Dashboard</span>
                 </a>
 
                 <!-- Input Laporan -->
                 <a href="{{ route('kelompok.laporan') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('kelompok.laporan') ? 'bg-blue-100 text-blue-700' : '' }}">
-                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
-                    Input Laporan
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('kelompok.laporan') ? 'bg-blue-100 text-blue-700' : '' }}">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Input Laporan</span>
                 </a>
 
                 <!-- Input Job Pekerjaan -->
                 <a href="{{ route('kelompok.job-pekerjaan') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('kelompok.job-pekerjaan') ? 'bg-blue-100 text-blue-700' : '' }}">
-                    <i data-lucide="briefcase" class="w-5 h-5 mr-3"></i>
-                    Input Job Pekerjaan
+                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('kelompok.job-pekerjaan') ? 'bg-blue-100 text-blue-700' : '' }}">
+                    <i data-lucide="briefcase" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                    <span>Input Job Pekerjaan</span>
                 </a>
 
                 <!-- Lihat Prediksi -->
@@ -191,15 +212,17 @@
         <!-- Settings -->
         @if(auth()->user()->role === 'atasan')
         <a href="{{ route('atasan.settings') }}" 
-           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
-            Pengaturan
+           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
+            <i data-lucide="settings" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+            <span>Pengaturan</span>
         </a>
         @else
         <a href="{{ route('kelompok.settings') }}" 
-           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
-            Pengaturan
+           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
+            <i data-lucide="settings" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+            <span>Pengaturan</span>
         </a>
         @endif
 
@@ -207,34 +230,20 @@
         <form method="POST" action="{{ route('logout') }}" class="mt-4">
             @csrf
             <button type="submit" 
-                    class="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors">
-                <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
-                Keluar
+                    class="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors min-h-[44px]">
+                <i data-lucide="log-out" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                <span>Keluar</span>
             </button>
         </form>
     </nav>
 
     <!-- Sidebar Footer -->
-    <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t">
+    <div class="mt-auto p-4 bg-gray-50 border-t">
         <div class="text-xs text-gray-500 text-center">
-            <p>PLN Unit Induk Distribusi</p>
-            <p>Sulselrabar</p>
+            <p class="truncate">PLN Unit Induk Distribusi</p>
+            <p class="truncate">Sulselrabar</p>
         </div>
     </div>
-</div>
-
-<!-- Mobile Sidebar Overlay -->
-<div x-data="{ sidebarOpen: false }" 
-     x-show="sidebarOpen" 
-     x-transition:enter="transition-opacity ease-linear duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     x-transition:leave="transition-opacity ease-linear duration-300"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0"
-     class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
-     @click="sidebarOpen = false"
-     style="display: none;">
 </div>
 
 <script>

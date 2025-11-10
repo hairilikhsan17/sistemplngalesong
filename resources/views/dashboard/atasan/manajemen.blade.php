@@ -3,11 +3,11 @@
 @section('title', 'Manajemen Kelompok & Karyawan')
 
 @section('content')
-<div class="p-6" x-data="manajemenData()">
+<div class="p-3 sm:p-4 lg:p-6" x-data="manajemenData()">
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Manajemen Kelompok & Karyawan</h1>
-        <p class="text-gray-600 mt-2">Kelola data kelompok dan anggota karyawan</p>
+    <div class="mb-4 sm:mb-6 lg:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Manajemen Kelompok & Karyawan</h1>
+        <p class="text-gray-600 mt-2 text-sm sm:text-base">Kelola data kelompok dan anggota karyawan</p>
     </div>
 
     <!-- Notification -->
@@ -27,17 +27,17 @@
 
 
     <!-- Tabs -->
-    <div class="mb-6">
+    <div class="mb-4 sm:mb-6">
         <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8">
+            <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
                 <button @click="activeTab = 'kelompok'" 
                         :class="activeTab === 'kelompok' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm min-h-[44px] flex items-center">
                     📋 Kelompok
                 </button>
                 <button @click="activeTab = 'karyawan'" 
                         :class="activeTab === 'karyawan' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm min-h-[44px] flex items-center">
                     👥 Karyawan
                 </button>
             </nav>
@@ -48,54 +48,60 @@
     <div x-show="activeTab === 'kelompok'">
         <!-- Kelompok Tab -->
         <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-medium text-gray-900">Data Kelompok</h3>
+            <div class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900">Data Kelompok</h3>
                     <a href="{{ route('atasan.kelompok') }}" 
-                       class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium inline-block">
-                        ➕ Tambah Kelompok
+                       class="bg-amber-600 hover:bg-amber-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium inline-block text-center min-h-[44px] flex items-center justify-center">
+                        ➕ <span class="ml-1">Tambah Kelompok</span>
                     </a>
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kelompok</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username Login</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Karyawan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($kelompoks as $kelompok)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ substr($kelompok->id, 0, 8) }}...</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $kelompok->nama_kelompok }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $kelompok->shift }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ strtolower(str_replace(' ', '', $kelompok->nama_kelompok)) }}</code>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $kelompok->karyawan->count() }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button @click="editKelompok('{{ $kelompok->id }}', '{{ $kelompok->nama_kelompok }}', '{{ $kelompok->shift }}')" 
-                                        class="text-amber-600 hover:text-amber-900 mr-3">Edit</button>
-                                <button @click="hapusKelompok('{{ $kelompok->id }}')" 
-                                        class="text-red-600 hover:text-red-900">Hapus</button>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                Belum ada data kelompok
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="overflow-x-auto -mx-3 sm:mx-0">
+                <div class="inline-block min-w-full align-middle">
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kelompok</th>
+                                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Username</th>
+                                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse($kelompoks as $kelompok)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ substr($kelompok->id, 0, 8) }}...</td>
+                                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ $kelompok->nama_kelompok }}</td>
+                                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ $kelompok->shift }}</td>
+                                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 hidden sm:table-cell">
+                                        <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ strtolower(str_replace(' ', '', $kelompok->nama_kelompok)) }}</code>
+                                    </td>
+                                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ $kelompok->karyawan->count() }}</td>
+                                    <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
+                                        <div class="flex flex-col sm:flex-row gap-1 sm:gap-0">
+                                            <button @click="editKelompok('{{ $kelompok->id }}', '{{ $kelompok->nama_kelompok }}', '{{ $kelompok->shift }}')" 
+                                                    class="text-amber-600 hover:text-amber-900 sm:mr-3 min-h-[32px] sm:min-h-0">Edit</button>
+                                            <button @click="hapusKelompok('{{ $kelompok->id }}')" 
+                                                    class="text-red-600 hover:text-red-900 min-h-[32px] sm:min-h-0">Hapus</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-500 text-center">
+                                        Belum ada data kelompok
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -104,74 +110,88 @@
   <!-- Karyawan Tab -->
   <div x-show="activeTab === 'karyawan'">
   <div class="bg-white rounded-lg shadow">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <div class="flex justify-between items-center">
-        <h3 class="text-lg font-semibold text-gray-900">Data Karyawan</h3>
+    <div class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">Data Karyawan</h3>
         <a href="{{ route('atasan.karyawan') }}"
-           class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
-          ➕ Tambah Karyawan
+           class="bg-amber-600 hover:bg-amber-700 text-white px-3 sm:px-5 py-2 rounded-lg text-sm font-medium text-center min-h-[44px] flex items-center justify-center">
+          ➕ <span class="ml-1">Tambah Karyawan</span>
         </a>
       </div>
     </div>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-amber-100">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">ID</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">Nama</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">Kelompok</th>
-            <th class="px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">Status</th>
-          </tr>
-        </thead>
+    <div class="overflow-x-auto -mx-3 sm:mx-0">
+      <div class="inline-block min-w-full align-middle">
+        <div class="overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-amber-100">
+              <tr>
+                <th class="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">ID</th>
+                <th class="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">Nama</th>
+                <th class="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">Kelompok</th>
+                <th class="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-amber-900 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
 
-        <tbody class="bg-white divide-y divide-gray-200">
-          @forelse($karyawans as $karyawan)
-          <tr class="hover:bg-amber-50 transition-colors duration-150">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ substr($karyawan->id, 0, 8) }}...</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $karyawan->nama }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $karyawan->kelompok->nama_kelompok ?? '-' }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                Aktif
-              </span>
-            </td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-              Belum ada data karyawan
-            </td>
-          </tr>
-          @endforelse
-        </tbody>
-      </table>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @forelse($karyawans as $karyawan)
+              <tr class="hover:bg-amber-50 transition-colors duration-150">
+                <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ substr($karyawan->id, 0, 8) }}...</td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ $karyawan->nama }}</td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">{{ $karyawan->kelompok->nama_kelompok ?? '-' }}</td>
+                <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Aktif
+                  </span>
+                </td>
+              </tr>
+              @empty
+              <tr>
+                <td colspan="4" class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-500 text-center">
+                  Belum ada data karyawan
+                </td>
+              </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Modal Tambah Kelompok -->
-<div x-show="showKelompokModal" x-transition class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+<div x-show="showKelompokModal" 
+     x-transition
+     class="fixed inset-0 z-50 overflow-y-auto"
+     @keydown.escape="showKelompokModal = false">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-3 sm:px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showKelompokModal = false"></div>
         
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <form @submit.prevent="isEditing ? updateKelompok() : tambahKelompok()">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" x-text="isEditing ? 'Edit Kelompok' : 'Tambah Kelompok Baru'"></h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base sm:text-lg leading-6 font-medium text-gray-900" x-text="isEditing ? 'Edit Kelompok' : 'Tambah Kelompok Baru'"></h3>
+                        <button type="button" 
+                                @click="showKelompokModal = false; resetFormKelompok()"
+                                class="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                     
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nama Kelompok</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kelompok</label>
                             <input type="text" x-model="formKelompok.nama_kelompok" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
+                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm form-input-mobile" 
                                    placeholder="Masukkan nama kelompok" required>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Shift</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Shift</label>
                             <select x-model="formKelompok.shift" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" required>
+                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm form-input-mobile" required>
                                 <option value="">Pilih Shift</option>
                                 <option value="Shift 1">Shift 1 (08.00 - 19.00)</option>
                                 <option value="Shift 2">Shift 2 (19.00 - 07.00)</option>
@@ -179,9 +199,9 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Password Login Kelompok</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password Login Kelompok</label>
                             <input type="password" x-model="formKelompok.password" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
+                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm form-input-mobile" 
                                    placeholder="Masukkan password untuk login kelompok" 
                                    :required="!isEditing">
                             <p class="mt-1 text-xs text-gray-500" x-show="!isEditing">
@@ -195,15 +215,15 @@
                     </div>
                 </div>
                 
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3">
                     <button type="submit" 
                             :disabled="loading"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-600 text-base font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                            class="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-600 text-sm sm:text-base font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:ml-3 disabled:opacity-50 min-h-[44px]">
                         <span x-show="!loading" x-text="isEditing ? 'Perbarui' : 'Simpan'"></span>
                         <span x-show="loading">Loading...</span>
                     </button>
                     <button type="button" @click="showKelompokModal = false; resetFormKelompok()" 
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            class="w-full sm:w-auto inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm sm:text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-h-[44px]">
                         Batal
                     </button>
                 </div>
@@ -213,27 +233,37 @@
 </div>
 
 <!-- Modal Tambah Karyawan -->
-<div x-show="showKaryawanModal" x-transition class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+<div x-show="showKaryawanModal" 
+     x-transition 
+     class="fixed inset-0 z-50 overflow-y-auto"
+     @keydown.escape="showKaryawanModal = false">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-3 sm:px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showKaryawanModal = false"></div>
         
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <form @submit.prevent="isEditingKaryawan ? updateKaryawan() : tambahKaryawan()">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" x-text="isEditingKaryawan ? 'Edit Karyawan' : 'Tambah Karyawan Baru'"></h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base sm:text-lg leading-6 font-medium text-gray-900" x-text="isEditingKaryawan ? 'Edit Karyawan' : 'Tambah Karyawan Baru'"></h3>
+                        <button type="button" 
+                                @click="showKaryawanModal = false; resetFormKaryawan()"
+                                class="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                     
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nama Karyawan</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Karyawan</label>
                             <input type="text" x-model="formKaryawan.nama" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
+                                   class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm form-input-mobile" 
                                    placeholder="Masukkan nama karyawan" required>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Kelompok</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kelompok</label>
                             <select x-model="formKaryawan.kelompok_id" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" required>
+                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm form-input-mobile" required>
                                 <option value="">Pilih Kelompok</option>
                                 @foreach($kelompoks as $kelompok)
                                 <option value="{{ $kelompok->id }}">{{ $kelompok->nama_kelompok }}</option>
@@ -242,9 +272,9 @@
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Status</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                             <select x-model="formKaryawan.status" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" required>
+                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 text-sm form-input-mobile" required>
                                 <option value="">Pilih Status</option>
                                 <option value="aktif">Aktif</option>
                                 <option value="tidak_aktif">Tidak Aktif</option>
@@ -253,15 +283,15 @@
                     </div>
                 </div>
                 
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3">
                     <button type="submit" 
                             :disabled="loading"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-600 text-base font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                            class="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-600 text-sm sm:text-base font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:ml-3 disabled:opacity-50 min-h-[44px]">
                         <span x-show="!loading" x-text="isEditingKaryawan ? 'Perbarui' : 'Simpan'"></span>
                         <span x-show="loading">Loading...</span>
                     </button>
                     <button type="button" @click="showKaryawanModal = false; resetFormKaryawan()" 
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            class="w-full sm:w-auto inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm sm:text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-h-[44px]">
                         Batal
                     </button>
                 </div>

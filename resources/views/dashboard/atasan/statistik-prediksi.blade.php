@@ -474,10 +474,11 @@
                     data: chartData,
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Tren dan Prediksi Waktu Penyelesaian'
+                                text: 'Tren Prediksi Waktu Penyelesaian'
                             },
                             legend: {
                                 position: 'top'
@@ -488,20 +489,8 @@
                                 beginAtZero: true,
                                 title: {
                                     display: true,
-                                    text: 'Waktu Penyelesaian (Hari)'
+                                    text: 'Hari'
                                 }
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Periode'
-                                }
-                            }
-                        },
-                        elements: {
-                            point: {
-                                radius: 4,
-                                hoverRadius: 6
                             }
                         }
                     }
@@ -723,59 +712,97 @@
         </div>
         
         <!-- Hasil Prediksi -->
-        <div x-show="predictionResults" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Hasil Prediksi Triple Exponential Smoothing</h3>
-                <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <div class="text-sm text-blue-700">
-                        <strong>Periode Prediksi:</strong> <span x-text="getMonthName(bulanPrediksi)"></span><br>
-                        <strong>Jenis Data:</strong> <span x-text="jenisPrediksi === 'laporan_karyawan' ? 'Laporan Karyawan' : 'Job Pekerjaan'"></span><br>
-                        <strong>Algoritma:</strong> Triple Exponential Smoothing (Holt-Winters)
+        <div x-show="predictionResults" class="mb-6">
+            <!-- Info Header Compact -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4">
+                <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <div class="flex items-center">
+                        <span class="font-medium text-gray-700 mr-2">📅 Periode:</span>
+                        <span class="text-blue-600 font-semibold" x-text="getMonthName(bulanPrediksi)"></span>
                     </div>
-                </div>
-                <div class="space-y-4">
-                    <template x-for="(result, index) in predictionResults" :key="index">
-                        <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-sm font-medium text-gray-700" x-text="result.kelompok"></span>
-                                <span class="text-lg font-bold text-amber-600" x-text="result.prediksi + ' hari'"></span>
-                            </div>
-                            <div class="mt-2">
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-amber-600 h-2 rounded-full transition-all duration-500" :style="'width: ' + result.percentage + '%'"></div>
-                                </div>
-                                <div class="mt-2 flex justify-between text-xs text-gray-500">
-                                    <span>Akurasi: <span class="font-medium" x-text="result.akurasi + '%'"></span></span>
-                                    <span>Efisiensi: <span class="font-medium" x-text="result.percentage + '%'"></span></span>
-                                </div>
-                                <div class="mt-1 text-xs text-gray-400">
-                                    Prediksi berdasarkan data historis 12 bulan terakhir
-                                </div>
-                            </div>
-                        </div>
-                    </template>
+                    <div class="flex items-center">
+                        <span class="font-medium text-gray-700 mr-2">📊 Jenis:</span>
+                        <span class="text-gray-900" x-text="jenisPrediksi === 'laporan_karyawan' ? 'Laporan Karyawan' : 'Job Pekerjaan'"></span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-medium text-gray-700 mr-2">🔮 Algoritma:</span>
+                        <span class="text-gray-900">Triple Exponential Smoothing</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Grafik Tren Prediksi</h3>
-                <div class="mb-3 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                    <strong>Legenda:</strong> Garis putus-putus menunjukkan prediksi masa depan
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Hasil Prediksi Cards - Compact -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h3 class="text-base font-medium text-gray-900">Hasil Prediksi</h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kelompok</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Prediksi</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Akurasi</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Efisiensi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <template x-for="(result, index) in predictionResults" :key="index">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-3 py-2 whitespace-nowrap">
+                                                <span class="text-sm font-medium text-gray-900" x-text="result.kelompok"></span>
+                                            </td>
+                                            <td class="px-3 py-2 whitespace-nowrap text-center">
+                                                <span class="text-base font-bold text-amber-600" x-text="result.prediksi + ' hari'"></span>
+                                            </td>
+                                            <td class="px-3 py-2 whitespace-nowrap text-center">
+                                                <span class="text-sm text-green-600 font-medium" x-text="result.akurasi + '%'"></span>
+                                            </td>
+                                            <td class="px-3 py-2 whitespace-nowrap text-center">
+                                                <div class="flex items-center justify-center">
+                                                    <div class="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
+                                                        <div class="bg-amber-600 h-1.5 rounded-full transition-all duration-500" :style="'width: ' + result.percentage + '%'"></div>
+                                                    </div>
+                                                    <span class="text-xs text-gray-600" x-text="result.percentage + '%'"></span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <canvas id="prediksiChart" width="400" height="300"></canvas>
-                <div class="mt-3 text-xs text-gray-500">
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
-                            <span>Kelompok A</span>
+                
+                <!-- Grafik Tren Prediksi - Same Size -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h3 class="text-base font-medium text-gray-900">Grafik Tren Prediksi</h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="relative" style="height: 400px;">
+                            <canvas id="prediksiChart"></canvas>
                         </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                            <span>Kelompok B</span>
-                        </div>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                            <span>Kelompok C</span>
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <div class="flex flex-wrap gap-3 text-xs text-gray-600">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-amber-500 rounded-full mr-1.5"></div>
+                                    <span>Kelompok A</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></div>
+                                    <span>Kelompok B</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></div>
+                                    <span>Kelompok C</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-xs text-gray-400 italic">
+                                Garis putus-putus = Prediksi
+                            </div>
                         </div>
                     </div>
                 </div>

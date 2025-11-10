@@ -3,8 +3,8 @@
 @section('title', 'Login - PLN Galesong')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+<div class="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4 sm:p-6">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 sm:p-8">
         <div class="flex items-center justify-center mb-8">
             <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-xl">
                 <i data-lucide="zap" class="w-12 h-12 text-white"></i>

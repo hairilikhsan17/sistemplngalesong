@@ -3,23 +3,24 @@
 @section('title', 'Dashboard Admin')
 
 @section('content')
-<div class="p-6" x-data="adminDashboard()">
+<div class="p-3 sm:p-4 lg:p-6" x-data="adminDashboard()">
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
+    <div class="mb-4 sm:mb-6 lg:mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Dashboard Admin</h1>
-                <p class="text-gray-600 mt-2">Monitor seluruh aktivitas dan performa sistem PLN Galesong</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard Admin</h1>
+                <p class="text-gray-600 mt-2 text-sm sm:text-base">Monitor seluruh aktivitas dan performa sistem PLN Galesong</p>
             </div>
-            <div class="flex items-center space-x-4">
-                <div class="text-sm text-gray-500">
+            <div class="flex items-center justify-between sm:justify-end gap-3 sm:space-x-4">
+                <div class="text-xs sm:text-sm text-gray-500 hidden sm:block">
                     <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
                     <span x-text="currentTime"></span>
                 </div>
                 <button @click="refreshData()" 
-                        class="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        class="flex items-center bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base min-h-[44px]">
                     <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
-                    Refresh
+                    <span class="hidden sm:inline">Refresh</span>
+                    <span class="sm:hidden">Refresh</span>
                 </button>
             </div>
         </div>
@@ -49,7 +50,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <!-- Total Kelompok -->
         <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center">
@@ -104,37 +105,45 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <!-- Monthly Reports Trend -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Trend Laporan Bulanan</h3>
-            <canvas id="monthlyReportsChart" width="400" height="200"></canvas>
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Trend Laporan Bulanan</h3>
+            <div class="chart-container">
+                <canvas id="monthlyReportsChart"></canvas>
+            </div>
         </div>
 
         <!-- Group Performance -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Performa Kelompok</h3>
-            <canvas id="groupPerformanceChart" width="400" height="200"></canvas>
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Performa Kelompok</h3>
+            <div class="chart-container">
+                <canvas id="groupPerformanceChart"></canvas>
+            </div>
         </div>
     </div>
 
     <!-- Second Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <!-- Job Completion Status -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Status Penyelesaian Job</h3>
-            <canvas id="jobCompletionChart" width="400" height="200"></canvas>
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Status Penyelesaian Job</h3>
+            <div class="chart-container">
+                <canvas id="jobCompletionChart"></canvas>
+            </div>
         </div>
 
         <!-- Prediction Accuracy -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Akurasi Prediksi</h3>
-            <canvas id="predictionAccuracyChart" width="400" height="200"></canvas>
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Akurasi Prediksi</h3>
+            <div class="chart-container">
+                <canvas id="predictionAccuracyChart"></canvas>
+            </div>
         </div>
     </div>
 
     <!-- Bottom Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <!-- Performance Overview -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Performa</h3>
@@ -223,9 +232,9 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="mt-8 bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi Cepat</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="mt-6 sm:mt-8 bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Aksi Cepat</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <a href="{{ route('atasan.manajemen') }}" 
                class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                 <i data-lucide="users" class="w-5 h-5 text-blue-600 mr-3"></i>
@@ -292,80 +301,117 @@ document.addEventListener('alpine:init', () => {
         },
         
         initializeCharts(data) {
-            // Monthly Reports Chart
-            const monthlyCtx = document.getElementById('monthlyReportsChart').getContext('2d');
-            this.charts.monthly = new Chart(monthlyCtx, {
-                type: 'line',
-                data: data.monthly_reports,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
                     }
                 }
-            });
+            };
+            
+            // Monthly Reports Chart
+            const monthlyCtx = document.getElementById('monthlyReportsChart');
+            if (monthlyCtx) {
+                this.charts.monthly = new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: data.monthly_reports,
+                    options: {
+                        ...chartOptions,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        }
+                    }
+                });
+            }
             
             // Group Performance Chart
-            const groupCtx = document.getElementById('groupPerformanceChart').getContext('2d');
-            this.charts.group = new Chart(groupCtx, {
-                type: 'bar',
-                data: data.group_performance,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
+            const groupCtx = document.getElementById('groupPerformanceChart');
+            if (groupCtx) {
+                this.charts.group = new Chart(groupCtx, {
+                    type: 'bar',
+                    data: data.group_performance,
+                    options: {
+                        ...chartOptions,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
             
             // Job Completion Chart
-            const jobCtx = document.getElementById('jobCompletionChart').getContext('2d');
-            this.charts.job = new Chart(jobCtx, {
-                type: 'doughnut',
-                data: data.job_completion,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
+            const jobCtx = document.getElementById('jobCompletionChart');
+            if (jobCtx) {
+                this.charts.job = new Chart(jobCtx, {
+                    type: 'doughnut',
+                    data: data.job_completion,
+                    options: {
+                        ...chartOptions,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 10,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
             
             // Prediction Accuracy Chart
-            const predCtx = document.getElementById('predictionAccuracyChart').getContext('2d');
-            this.charts.prediction = new Chart(predCtx, {
-                type: 'line',
-                data: data.prediction_accuracy,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100
+            const predCtx = document.getElementById('predictionAccuracyChart');
+            if (predCtx) {
+                this.charts.prediction = new Chart(predCtx, {
+                    type: 'line',
+                    data: data.prediction_accuracy,
+                    options: {
+                        ...chartOptions,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            },
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
                         }
                     }
-                }
+                });
+            }
+            
+            // Handle window resize for charts
+            window.addEventListener('resize', () => {
+                Object.values(this.charts).forEach(chart => {
+                    if (chart) {
+                        chart.resize();
+                    }
+                });
             });
         },
         

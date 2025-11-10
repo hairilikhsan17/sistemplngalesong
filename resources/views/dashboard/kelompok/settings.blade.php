@@ -31,7 +31,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Shift Kerja</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $kelompok->shift ?? '-' }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $kelompok?->shift ?? '-' }}</p>
                 </div>
             </div>
         </div>
@@ -342,15 +342,15 @@ document.addEventListener('alpine:init', () => {
         monthlyReports: 0,
         
         groupSettings: {
-            id: '{{ $kelompok->id ?? "" }}',
-            nama_kelompok: '{{ $kelompok->nama_kelompok ?? "" }}',
-            shift: '{{ $kelompok->shift ?? "Shift 1" }}',
-            deskripsi: '{{ $kelompok->deskripsi ?? "" }}',
-            lokasi: '{{ $kelompok->lokasi ?? "" }}',
-            telepon: '{{ $kelompok->telepon ?? "" }}',
-            email: '{{ $kelompok->email ?? "" }}',
-            avatar: '{{ $kelompok->avatar ?? "" }}',
-            avatar_url: '{{ $kelompok->avatar ? asset("storage/avatars/" . $kelompok->avatar) : "" }}',
+            id: '{{ $kelompok?->id ?? "" }}',
+            nama_kelompok: '{{ $kelompok?->nama_kelompok ?? "" }}',
+            shift: '{{ $kelompok?->shift ?? "Shift 1" }}',
+            deskripsi: '{{ $kelompok?->deskripsi ?? "" }}',
+            lokasi: '{{ $kelompok?->lokasi ?? "" }}',
+            telepon: '{{ $kelompok?->telepon ?? "" }}',
+            email: '{{ $kelompok?->email ?? "" }}',
+            avatar: '{{ $kelompok?->avatar ?? "" }}',
+            avatar_url: '{{ ($kelompok?->avatar) ? asset("storage/avatars/" . $kelompok?->avatar) : "" }}',
             avatar_file: null
         },
         

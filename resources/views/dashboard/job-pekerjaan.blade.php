@@ -4,21 +4,21 @@
 
 @section('content')
 <!-- Header -->
-<div class="bg-white shadow-sm border-b mb-6">
-    <div class="flex justify-between items-center py-6">
+<div class="bg-white shadow-sm border-b mb-4 sm:mb-6">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 py-4 sm:py-6 px-3 sm:px-4 lg:px-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Job Pekerjaan</h1>
-            <p class="text-sm text-gray-600 mt-1">Kelola data pekerjaan dan aktivitas kelompok</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Job Pekerjaan</h1>
+            <p class="text-xs sm:text-sm text-gray-600 mt-1">Kelola data pekerjaan dan aktivitas kelompok</p>
         </div>
         <button onclick="openCreateModal()" 
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors">
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto min-h-[44px]">
             <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
             Tambah Job
         </button>
     </div>
 </div>
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-3 sm:px-0">
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center">
                     <div class="p-2 bg-blue-100 rounded-lg">
@@ -69,17 +69,17 @@
         </div>
 
         <!-- Filter and Search -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="p-6">
-                <div class="flex flex-col md:flex-row gap-4">
+        <div class="bg-white rounded-lg shadow mb-4 sm:mb-6 mx-3 sm:mx-0">
+            <div class="p-4 sm:p-6">
+                <div class="flex flex-col md:flex-row gap-3 sm:gap-4">
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Cari Job</label>
                         <input type="text" id="search-input" placeholder="Cari berdasarkan lokasi atau hari..."
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile">
                     </div>
-                    <div class="md:w-48">
+                    <div class="w-full md:w-48">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Hari</label>
-                        <select id="day-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select id="day-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile">
                             <option value="">Semua Hari</option>
                             <option value="Senin">Senin</option>
                             <option value="Selasa">Selasa</option>
@@ -90,11 +90,12 @@
                             <option value="Minggu">Minggu</option>
                         </select>
                     </div>
-                    <div class="md:w-32">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Aksi</label>
+                    <div class="w-full md:w-32">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 md:hidden">Aksi</label>
                         <button onclick="loadJobs()" 
-                                class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
-                            <i data-lucide="search" class="w-4 h-4 mx-auto"></i>
+                                class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors min-h-[44px] flex items-center justify-center">
+                            <i data-lucide="search" class="w-4 h-4 mr-2 md:mr-0 md:mx-auto"></i>
+                            <span class="md:hidden">Cari</span>
                         </button>
                     </div>
                 </div>
@@ -102,12 +103,14 @@
         </div>
 
         <!-- Jobs Table -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Daftar Job Pekerjaan</h3>
+        <div class="bg-white rounded-lg shadow mx-3 sm:mx-0">
+            <div class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h3 class="text-base sm:text-lg font-medium text-gray-900">Daftar Job Pekerjaan</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+            <div class="overflow-x-auto -mx-3 sm:mx-0">
+                <div class="inline-block min-w-full align-middle">
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
@@ -141,19 +144,20 @@
 
 <!-- Create/Edit Modal -->
 <div id="job-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-gray-200">
+    <div class="flex items-center justify-center min-h-screen p-3 sm:p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
-                    <h3 id="modal-title" class="text-lg font-medium text-gray-900">Tambah Job Pekerjaan</h3>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <h3 id="modal-title" class="text-base sm:text-lg font-medium text-gray-900">Tambah Job Pekerjaan</h3>
+                    <button onclick="closeModal()" 
+                            class="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
             
-            <form id="job-form" class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form id="job-form" class="p-4 sm:p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal <span class="text-red-500">*</span></label>
                         <input type="date" id="tanggal" name="tanggal" required

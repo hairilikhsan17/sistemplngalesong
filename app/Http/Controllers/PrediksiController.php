@@ -471,24 +471,34 @@ class PrediksiController extends Controller
             
             foreach ($kelompoks as $kelompok) {
                 foreach ($kelompok->jobPekerjaan as $job) {
-                    $totalJobs += $job->perbaikan_kwh;
-                    $jobTypes['Perbaikan KWH'] += $job->perbaikan_kwh;
+                    // Count jobs based on whether they have content (text descriptions)
+                    // If text is not empty, count as 1 job
+                    if (!empty(trim($job->perbaikan_kwh))) {
+                        $totalJobs++;
+                        $jobTypes['Perbaikan KWH']++;
+                    }
                     
-                    $totalJobs += $job->pemeliharaan_pengkabelan;
-                    $jobTypes['Pemeliharaan Pengkabelan'] += $job->pemeliharaan_pengkabelan;
+                    if (!empty(trim($job->pemeliharaan_pengkabelan))) {
+                        $totalJobs++;
+                        $jobTypes['Pemeliharaan Pengkabelan']++;
+                    }
                     
-                    $totalJobs += $job->pengecekan_gardu;
-                    $jobTypes['Pengecekan Gardu'] += $job->pengecekan_gardu;
+                    if (!empty(trim($job->pengecekan_gardu))) {
+                        $totalJobs++;
+                        $jobTypes['Pengecekan Gardu']++;
+                    }
                     
-                    $totalJobs += $job->penanganan_gangguan;
-                    $jobTypes['Penanganan Gangguan'] += $job->penanganan_gangguan;
-                    
-                    // Simulate instalasi baru based on other job types
-                    $instalasi = max(0, rand(0, 5));
-                    $totalJobs += $instalasi;
-                    $jobTypes['Instalasi Baru'] += $instalasi;
+                    if (!empty(trim($job->penanganan_gangguan))) {
+                        $totalJobs++;
+                        $jobTypes['Penanganan Gangguan']++;
+                    }
                 }
             }
+            
+            // Simulate instalasi baru based on total jobs
+            $instalasi = max(0, (int)($totalJobs * 0.1)); // 10% of total jobs
+            $totalJobs += $instalasi;
+            $jobTypes['Instalasi Baru'] += $instalasi;
             
             // If no actual data, use realistic sample data
             if ($totalJobs === 0) {
