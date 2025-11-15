@@ -11,6 +11,12 @@ use App\Models\JobPekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class PrediksiController extends Controller
 {
@@ -534,7 +540,7 @@ class PrediksiController extends Controller
     /**
      * Export prediction data
      */
-    public function export($format)
+    public function export($format, Request $request)
     {
         // Ensure only atasan can access
         if (!auth()->user()->isAtasan()) {
@@ -542,7 +548,67 @@ class PrediksiController extends Controller
         }
         
         try {
-            $predictions = Prediksi::orderBy('bulan', 'desc')->get();
+            // Get tipe parameter (laporan or job)
+            $tipe = $request->get('tipe', 'laporan');
+            
+            // Validate tipe
+            if (!in_array($tipe, ['laporan', 'job'])) {
+                $tipe = 'laporan';
+            }
+            
+            // Check if we should export latest prediction only
+            $latestOnly = $request->get('latest', false);
+            
+            if ($latestOnly) {
+                // Get only the latest prediction for this tipe
+                $prediction = Prediksi::orderBy('created_at', 'desc')
+                    ->get()
+                    ->filter(function ($prediksi) use ($tipe) {
+                        $params = $prediksi->params ?? [];
+                        return ($params['tipe'] ?? 'laporan') === $tipe;
+                    })
+                    ->first();
+                
+                if (!$prediction) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada data prediksi ' . ($tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan') . ' untuk diexport',
+                    ], 404);
+                }
+                
+                $predictions = collect([$prediction]);
+            } else {
+                // Get ALL latest predictions (last 20) - tidak filter tipe
+                // Akan dipisahkan di export berdasarkan tipe masing-masing
+                $allPredictions = Prediksi::orderBy('created_at', 'desc')
+                    ->limit(20)
+                    ->get();
+                
+                // Separate by tipe
+                $laporanPredictions = $allPredictions->filter(function ($prediksi) {
+                    $params = $prediksi->params ?? [];
+                    return ($params['tipe'] ?? 'laporan') === 'laporan';
+                })->take(10);
+                
+                $jobPredictions = $allPredictions->filter(function ($prediksi) {
+                    $params = $prediksi->params ?? [];
+                    return ($params['tipe'] ?? 'laporan') === 'job';
+                })->take(10);
+                
+                // Use the tipe that user requested
+                if ($tipe === 'laporan') {
+                    $predictions = $laporanPredictions;
+                } else {
+                    $predictions = $jobPredictions;
+                }
+                
+                if (count($predictions) === 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tidak ada data prediksi ' . ($tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan') . ' untuk diexport',
+                    ], 404);
+                }
+            }
             
             if ($format === 'pdf') {
                 // TODO: Implement PDF export using dompdf
@@ -551,11 +617,7 @@ class PrediksiController extends Controller
                     'message' => 'PDF export belum diimplementasikan',
                 ], 501);
             } elseif ($format === 'excel') {
-                // TODO: Implement Excel export using maatwebsite/excel
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Excel export belum diimplementasikan',
-                ], 501);
+                return $this->exportToExcel($predictions, $latestOnly, $tipe);
             } else {
                 return response()->json([
                     'success' => false,
@@ -568,5 +630,285 @@ class PrediksiController extends Controller
                 'message' => 'Error: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Export predictions to Excel
+     */
+    private function exportToExcel($predictions, $latestOnly = false, $tipe = 'laporan')
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Get tipe label
+        $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
+        
+        // Set sheet title
+        $sheetTitle = $latestOnly 
+            ? 'Hasil Prediksi ' . $tipeLabel 
+            : 'Rekap Prediksi ' . $tipeLabel;
+        $sheet->setTitle($sheetTitle);
+        
+        // Title
+        $title = $latestOnly 
+            ? 'HASIL PREDIKSI TERAKHIR - ' . strtoupper($tipeLabel)
+            : 'REKAP HASIL PREDIKSI - ' . strtoupper($tipeLabel);
+        $sheet->setCellValue('A1', $title);
+        $sheet->mergeCells('A1:G1');
+        // Set header color based on tipe
+        $headerColor = $tipe === 'laporan' ? '2563EB' : '059669'; // Blue for laporan, Green for job
+        
+        $sheet->getStyle('A1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 16,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $headerColor]
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ]
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(30);
+        
+        // Subtitle
+        $sheet->setCellValue('A2', 'Sistem Prediksi PLN Galesong - ' . $tipeLabel);
+        $sheet->mergeCells('A2:G2');
+        $sheet->getStyle('A2')->applyFromArray([
+            'font' => [
+                'size' => 12,
+                'italic' => true,
+                'color' => ['rgb' => '6B7280']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ]
+        ]);
+        $sheet->getRowDimension(2)->setRowHeight(20);
+        
+        // Export date
+        $sheet->setCellValue('A3', 'Tanggal Export: ' . now()->format('d F Y H:i:s'));
+        $sheet->mergeCells('A3:G3');
+        $sheet->getStyle('A3')->applyFromArray([
+            'font' => [
+                'size' => 10,
+                'color' => ['rgb' => '6B7280']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ]
+        ]);
+        $sheet->getRowDimension(3)->setRowHeight(18);
+        
+        // Empty row
+        $sheet->getRowDimension(4)->setRowHeight(10);
+        
+        // Headers
+        $headers = [
+            'No',
+            'Bulan yang Diprediksi',
+            'Jenis Data',
+            'Kelompok',
+            'Hasil Prediksi',
+            'Akurasi Model (MAPE)',
+            'Tanggal Dibuat'
+        ];
+        
+        $col = 'A';
+        $row = 5;
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . $row, $header);
+            $col++;
+        }
+        
+        // Style headers - use different color based on tipe
+        $tableHeaderColor = $tipe === 'laporan' ? 'F59E0B' : '10B981'; // Orange for laporan, Green for job
+        $headerRange = 'A5:' . chr(64 + count($headers)) . '5';
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 11,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => $tableHeaderColor]
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000']
+                ]
+            ]
+        ]);
+        $sheet->getRowDimension($row)->setRowHeight(25);
+        
+        // Data
+        $row = 6;
+        $no = 1;
+        foreach ($predictions as $prediksi) {
+            $params = $prediksi->params ?? [];
+            $tipe = $params['tipe'] ?? 'laporan';
+            $kelompokName = $params['kelompok'] ?? 'N/A';
+            $bulanTarget = $params['bulan_target'] ?? (strpos($prediksi->bulan, '_') !== false ? explode('_', $prediksi->bulan)[0] : $prediksi->bulan);
+            $kelompokDisplay = $kelompokName === 'all' ? 'Semua Kelompok' : $kelompokName;
+            $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
+            $hasilLabel = $tipe === 'laporan' ? 'jumlah laporan' : 'hari';
+            
+            // Format bulan
+            try {
+                $bulanFormatted = Carbon::createFromFormat('Y-m', $bulanTarget)->format('F Y');
+            } catch (\Exception $e) {
+                $bulanFormatted = $bulanTarget;
+            }
+            
+            $sheet->setCellValue('A' . $row, $no);
+            $sheet->setCellValue('B' . $row, $bulanFormatted);
+            $sheet->setCellValue('C' . $row, $tipeLabel);
+            $sheet->setCellValue('D' . $row, $kelompokDisplay);
+            $sheet->setCellValue('E' . $row, number_format($prediksi->hasil_prediksi, 2) . ' ' . $hasilLabel);
+            $sheet->setCellValue('F' . $row, number_format($prediksi->akurasi, 2) . '%');
+            $sheet->setCellValue('G' . $row, $prediksi->created_at->format('d/m/Y H:i'));
+            
+            // Style data rows
+            $dataRange = 'A' . $row . ':' . chr(64 + count($headers)) . $row;
+            $isEven = ($no % 2) === 0;
+            $sheet->getStyle($dataRange)->applyFromArray([
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => $isEven ? 'F9FAFB' : 'FFFFFF']
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['rgb' => 'E5E7EB']
+                    ]
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_LEFT,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                    'wrapText' => true
+                ]
+            ]);
+            
+            // Center align for No, Hasil Prediksi, Akurasi
+            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('F' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            // Color code accuracy
+            $accuracy = $prediksi->akurasi;
+            $accuracyColor = '10B981'; // Green
+            if ($accuracy < 70) {
+                $accuracyColor = 'EF4444'; // Red
+            } elseif ($accuracy < 85) {
+                $accuracyColor = 'F59E0B'; // Orange
+            }
+            $sheet->getStyle('F' . $row)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => $accuracyColor]
+                ]
+            ]);
+            
+            $sheet->getRowDimension($row)->setRowHeight(20);
+            $row++;
+            $no++;
+        }
+        
+        // Summary section
+        $summaryRow = $row + 2;
+        $sheet->setCellValue('A' . $summaryRow, 'RINGKASAN');
+        $sheet->mergeCells('A' . $summaryRow . ':B' . $summaryRow);
+        $sheet->getStyle('A' . $summaryRow)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '059669']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ]
+        ]);
+        $sheet->getRowDimension($summaryRow)->setRowHeight(25);
+        
+        $summaryRow++;
+        $sheet->setCellValue('A' . $summaryRow, 'Total Prediksi:');
+        $sheet->setCellValue('B' . $summaryRow, count($predictions));
+        $sheet->getStyle('A' . $summaryRow)->applyFromArray([
+            'font' => ['bold' => true]
+        ]);
+        
+        $summaryRow++;
+        $avgAccuracy = $predictions->avg('akurasi');
+        $sheet->setCellValue('A' . $summaryRow, 'Rata-rata Akurasi:');
+        $sheet->setCellValue('B' . $summaryRow, number_format($avgAccuracy, 2) . '%');
+        $sheet->getStyle('A' . $summaryRow)->applyFromArray([
+            'font' => ['bold' => true]
+        ]);
+        $sheet->getStyle('B' . $summaryRow)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => $avgAccuracy >= 85 ? '10B981' : ($avgAccuracy >= 70 ? 'F59E0B' : 'EF4444')]
+            ]
+        ]);
+        
+        // Auto size columns
+        foreach (range('A', chr(64 + count($headers))) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            if ($col === 'A') {
+                $sheet->getColumnDimension($col)->setWidth(8);
+            } elseif ($col === 'B') {
+                $sheet->getColumnDimension($col)->setWidth(25);
+            } elseif ($col === 'C') {
+                $sheet->getColumnDimension($col)->setWidth(18);
+            } elseif ($col === 'D') {
+                $sheet->getColumnDimension($col)->setWidth(20);
+            } elseif ($col === 'E') {
+                $sheet->getColumnDimension($col)->setWidth(20);
+            } elseif ($col === 'F') {
+                $sheet->getColumnDimension($col)->setWidth(20);
+            } elseif ($col === 'G') {
+                $sheet->getColumnDimension($col)->setWidth(20);
+            }
+        }
+        
+        // Set print area
+        $sheet->getPageSetup()->setPrintArea('A1:' . chr(64 + count($headers)) . ($row - 1));
+        
+        // Generate filename based on tipe
+        $tipeLabelForFile = $tipe === 'laporan' ? 'Laporan_Karyawan' : 'Job_Pekerjaan';
+        $filenamePrefix = $latestOnly 
+            ? 'Hasil_Prediksi_' . $tipeLabelForFile 
+            : 'Rekap_Prediksi_' . $tipeLabelForFile;
+        $filename = $filenamePrefix . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+        
+        // Download file
+        $writer = new Xlsx($spreadsheet);
+        
+        $response = response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $filename);
+        
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        
+        return $response;
     }
 }

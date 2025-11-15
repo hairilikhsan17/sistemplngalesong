@@ -124,20 +124,10 @@
             </div>
         </div>
         <div class="flex gap-4">
-            <button @click="exportData('pdf')" 
-                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
-                <i data-lucide="file-text" class="w-4 h-4 inline mr-2"></i>
-                Unduh PDF
-            </button>
             <button @click="exportData('excel')" 
                     class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
                 <i data-lucide="file-spreadsheet" class="w-4 h-4 inline mr-2"></i>
                 Unduh Excel
-            </button>
-            <button @click="resetData()" 
-                    class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i>
-                Reset Data
             </button>
         </div>
     </div>
@@ -360,6 +350,7 @@ function prediksiPage() {
                     this.hasilPrediksi = {
                         bulan: result.data.bulan,
                         kelompok: result.data.kelompok || 'N/A',
+                        tipe: result.data.tipe || this.form.tipe,
                         tipe_label: result.data.tipe_label || 'N/A',
                         hasil_prediksi: result.data.hasil_prediksi,
                         hasil_label: result.data.hasil_label || 'hari',
@@ -472,11 +463,29 @@ function prediksiPage() {
         },
 
         async exportData(format) {
-            if (!this.hasilPrediksi) return;
+            // Export semua prediksi terakhir dari tabel "Prediksi Terakhir"
+            // Tidak perlu cek hasilPrediksi, langsung export dari latestPredictions
+            
+            if (this.latestPredictions.length === 0) {
+                this.message = 'Tidak ada data prediksi terakhir untuk diexport';
+                this.messageType = 'error';
+                return;
+            }
+            
+            // Get current tipe from form or from latestPredictions
+            const currentTipe = this.form.tipe || '{{ $tipe }}';
             
             // Construct URL manually since format is dynamic
+            // Export semua prediksi terakhir berdasarkan tipe (tidak hanya latest=1)
             const baseUrl = '{{ url("/admin/prediksi/export") }}';
-            window.open(`${baseUrl}/${format}`, '_blank');
+            window.open(`${baseUrl}/${format}?tipe=${currentTipe}`, '_blank');
+            
+            this.message = 'Sedang memproses export ' + (currentTipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan') + '...';
+            this.messageType = 'success';
+            setTimeout(() => {
+                this.message = '';
+                this.messageType = '';
+            }, 3000);
         },
 
         async resetData() {

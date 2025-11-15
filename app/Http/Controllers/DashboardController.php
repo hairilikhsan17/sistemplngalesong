@@ -43,6 +43,9 @@ class DashboardController extends Controller
             // Calculate average reports per day (last 30 days)
             $avgPerHari = $this->calculateAvgPerHari();
             
+            // Calculate total job pekerjaan
+            $totalJobPekerjaan = JobPekerjaan::count();
+            
             $stats = [
                 // Basic counts
                 'total_kelompok' => Kelompok::count(),
@@ -55,6 +58,9 @@ class DashboardController extends Controller
                 'laporan_bulan_ini' => LaporanKaryawan::whereMonth('created_at', now()->month)
                     ->whereYear('created_at', now()->year)->count(),
                 'laporan_pending' => $pendingReview,
+                
+                // Job Pekerjaan statistics
+                'total_job_pekerjaan' => $totalJobPekerjaan,
                 
                 // Performance metrics
                 'avg_waktu_penyelesaian' => 0,
@@ -77,6 +83,7 @@ class DashboardController extends Controller
                 'laporan_hari_ini' => 0,
                 'laporan_bulan_ini' => 0,
                 'laporan_pending' => 0,
+                'total_job_pekerjaan' => 0,
                 'avg_waktu_penyelesaian' => 0,
                 'best_performing_group' => 'Error',
                 'monthly_trend' => [],
@@ -91,7 +98,167 @@ class DashboardController extends Controller
      */
     public function kelompokIndex()
     {
-        return view('dashboard.kelompok.index');
+        // Get performance data for all groups
+        $performanceData = $this->getAllKelompokPerformance();
+        
+        // Get user's kelompok data for karyawan dashboard
+        $user = auth()->user();
+        $kelompok = $user->kelompok;
+        
+        // Calculate current user's ranking from performanceData
+        $userRanking = null;
+        if ($kelompok && !empty($performanceData)) {
+            $rank = 1;
+            $userScore = 0;
+            $totalGroups = count($performanceData);
+            
+            foreach ($performanceData as $index => $perf) {
+                if ($perf['nama'] === $kelompok->nama_kelompok) {
+                    $rank = $index + 1;
+                    $userScore = $perf['skor'];
+                    break;
+                }
+            }
+            
+            $userRanking = [
+                'rank' => $rank,
+                'total_groups' => $totalGroups,
+                'score' => $userScore,
+                'skor' => $userScore
+            ];
+        }
+        
+        if ($kelompok) {
+            $laporanCount = LaporanKaryawan::where('kelompok_id', $kelompok->id)->count();
+            $jobsCount = JobPekerjaan::where('kelompok_id', $kelompok->id)->count();
+            $recentLaporan = LaporanKaryawan::where('kelompok_id', $kelompok->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+            $recentJobs = JobPekerjaan::where('kelompok_id', $kelompok->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+            
+            // Get prediksi if exists
+            $prediksis = collect([]); // You can add prediksi logic here if needed
+        } else {
+            $laporanCount = 0;
+            $jobsCount = 0;
+            $recentLaporan = collect([]);
+            $recentJobs = collect([]);
+            $prediksis = collect([]);
+        }
+        
+        return view('dashboard.kelompok.index', compact('performanceData', 'kelompok', 'laporanCount', 'jobsCount', 'recentLaporan', 'recentJobs', 'prediksis', 'userRanking'));
+    }
+    
+    /**
+     * Get performance data for all kelompok
+     * Calculate based on: Laporan (40%), Rata-rata waktu penyelesaian (30%), Konsistensi (30%)
+     */
+    private function getAllKelompokPerformance()
+    {
+        try {
+            $kelompoks = Kelompok::all();
+            $performanceData = [];
+            
+            // Get total laporan per kelompok (bulan ini)
+            $totalLaporanPerKelompok = LaporanKaryawan::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('kelompok_id')
+                ->pluck('total', 'kelompok_id')
+                ->toArray();
+            
+            // Get total job per kelompok (bulan ini)
+            $totalJobPerKelompok = JobPekerjaan::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('kelompok_id')
+                ->pluck('total', 'kelompok_id')
+                ->toArray();
+            
+            // Get max values for normalization
+            $maxLaporan = !empty($totalLaporanPerKelompok) ? max($totalLaporanPerKelompok) : 1;
+            $maxJob = !empty($totalJobPerKelompok) ? max($totalJobPerKelompok) : 1;
+            
+            // Get rata-rata waktu penyelesaian per kelompok
+            $avgWaktuPerKelompok = JobPekerjaan::where('waktu_penyelesaian', '>', 0)
+                ->select('kelompok_id', DB::raw('AVG(waktu_penyelesaian) as avg_waktu'))
+                ->groupBy('kelompok_id')
+                ->pluck('avg_waktu', 'kelompok_id')
+                ->toArray();
+            
+            $maxWaktu = !empty($avgWaktuPerKelompok) ? max($avgWaktuPerKelompok) : 1;
+            
+            // Get konsistensi (laporan hari ini dan minggu ini)
+            $laporanHariIniPerKelompok = LaporanKaryawan::whereDate('created_at', today())
+                ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('kelompok_id')
+                ->pluck('total', 'kelompok_id')
+                ->toArray();
+            
+            $laporanMingguIniPerKelompok = LaporanKaryawan::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+                ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+                ->groupBy('kelompok_id')
+                ->pluck('total', 'kelompok_id')
+                ->toArray();
+            
+            $maxHariIni = !empty($laporanHariIniPerKelompok) ? max($laporanHariIniPerKelompok) : 1;
+            $maxMingguIni = !empty($laporanMingguIniPerKelompok) ? max($laporanMingguIniPerKelompok) : 1;
+            
+            foreach ($kelompoks as $kelompok) {
+                $score = 0;
+                
+                // 1. Laporan (40% weight) - total laporan bulan ini
+                $totalLaporan = $totalLaporanPerKelompok[$kelompok->id] ?? 0;
+                $laporanScore = ($totalLaporan / $maxLaporan) * 100;
+                $score += $laporanScore * 0.4;
+                
+                // 2. Rata-rata waktu penyelesaian (30% weight) - lower is better
+                $avgWaktu = $avgWaktuPerKelompok[$kelompok->id] ?? 0;
+                
+                if ($avgWaktu > 0 && $maxWaktu > 0) {
+                    // Invert: lower time = higher score
+                    // Scale: 0 jam = 100, maxWaktu jam = 0
+                    $waktuScore = max(0, 100 - (($avgWaktu / $maxWaktu) * 100));
+                    $score += $waktuScore * 0.3;
+                } else {
+                    // No data, give neutral score (50% of 30% = 15%)
+                    $score += 50 * 0.3;
+                }
+                
+                // 3. Konsistensi (30% weight) - laporan hari ini dan minggu ini
+                $laporanHariIni = $laporanHariIniPerKelompok[$kelompok->id] ?? 0;
+                $laporanMingguIni = $laporanMingguIniPerKelompok[$kelompok->id] ?? 0;
+                
+                $hariScore = ($maxHariIni > 0) ? ($laporanHariIni / $maxHariIni) * 50 : 0;
+                $mingguScore = ($maxMingguIni > 0) ? ($laporanMingguIni / $maxMingguIni) * 50 : 0;
+                $consistencyScore = $hariScore + $mingguScore;
+                $score += $consistencyScore * 0.3;
+                
+                // Cap score at 0-100
+                $finalScore = min(100, max(0, $score));
+                
+                $performanceData[] = [
+                    'nama' => $kelompok->nama_kelompok,
+                    'skor' => round($finalScore, 2)
+                ];
+            }
+            
+            // Sort by score descending
+            usort($performanceData, function($a, $b) {
+                return $b['skor'] <=> $a['skor'];
+            });
+            
+            return $performanceData;
+            
+        } catch (\Exception $e) {
+            // Log error and return empty array
+            \Log::error('Error calculating kelompok performance: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -179,6 +346,28 @@ class DashboardController extends Controller
                 ]);
             }
 
+            // Get performance ranking - ensure it always returns data
+            $performanceRanking = $this->getGroupPerformanceRanking($kelompok->id);
+            
+            // Ensure ranking_data is always present and not empty
+            if (empty($performanceRanking['ranking_data'])) {
+                // Fallback: create basic ranking data from all kelompok
+                $allKelompoks = Kelompok::all();
+                $performanceRanking['ranking_data'] = [];
+                foreach ($allKelompoks as $k) {
+                    $score = $this->calculatePerformanceScore($k->id);
+                    $performanceRanking['ranking_data'][] = [
+                        'id' => $k->id,
+                        'nama' => $k->nama_kelompok,
+                        'score' => round($score, 2)
+                    ];
+                }
+                // Sort by score
+                usort($performanceRanking['ranking_data'], function($a, $b) {
+                    return $b['score'] <=> $a['score'];
+                });
+            }
+
             $stats = [
                 // Group info
                 'nama_kelompok' => $kelompok->nama_kelompok,
@@ -197,9 +386,9 @@ class DashboardController extends Controller
                     ->whereDate('created_at', '<', now()->subDays(1))->count(),
                 
                 // Performance metrics
-                'avg_waktu_penyelesaian' => 0, // Will be calculated when waktu_penyelesaian column is added
+                'avg_waktu_penyelesaian' => $this->calculateAvgWaktuPenyelesaian($kelompok->id),
                 
-                'performance_ranking' => $this->getGroupPerformanceRanking($kelompok->id),
+                'performance_ranking' => $performanceRanking,
                 'monthly_performance' => $this->getGroupMonthlyPerformance($kelompok->id),
                 
                 // Job statistics
@@ -215,6 +404,7 @@ class DashboardController extends Controller
             return response()->json(['stats' => $stats]);
 
         } catch (\Exception $e) {
+            \Log::error('Error in getKelompokStats: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -333,16 +523,166 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get group performance ranking
+     * Get group performance ranking based on real performance metrics
      */
     private function getGroupPerformanceRanking($kelompokId)
     {
-        // For now, return default ranking since waktu_penyelesaian column doesn't exist
-        return [
-            'rank' => 1,
-            'total_groups' => Kelompok::count(),
-            'avg_time' => 0
-        ];
+        try {
+            // Get all kelompok with their performance scores
+            $kelompoks = Kelompok::with(['karyawan'])->get();
+            
+            $performances = [];
+            
+            foreach ($kelompoks as $kelompok) {
+                // Calculate performance score (0-100)
+                $score = $this->calculatePerformanceScore($kelompok->id);
+                
+                $performances[] = [
+                    'id' => $kelompok->id,
+                    'nama' => $kelompok->nama_kelompok,
+                    'score' => $score
+                ];
+            }
+            
+            // Sort by score descending (higher score = better)
+            usort($performances, function($a, $b) {
+                return $b['score'] <=> $a['score'];
+            });
+            
+            // Find current kelompok rank
+            $rank = 1;
+            foreach ($performances as $index => $perf) {
+                if ($perf['id'] == $kelompokId) {
+                    $rank = $index + 1;
+                    break;
+                }
+            }
+            
+            // Calculate average time for this kelompok
+            $avgTime = $this->calculateAvgWaktuPenyelesaian($kelompokId);
+            
+            // Find current kelompok score
+            $currentIndex = array_search($kelompokId, array_column($performances, 'id'));
+            $currentScore = $currentIndex !== false ? $performances[$currentIndex]['score'] : 0;
+            
+            return [
+                'rank' => $rank,
+                'total_groups' => count($performances),
+                'avg_time' => round($avgTime, 1),
+                'score' => round($currentScore, 2),
+                'id' => $kelompokId, // Current kelompok ID for highlighting
+                'ranking_data' => $performances // For chart data
+            ];
+            
+        } catch (\Exception $e) {
+            // Get all kelompok for fallback data
+            $kelompoks = Kelompok::all();
+            $performances = [];
+            
+            foreach ($kelompoks as $kelompok) {
+                $performances[] = [
+                    'id' => $kelompok->id,
+                    'nama' => $kelompok->nama_kelompok,
+                    'score' => 0
+                ];
+            }
+            
+            return [
+                'rank' => 1,
+                'total_groups' => count($performances) ?: Kelompok::count(),
+                'avg_time' => 0,
+                'score' => 0,
+                'id' => $kelompokId,
+                'ranking_data' => $performances
+            ];
+        }
+    }
+    
+    /**
+     * Calculate performance score for a kelompok (0-100)
+     * Based on: laporan count (40%), waktu penyelesaian (30%), consistency (30%)
+     */
+    private function calculatePerformanceScore($kelompokId)
+    {
+        $score = 0;
+        
+        // 1. Laporan count (40% weight) - bulan ini
+        $laporanBulanIni = LaporanKaryawan::where('kelompok_id', $kelompokId)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+        
+        // Get max laporan count for normalization
+        $maxLaporan = LaporanKaryawan::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('kelompok_id')
+            ->max('total') ?: 1;
+        
+        $laporanScore = ($laporanBulanIni / $maxLaporan) * 100;
+        $score += $laporanScore * 0.4;
+        
+        // 2. Average waktu penyelesaian (30% weight) - lower is better (in days)
+        $avgWaktu = $this->calculateAvgWaktuPenyelesaian($kelompokId);
+        if ($avgWaktu > 0) {
+            // Invert: lower time = higher score
+            // Assume max time is 7 days, so 0 days = 100, 7+ days = 0
+            // Scale: 0 hari = 100, 7 hari = 0
+            $waktuScore = max(0, 100 - (($avgWaktu / 7) * 100));
+            $score += $waktuScore * 0.3;
+        } else {
+            // No data, give neutral score (50% of 30% = 15%)
+            $score += 50 * 0.3;
+        }
+        
+        // 3. Consistency (30% weight) - laporan hari ini dan minggu ini
+        $laporanHariIni = LaporanKaryawan::where('kelompok_id', $kelompokId)
+            ->whereDate('created_at', today())
+            ->count();
+        
+        $laporanMingguIni = LaporanKaryawan::where('kelompok_id', $kelompokId)
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->count();
+        
+        // Max for normalization
+        $maxHariIni = LaporanKaryawan::whereDate('created_at', today())
+            ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('kelompok_id')
+            ->max('total') ?: 1;
+            
+        $maxMingguIni = LaporanKaryawan::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->select('kelompok_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('kelompok_id')
+            ->max('total') ?: 1;
+        
+        $hariScore = ($laporanHariIni / $maxHariIni) * 50;
+        $mingguScore = ($laporanMingguIni / $maxMingguIni) * 50;
+        $consistencyScore = $hariScore + $mingguScore;
+        $score += $consistencyScore * 0.3;
+        
+        return min(100, max(0, $score)); // Cap at 0-100
+    }
+    
+    /**
+     * Calculate average waktu penyelesaian for a kelompok
+     * waktu_penyelesaian is in hours, convert to days (divide by 24)
+     */
+    private function calculateAvgWaktuPenyelesaian($kelompokId)
+    {
+        try {
+            $avgWaktuHours = JobPekerjaan::where('kelompok_id', $kelompokId)
+                ->where('waktu_penyelesaian', '>', 0)
+                ->avg('waktu_penyelesaian');
+            
+            if ($avgWaktuHours > 0) {
+                // Convert hours to days
+                return $avgWaktuHours / 24;
+            }
+            
+            return 0;
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     /**

@@ -11,9 +11,66 @@ use Illuminate\Support\Str;
 
 class LaporanKaryawanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('dashboard.kelompok.laporan');
+        $user = Auth::user();
+        
+        // Base query for statistics (without filters)
+        $baseQuery = LaporanKaryawan::query();
+        
+        // If user is karyawan, only show their group's reports
+        if ($user->isKaryawan() && $user->kelompok_id) {
+            $baseQuery->where('kelompok_id', $user->kelompok_id);
+        }
+        
+        // Calculate statistics (without filters)
+        $totalLaporan = (clone $baseQuery)->count();
+        $laporanHariIni = (clone $baseQuery)->whereDate('tanggal', today())->count();
+        $laporanBulanIni = (clone $baseQuery)
+            ->whereMonth('tanggal', now()->month)
+            ->whereYear('tanggal', now()->year)
+            ->count();
+        
+        // Query for paginated data (with filters)
+        $query = LaporanKaryawan::with('kelompok');
+
+        // If user is karyawan, only show their group's reports
+        if ($user->isKaryawan() && $user->kelompok_id) {
+            $query->where('kelompok_id', $user->kelompok_id);
+        }
+
+        // Apply filters
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tanggal', $request->tanggal);
+        }
+
+        if ($request->filled('hari')) {
+            $query->where('hari', $request->hari);
+        }
+
+        if ($request->filled('nama')) {
+            $query->where('nama', 'like', '%' . $request->nama . '%');
+        }
+
+        if ($request->filled('instansi')) {
+            $query->where('instansi', 'like', '%' . $request->instansi . '%');
+        }
+
+        if ($request->filled('alamat_tujuan')) {
+            $query->where('alamat_tujuan', 'like', '%' . $request->alamat_tujuan . '%');
+        }
+
+        $laporans = $query->orderBy('tanggal', 'desc')
+                         ->orderBy('created_at', 'desc')
+                         ->paginate(10);
+
+        $statistics = [
+            'totalLaporan' => $totalLaporan,
+            'laporanHariIni' => $laporanHariIni,
+            'laporanBulanIni' => $laporanBulanIni,
+        ];
+
+        return view('dashboard.kelompok.laporan', compact('laporans', 'statistics'));
     }
 
     public function getLaporans()

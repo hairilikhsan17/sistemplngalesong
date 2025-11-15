@@ -19,50 +19,50 @@
 </div>
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-3 sm:px-0">
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                 <div class="flex items-center">
                     <div class="p-2 bg-blue-100 rounded-lg">
                         <i data-lucide="zap" class="w-6 h-6 text-blue-600"></i>
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Total Job Pekerjaan</p>
-                        <p class="text-2xl font-bold text-gray-900" id="total-jobs">0</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $statistics['totalJob'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                 <div class="flex items-center">
                     <div class="p-2 bg-green-100 rounded-lg">
                         <i data-lucide="clock" class="w-6 h-6 text-green-600"></i>
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Total Waktu (jam)</p>
-                        <p class="text-2xl font-bold text-gray-900" id="total-waktu">0</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ number_format($statistics['totalWaktu'] ?? 0, 1) }}</p>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                 <div class="flex items-center">
                     <div class="p-2 bg-yellow-100 rounded-lg">
                         <i data-lucide="calendar" class="w-6 h-6 text-yellow-600"></i>
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Hari Ini</p>
-                        <p class="text-2xl font-bold text-gray-900" id="today-jobs">0</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $statistics['hariIni'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                 <div class="flex items-center">
                     <div class="p-2 bg-red-100 rounded-lg">
                         <i data-lucide="map-pin" class="w-6 h-6 text-red-600"></i>
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600">Lokasi Berbeda</p>
-                        <p class="text-2xl font-bold text-gray-900" id="total-lokasi">0</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $statistics['lokasiBerbeda'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -72,32 +72,37 @@
         <div class="bg-white rounded-lg shadow mb-4 sm:mb-6 mx-3 sm:mx-0">
             <div class="p-4 sm:p-6">
                 <div class="flex flex-col md:flex-row gap-3 sm:gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cari Job</label>
-                        <input type="text" id="search-input" placeholder="Cari berdasarkan lokasi atau hari..."
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile">
-                    </div>
-                    <div class="w-full md:w-48">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Hari</label>
-                        <select id="day-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile">
-                            <option value="">Semua Hari</option>
-                            <option value="Senin">Senin</option>
-                            <option value="Selasa">Selasa</option>
-                            <option value="Rabu">Rabu</option>
-                            <option value="Kamis">Kamis</option>
-                            <option value="Jumat">Jumat</option>
-                            <option value="Sabtu">Sabtu</option>
-                            <option value="Minggu">Minggu</option>
-                        </select>
-                    </div>
-                    <div class="w-full md:w-32">
-                        <label class="block text-sm font-medium text-gray-700 mb-2 md:hidden">Aksi</label>
-                        <button onclick="loadJobs()" 
-                                class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors min-h-[44px] flex items-center justify-center">
-                            <i data-lucide="search" class="w-4 h-4 mr-2 md:mr-0 md:mx-auto"></i>
-                            <span class="md:hidden">Cari</span>
-                        </button>
-                    </div>
+                    <form method="GET" action="{{ route('kelompok.job-pekerjaan') }}" class="flex flex-col md:flex-row gap-3 sm:gap-4 w-full">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Cari Job</label>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan lokasi atau hari..."
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile">
+                        </div>
+                        <div class="w-full md:w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Hari</label>
+                            <select name="day" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent form-input-mobile">
+                                <option value="">Semua Hari</option>
+                                <option value="Senin" {{ request('day') == 'Senin' ? 'selected' : '' }}>Senin</option>
+                                <option value="Selasa" {{ request('day') == 'Selasa' ? 'selected' : '' }}>Selasa</option>
+                                <option value="Rabu" {{ request('day') == 'Rabu' ? 'selected' : '' }}>Rabu</option>
+                                <option value="Kamis" {{ request('day') == 'Kamis' ? 'selected' : '' }}>Kamis</option>
+                                <option value="Jumat" {{ request('day') == 'Jumat' ? 'selected' : '' }}>Jumat</option>
+                                <option value="Sabtu" {{ request('day') == 'Sabtu' ? 'selected' : '' }}>Sabtu</option>
+                                <option value="Minggu" {{ request('day') == 'Minggu' ? 'selected' : '' }}>Minggu</option>
+                            </select>
+                        </div>
+                        <div class="w-full md:w-48 flex items-end gap-2">
+                            <button type="submit" 
+                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors min-h-[44px] flex items-center justify-center shadow-md hover:shadow-lg">
+                                <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                                <span>Cari</span>
+                            </button>
+                            <a href="{{ route('kelompok.job-pekerjaan') }}" 
+                               class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors min-h-[44px] flex items-center justify-center shadow-md hover:shadow-lg">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -111,34 +116,236 @@
                 <div class="inline-block min-w-full align-middle">
                     <div class="overflow-hidden">
                         <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hari</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perbaikan KWH</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pemeliharaan Pengkabelan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pengecekan Gardu</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penanganan Gangguan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu (jam)</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Tanggal</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Hari</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Perbaikan KWH</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Pemeliharaan Pengkabelan</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Pengecekan Gardu</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Penanganan Gangguan</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu (jam)</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="jobs-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Data will be loaded here -->
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($jobPekerjaans as $index => $job)
+                            <tr class="hover:bg-blue-50/50 transition-colors border-b border-gray-100">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                                        {{ $jobPekerjaans->firstItem() + $index }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($job->tanggal)->locale('id')->isoFormat('DD MMM YYYY') }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="calendar-days" class="w-4 h-4 text-purple-600"></i>
+                                        <span class="text-sm font-medium text-gray-900">{{ $job->hari }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                    <div class="truncate" title="{{ $job->perbaikan_kwh }}">
+                                        <i data-lucide="zap" class="w-4 h-4 text-yellow-600 inline mr-1"></i>
+                                        {{ Str::limit($job->perbaikan_kwh, 40) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                    <div class="truncate" title="{{ $job->pemeliharaan_pengkabelan }}">
+                                        <i data-lucide="cable" class="w-4 h-4 text-orange-600 inline mr-1"></i>
+                                        {{ Str::limit($job->pemeliharaan_pengkabelan, 40) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                    <div class="truncate" title="{{ $job->pengecekan_gardu }}">
+                                        <i data-lucide="building" class="w-4 h-4 text-green-600 inline mr-1"></i>
+                                        {{ Str::limit($job->pengecekan_gardu, 40) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                    <div class="truncate" title="{{ $job->penanganan_gangguan }}">
+                                        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600 inline mr-1"></i>
+                                        {{ Str::limit($job->penanganan_gangguan, 40) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-red-600 flex-shrink-0"></i>
+                                        <span class="line-clamp-2">{{ Str::limit($job->lokasi, 50) }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i>
+                                        <span class="font-medium">{{ $job->waktu_penyelesaian }} jam</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <!-- View Button - Lebih Kentara -->
+                                        <button onclick="viewJob('{{ $job->id }}')" 
+                                                class="inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-green-600"
+                                                title="Lihat Detail">
+                                            <i data-lucide="eye" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                        </button>
+                                        
+                                        <!-- Edit Button - Lebih Kentara -->
+                                        <button onclick="editJob('{{ $job->id }}')" 
+                                                class="inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-blue-600"
+                                                title="Edit Job">
+                                            <i data-lucide="edit-2" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                        </button>
+                                        
+                                        <!-- Delete Button - Lebih Kentara -->
+                                        <button onclick="deleteJob('{{ $job->id }}')" 
+                                                class="inline-flex items-center justify-center w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-red-600"
+                                                title="Hapus Job">
+                                            <i data-lucide="trash-2" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div class="p-4 bg-gray-100 rounded-full mb-4">
+                                            <i data-lucide="briefcase" class="w-16 h-16 text-gray-400"></i>
+                                        </div>
+                                        <p class="text-gray-700 text-lg font-semibold mb-2">Belum ada job pekerjaan</p>
+                                        <p class="text-gray-500 text-sm mb-4">Mulai dengan membuat job pekerjaan pertama Anda</p>
+                                        <button onclick="openCreateModal()" 
+                                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                            Tambah Job Pertama
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
-            <div id="loading-spinner" class="hidden p-8 text-center">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p class="mt-2 text-gray-600">Memuat data...</p>
+        </div>
+        
+        <!-- Pagination -->
+        @if($jobPekerjaans->hasPages())
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                @if($jobPekerjaans->onFirstPage())
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Sebelumnya
+                    </span>
+                @else
+                    <a href="{{ $jobPekerjaans->appends(request()->except('page'))->previousPageUrl() }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Sebelumnya
+                    </a>
+                @endif
+                
+                @if($jobPekerjaans->hasMorePages())
+                    <a href="{{ $jobPekerjaans->appends(request()->except('page'))->nextPageUrl() }}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Selanjutnya
+                    </a>
+                @else
+                    <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Selanjutnya
+                    </span>
+                @endif
             </div>
-            <div id="no-data" class="hidden p-8 text-center text-gray-500">
-                <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-4 text-gray-400"></i>
-                <p>Tidak ada data job pekerjaan</p>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Menampilkan
+                        <span class="font-medium">{{ $jobPekerjaans->firstItem() ?? 0 }}</span>
+                        sampai
+                        <span class="font-medium">{{ $jobPekerjaans->lastItem() ?? 0 }}</span>
+                        dari
+                        <span class="font-medium">{{ $jobPekerjaans->total() }}</span>
+                        hasil
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        @if($jobPekerjaans->onFirstPage())
+                            <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </span>
+                        @else
+                            <a href="{{ $jobPekerjaans->appends(request()->except('page'))->previousPageUrl() }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </a>
+                        @endif
+                        
+                        @php
+                            $currentPage = $jobPekerjaans->currentPage();
+                            $lastPage = $jobPekerjaans->lastPage();
+                            $start = max(1, $currentPage - 2);
+                            $end = min($lastPage, $currentPage + 2);
+                        @endphp
+                        
+                        @if($start > 1)
+                            <a href="{{ $jobPekerjaans->appends(request()->except('page'))->url(1) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                1
+                            </a>
+                            @if($start > 2)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            @endif
+                        @endif
+                        
+                        @for($page = $start; $page <= $end; $page++)
+                            @if($page == $currentPage)
+                            <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                                {{ $page }}
+                            </span>
+                            @else
+                            <a href="{{ $jobPekerjaans->appends(request()->except('page'))->url($page) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ $page }}
+                            </a>
+                            @endif
+                        @endfor
+                        
+                        @if($end < $lastPage)
+                            @if($end < $lastPage - 1)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
+                                </span>
+                            @endif
+                            <a href="{{ $jobPekerjaans->appends(request()->except('page'))->url($lastPage) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ $lastPage }}
+                            </a>
+                        @endif
+                        
+                        @if($jobPekerjaans->hasMorePages())
+                            <a href="{{ $jobPekerjaans->appends(request()->except('page'))->nextPageUrl() }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </a>
+                        @else
+                            <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </span>
+                        @endif
+                    </nav>
+                </div>
             </div>
         </div>
+        @endif
     </div>
 </div>
 
@@ -288,15 +495,19 @@ let isEditMode = false;
 
 // Load jobs on page load
 document.addEventListener('DOMContentLoaded', function() {
-    loadJobs();
+    // Data is already loaded from server-side, no need to call loadJobs()
+    // loadJobs(); 
     setupEventListeners();
+    
+    // Reinitialize lucide icons
+    setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }, 100);
 });
 
 function setupEventListeners() {
-    // Search functionality
-    document.getElementById('search-input').addEventListener('input', debounce(loadJobs, 300));
-    document.getElementById('day-filter').addEventListener('change', loadJobs);
-    
     // Form submission
     document.getElementById('job-form').addEventListener('submit', handleFormSubmit);
 }
@@ -475,79 +686,113 @@ function openCreateModal() {
 }
 
 function editJob(jobId) {
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
+    // Load job data from API
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     window.csrfToken || 
+                     document.querySelector('input[name="_token"]')?.value;
     
-    isEditMode = true;
-    currentJobId = jobId;
-    document.getElementById('modal-title').textContent = 'Edit Job Pekerjaan';
-    document.getElementById('submit-btn').textContent = 'Update';
-    
-    // Fill form with job data
-    document.getElementById('tanggal').value = job.tanggal;
-    document.getElementById('hari').value = job.hari || '';
-    document.getElementById('lokasi').value = job.lokasi;
-    document.getElementById('perbaikan_kwh').value = job.perbaikan_kwh;
-    document.getElementById('pemeliharaan_pengkabelan').value = job.pemeliharaan_pengkabelan;
-    document.getElementById('pengecekan_gardu').value = job.pengecekan_gardu;
-    document.getElementById('penanganan_gangguan').value = job.penanganan_gangguan;
-    document.getElementById('waktu_penyelesaian').value = job.waktu_penyelesaian;
-    
-    document.getElementById('job-modal').classList.remove('hidden');
+    fetch(`/api/job-pekerjaan/${jobId}`, {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(job => {
+        isEditMode = true;
+        currentJobId = jobId;
+        document.getElementById('modal-title').textContent = 'Edit Job Pekerjaan';
+        document.getElementById('submit-btn').textContent = 'Update';
+        
+        // Fill form with job data
+        document.getElementById('tanggal').value = job.tanggal ? job.tanggal.split('T')[0] : '';
+        document.getElementById('hari').value = job.hari || '';
+        document.getElementById('lokasi').value = job.lokasi || '';
+        document.getElementById('perbaikan_kwh').value = job.perbaikan_kwh || '';
+        document.getElementById('pemeliharaan_pengkabelan').value = job.pemeliharaan_pengkabelan || '';
+        document.getElementById('pengecekan_gardu').value = job.pengecekan_gardu || '';
+        document.getElementById('penanganan_gangguan').value = job.penanganan_gangguan || '';
+        document.getElementById('waktu_penyelesaian').value = job.waktu_penyelesaian || '';
+        
+        document.getElementById('job-modal').classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error loading job:', error);
+        showError('Gagal memuat data job pekerjaan');
+    });
 }
 
 function viewJob(jobId) {
-    const job = jobs.find(j => j.id === jobId);
-    if (!job) return;
+    // Load job data from API
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     window.csrfToken || 
+                     document.querySelector('input[name="_token"]')?.value;
     
-    const content = `
-        <div class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Tanggal</label>
-                    <p class="text-gray-900 font-medium">${formatDate(job.tanggal)}</p>
+    fetch(`/api/job-pekerjaan/${jobId}`, {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(job => {
+        const content = `
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Tanggal</label>
+                        <p class="text-gray-900 font-medium">${formatDate(job.tanggal)}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Hari</label>
+                        <p class="text-gray-900 font-medium">${job.hari || '-'}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Lokasi</label>
+                        <p class="text-gray-900 font-medium">${job.lokasi || '-'}</p>
+                    </div>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Hari</label>
-                    <p class="text-gray-900 font-medium">${job.hari || '-'}</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Lokasi</label>
-                    <p class="text-gray-900 font-medium">${job.lokasi}</p>
+                
+                <div class="space-y-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Perbaikan KWH</label>
+                        <p class="text-gray-900">${job.perbaikan_kwh || '-'}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Pemeliharaan Pengkabelan</label>
+                        <p class="text-gray-900">${job.pemeliharaan_pengkabelan || '-'}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Pengecekan Gardu</label>
+                        <p class="text-gray-900">${job.pengecekan_gardu || '-'}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Penanganan Gangguan</label>
+                        <p class="text-gray-900">${job.penanganan_gangguan || '-'}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Waktu Penyelesaian</label>
+                        <p class="text-gray-900 font-medium">${job.waktu_penyelesaian || 0} jam</p>
+                    </div>
                 </div>
             </div>
-            
-            <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Perbaikan KWH</label>
-                    <p class="text-gray-900">${job.perbaikan_kwh}</p>
-                </div>
-                
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Pemeliharaan Pengkabelan</label>
-                    <p class="text-gray-900">${job.pemeliharaan_pengkabelan}</p>
-                </div>
-                
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Pengecekan Gardu</label>
-                    <p class="text-gray-900">${job.pengecekan_gardu}</p>
-                </div>
-                
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Penanganan Gangguan</label>
-                    <p class="text-gray-900">${job.penanganan_gangguan}</p>
-                </div>
-                
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <label class="block text-sm font-medium text-gray-600 mb-2">Waktu Penyelesaian</label>
-                    <p class="text-gray-900 font-medium">${job.waktu_penyelesaian} jam</p>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('view-modal-content').innerHTML = content;
-    document.getElementById('view-modal').classList.remove('hidden');
+        `;
+        
+        document.getElementById('view-modal-content').innerHTML = content;
+        document.getElementById('view-modal').classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error loading job:', error);
+        showError('Gagal memuat data job pekerjaan');
+    });
 }
 
 function deleteJob(jobId) {
@@ -661,8 +906,11 @@ function confirmDeleteJob() {
         // Check for success in various response formats
         if (data.success === true || data.success === 'true' || data.id) {
             showSuccess('Job pekerjaan berhasil dihapus');
-            loadJobs();
             closeDeleteModal();
+            // Reload page to refresh server-side pagination
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             showError(data.message || data.error || 'Gagal menghapus job pekerjaan');
         }
@@ -713,7 +961,10 @@ function handleFormSubmit(e) {
         if (data.id || data.success) {
             showSuccess(isEditMode ? 'Job pekerjaan berhasil diupdate' : 'Job pekerjaan berhasil ditambahkan');
             closeModal();
-            loadJobs();
+            // Reload page to refresh server-side pagination
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             showError(data.error || 'Terjadi kesalahan');
         }

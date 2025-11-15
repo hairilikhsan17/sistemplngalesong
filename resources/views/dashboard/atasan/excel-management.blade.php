@@ -3,93 +3,124 @@
 @section('title', 'Manajemen Excel')
 
 @section('content')
-<div class="p-6" x-data="excelManagement()">
+<div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen" x-data="excelManagement()">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Manajemen Excel</h1>
-        <p class="text-gray-600 mt-2">Kelola upload data dan pembuatan file Excel template</p>
+        <div class="flex items-center space-x-4 mb-4">
+            <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <i data-lucide="file-spreadsheet" class="w-8 h-8 text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Manajemen Excel
+                </h1>
+                <p class="text-gray-600 mt-2 text-lg">Kelola upload data dan pembuatan file Excel template</p>
+            </div>
+        </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Action Cards & Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Upload Data -->
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-blue-200">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                    <div class="p-3 bg-blue-100 rounded-lg">
-                        <i data-lucide="upload" class="w-6 h-6 text-blue-600"></i>
+                    <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md">
+                        <i data-lucide="upload" class="w-6 h-6 text-white"></i>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Upload Data</h3>
+                        <h3 class="text-lg font-bold text-gray-900">Upload Data</h3>
                         <p class="text-sm text-gray-600">Upload data dari file Excel</p>
                     </div>
                 </div>
             </div>
-            <a href="{{ route('atasan.excel.upload') }}" 
-               class="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+            <button @click="showUploadModal = true" 
+                    class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg font-semibold transform hover:scale-105">
+                <i data-lucide="upload-cloud" class="w-4 h-4 inline mr-2"></i>
                 Upload Excel
-            </a>
+            </button>
         </div>
 
-        <!-- Create Template -->
-        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
-                    <div class="p-3 bg-green-100 rounded-lg">
-                        <i data-lucide="file-plus" class="w-6 h-6 text-green-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Buat Template</h3>
-                        <p class="text-sm text-gray-600">Buat file Excel template baru</p>
-                    </div>
+        <!-- Statistics Cards -->
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border border-purple-200">
+            <div class="flex items-center mb-4">
+                <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md">
+                    <i data-lucide="bar-chart-3" class="w-6 h-6 text-white"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-gray-900">Statistik</h3>
+                    <p class="text-sm text-gray-600">Ringkasan data Excel</p>
                 </div>
             </div>
-            <a href="{{ route('atasan.excel.create') }}" 
-               class="block w-full bg-green-600 text-white text-center py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                Buat Template
-            </a>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center bg-white/60 rounded-lg px-3 py-2 backdrop-blur-sm">
+                    <span class="text-sm font-medium text-gray-700">Total File:</span>
+                    <span class="text-lg font-bold text-purple-600" x-text="totalFiles"></span>
+                </div>
+                <div class="flex justify-between items-center bg-white/60 rounded-lg px-3 py-2 backdrop-blur-sm">
+                    <span class="text-sm font-medium text-gray-700">Laporan Karyawan:</span>
+                    <span class="text-lg font-bold text-green-600" x-text="laporanCount"></span>
+                </div>
+                <div class="flex justify-between items-center bg-white/60 rounded-lg px-3 py-2 backdrop-blur-sm">
+                    <span class="text-sm font-medium text-gray-700">Job Pekerjaan:</span>
+                    <span class="text-lg font-bold text-orange-600" x-text="jobCount"></span>
+                </div>
+            </div>
         </div>
 
-        <!-- Statistics -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
-                    <div class="p-3 bg-purple-100 rounded-lg">
-                        <i data-lucide="bar-chart-3" class="w-6 h-6 text-purple-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Statistik</h3>
-                        <p class="text-sm text-gray-600">Ringkasan data Excel</p>
-                    </div>
+        <!-- Quick Stats Card 1 -->
+        <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg p-6 border border-green-200">
+            <div class="flex items-center mb-4">
+                <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-md">
+                    <i data-lucide="file-check" class="w-6 h-6 text-white"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-gray-900">Laporan</h3>
+                    <p class="text-sm text-gray-600">File Laporan Karyawan</p>
                 </div>
             </div>
-            <div class="space-y-2">
-                <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Total File:</span>
-                    <span class="text-sm font-medium" x-text="totalFiles"></span>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-600" x-text="filteredLaporanFiles.length"></div>
+                <p class="text-xs text-gray-600 mt-1">File tersedia</p>
+            </div>
+        </div>
+
+        <!-- Quick Stats Card 2 -->
+        <div class="bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg p-6 border border-orange-200">
+            <div class="flex items-center mb-4">
+                <div class="p-3 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl shadow-md">
+                    <i data-lucide="briefcase" class="w-6 h-6 text-white"></i>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Template:</span>
-                    <span class="text-sm font-medium" x-text="templateCount"></span>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-gray-900">Job</h3>
+                    <p class="text-sm text-gray-600">File Job Pekerjaan</p>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Upload:</span>
-                    <span class="text-sm font-medium" x-text="uploadCount"></span>
-                </div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-orange-600" x-text="filteredJobFiles.length"></div>
+                <p class="text-xs text-gray-600 mt-1">File tersedia</p>
             </div>
         </div>
     </div>
 
     <!-- Laporan Karyawan Files -->
-    <div class="bg-white rounded-lg shadow-md mb-6">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden border border-gray-200">
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-5">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">File Excel Terbaru Laporan Karyawan</h2>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="file-text" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">File Excel Terbaru Laporan Karyawan</h2>
+                        <p class="text-sm text-green-100">Kelola file Excel laporan karyawan</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
                     <!-- Filter Bulan -->
                     <select x-model="filterLaporan.bulan" 
                             @change="filterLaporanFiles()"
-                            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            class="px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm hover:bg-white transition-colors">
                         <option value="">Semua Bulan</option>
                         <option value="Januari">Januari</option>
                         <option value="Februari">Februari</option>
@@ -106,18 +137,24 @@
                     </select>
                     
                     <!-- Filter Tahun -->
-                    <select x-model="filterLaporan.tahun" 
-                            @change="filterLaporanFiles()"
-                            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Semua Tahun</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
+                    <div class="relative">
+                        <input type="number" 
+                               x-model="filterLaporan.tahun" 
+                               @input="filterLaporanFiles()"
+                               placeholder="Tahun (contoh: 2024)"
+                               min="2000"
+                               max="2100"
+                               class="px-4 py-2 pr-10 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm hover:bg-white transition-colors w-32">
+                        <button x-show="filterLaporan.tahun" 
+                                @click="filterLaporan.tahun = ''; filterLaporanFiles()"
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                     
                     <button @click="refreshLaporanFiles()" 
                             :disabled="loading"
-                            class="flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            class="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all">
                         <i data-lucide="refresh-cw" :class="loading ? 'animate-spin' : ''" class="w-4 h-4 mr-2"></i>
                         <span x-text="loading ? 'Loading...' : 'Refresh'"></span>
                     </button>
@@ -127,59 +164,69 @@
         
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Nama File
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Tipe
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Ukuran
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Dibuat
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Aksi
                         </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <template x-for="file in filteredLaporanFiles" :key="file.name">
-                        <tr>
+                        <tr class="hover:bg-green-50 transition-colors duration-150">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-600 mr-3"></i>
+                                    <div class="p-2 bg-green-100 rounded-lg mr-3">
+                                        <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-600"></i>
+                                    </div>
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900" x-text="file.name"></div>
+                                        <div class="text-sm font-semibold text-gray-900" x-text="file.name"></div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="file.type === 'template' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'"
-                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                                <span :class="file.type === 'template' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'"
+                                      class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full shadow-sm" 
                                       x-text="file.type === 'template' ? 'Template' : 'Upload'">
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatFileSize(file.size)">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm font-medium text-gray-700">
+                                    <i data-lucide="hard-drive" class="w-4 h-4 mr-2 text-gray-400"></i>
+                                    <span x-text="formatFileSize(file.size)"></span>
+                                </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatDate(file.created)">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-700">
+                                    <i data-lucide="calendar" class="w-4 h-4 mr-2 text-gray-400"></i>
+                                    <span x-text="formatDate(file.created)"></span>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-2">
+                                <div class="flex items-center justify-center space-x-2">
                                     <button @click="downloadFile(file.name)" 
-                                            class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 rounded-md transition-colors"
+                                            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                                             title="Download file">
-                                        <i data-lucide="download" class="w-4 h-4 mr-1"></i>
-                                        Download
+                                        <i data-lucide="download" class="w-4 h-4 mr-1.5"></i>
+                                        <span class="text-xs font-semibold">Download</span>
                                     </button>
                                     <button @click="deleteFile(file.name)" 
-                                            class="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-400 rounded-md transition-colors"
+                                            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                                             title="Hapus file">
-                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i>
-                                        Hapus
+                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i>
+                                        <span class="text-xs font-semibold">Hapus</span>
                                     </button>
                                 </div>
                             </td>
@@ -187,8 +234,13 @@
                     </template>
                     
                     <tr x-show="filteredLaporanFiles.length === 0">
-                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            Belum ada file Excel Laporan Karyawan
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="p-4 bg-gray-100 rounded-full mb-3">
+                                    <i data-lucide="file-x" class="w-8 h-8 text-gray-400"></i>
+                                </div>
+                                <p class="text-sm font-medium text-gray-500">Belum ada file Excel Laporan Karyawan</p>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -197,15 +249,23 @@
     </div>
 
     <!-- Job Pekerjaan Files -->
-    <div class="bg-white rounded-lg shadow-md mb-6">
-        <div class="px-6 py-4 border-b border-gray-200">
+    <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden border border-gray-200">
+        <div class="bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-5">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">File Excel Terbaru Job Pekerjaan</h2>
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="briefcase" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">File Excel Terbaru Job Pekerjaan</h2>
+                        <p class="text-sm text-orange-100">Kelola file Excel job pekerjaan</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
                     <!-- Filter Bulan -->
                     <select x-model="filterJob.bulan" 
                             @change="filterJobFiles()"
-                            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            class="px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm hover:bg-white transition-colors">
                         <option value="">Semua Bulan</option>
                         <option value="Januari">Januari</option>
                         <option value="Februari">Februari</option>
@@ -222,18 +282,24 @@
                     </select>
                     
                     <!-- Filter Tahun -->
-                    <select x-model="filterJob.tahun" 
-                            @change="filterJobFiles()"
-                            class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <option value="">Semua Tahun</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
+                    <div class="relative">
+                        <input type="number" 
+                               x-model="filterJob.tahun" 
+                               @input="filterJobFiles()"
+                               placeholder="Tahun (contoh: 2024)"
+                               min="2000"
+                               max="2100"
+                               class="px-4 py-2 pr-10 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm hover:bg-white transition-colors w-32">
+                        <button x-show="filterJob.tahun" 
+                                @click="filterJob.tahun = ''; filterJobFiles()"
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                     
                     <button @click="refreshJobFiles()" 
                             :disabled="loading"
-                            class="flex items-center text-sm text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed">
+                            class="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all">
                         <i data-lucide="refresh-cw" :class="loading ? 'animate-spin' : ''" class="w-4 h-4 mr-2"></i>
                         <span x-text="loading ? 'Loading...' : 'Refresh'"></span>
                     </button>
@@ -243,59 +309,69 @@
         
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Nama File
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Tipe
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Ukuran
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Dibuat
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                             Aksi
                         </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <template x-for="file in filteredJobFiles" :key="file.name">
-                        <tr>
+                        <tr class="hover:bg-orange-50 transition-colors duration-150">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <i data-lucide="file-spreadsheet" class="w-5 h-5 text-orange-600 mr-3"></i>
+                                    <div class="p-2 bg-orange-100 rounded-lg mr-3">
+                                        <i data-lucide="file-spreadsheet" class="w-5 h-5 text-orange-600"></i>
+                                    </div>
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900" x-text="file.name"></div>
+                                        <div class="text-sm font-semibold text-gray-900" x-text="file.name"></div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="file.type === 'template' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'"
-                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                                <span :class="file.type === 'template' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'"
+                                      class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full shadow-sm" 
                                       x-text="file.type === 'template' ? 'Template' : 'Upload'">
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatFileSize(file.size)">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm font-medium text-gray-700">
+                                    <i data-lucide="hard-drive" class="w-4 h-4 mr-2 text-gray-400"></i>
+                                    <span x-text="formatFileSize(file.size)"></span>
+                                </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatDate(file.created)">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-700">
+                                    <i data-lucide="calendar" class="w-4 h-4 mr-2 text-gray-400"></i>
+                                    <span x-text="formatDate(file.created)"></span>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex space-x-2">
+                                <div class="flex items-center justify-center space-x-2">
                                     <button @click="downloadFile(file.name)" 
-                                            class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 rounded-md transition-colors"
+                                            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                                             title="Download file">
-                                        <i data-lucide="download" class="w-4 h-4 mr-1"></i>
-                                        Download
+                                        <i data-lucide="download" class="w-4 h-4 mr-1.5"></i>
+                                        <span class="text-xs font-semibold">Download</span>
                                     </button>
                                     <button @click="deleteFile(file.name)" 
-                                            class="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-400 rounded-md transition-colors"
+                                            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
                                             title="Hapus file">
-                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i>
-                                        Hapus
+                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i>
+                                        <span class="text-xs font-semibold">Hapus</span>
                                     </button>
                                 </div>
                             </td>
@@ -303,8 +379,13 @@
                     </template>
                     
                     <tr x-show="filteredJobFiles.length === 0">
-                        <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            Belum ada file Excel Job Pekerjaan
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="p-4 bg-gray-100 rounded-full mb-3">
+                                    <i data-lucide="file-x" class="w-8 h-8 text-gray-400"></i>
+                                </div>
+                                <p class="text-sm font-medium text-gray-500">Belum ada file Excel Job Pekerjaan</p>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -312,132 +393,217 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Quick Upload -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Upload Cepat</h3>
-            <form @submit.prevent="quickUpload()" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">File Excel</label>
-                    <input type="file" 
-                           @change="handleFileSelect($event)"
-                           accept=".xlsx,.xls"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
-                        <select x-model="quickUploadData.bulan" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Bulan</option>
-                            <option value="Januari">Januari</option>
-                            <option value="Februari">Februari</option>
-                            <option value="Maret">Maret</option>
-                            <option value="April">April</option>
-                            <option value="Mei">Mei</option>
-                            <option value="Juni">Juni</option>
-                            <option value="Juli">Juli</option>
-                            <option value="Agustus">Agustus</option>
-                            <option value="September">September</option>
-                            <option value="Oktober">Oktober</option>
-                            <option value="November">November</option>
-                            <option value="Desember">Desember</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
-                        <input type="number" 
-                               x-model="quickUploadData.tahun"
-                               min="2020" max="2030"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Data</label>
-                    <select x-model="quickUploadData.jenis_data" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Pilih Jenis Data</option>
-                        <option value="laporan_karyawan">Laporan Karyawan</option>
-                        <option value="job_pekerjaan">Job Pekerjaan</option>
-                    </select>
-                </div>
-                <button type="submit" 
-                        :disabled="!selectedFile || !quickUploadData.bulan || !quickUploadData.tahun || !quickUploadData.jenis_data"
-                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
-                    Upload Sekarang
-                </button>
-            </form>
-        </div>
 
-        <!-- Quick Template -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Template Cepat</h3>
-            <form @submit.prevent="quickTemplate()" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+    <!-- Upload Excel Modal -->
+    <div x-show="showUploadModal" 
+         x-cloak
+         x-transition
+         @click.away="showUploadModal = false"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-lg flex items-center justify-between">
+                <div class="flex items-center">
+                    <i data-lucide="upload-cloud" class="w-6 h-6 text-white mr-3"></i>
+                    <h2 class="text-xl font-semibold text-white">Upload Data Excel</h2>
+                </div>
+                <button @click="closeUploadModal()" class="text-white hover:text-gray-200 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form @submit.prevent="uploadExcel()" class="space-y-6">
+                    <!-- File Upload -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
-                        <select x-model="quickTemplateData.bulan" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                            <option value="">Pilih Bulan</option>
-                            <option value="Januari">Januari</option>
-                            <option value="Februari">Februari</option>
-                            <option value="Maret">Maret</option>
-                            <option value="April">April</option>
-                            <option value="Mei">Mei</option>
-                            <option value="Juni">Juni</option>
-                            <option value="Juli">Juli</option>
-                            <option value="Agustus">Agustus</option>
-                            <option value="September">September</option>
-                            <option value="Oktober">Oktober</option>
-                            <option value="November">November</option>
-                            <option value="Desember">Desember</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            File Excel <span class="text-red-500">*</span>
+                        </label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors"
+                             @dragover.prevent
+                             @drop.prevent="handleFileDrop($event)">
+                            <div x-show="!selectedFileUpload">
+                                <i data-lucide="upload-cloud" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                                <p class="text-gray-600 mb-2">Drag & drop file Excel di sini atau</p>
+                                <input type="file" 
+                                       @change="handleFileSelect($event)"
+                                       accept=".xlsx,.xls"
+                                       class="hidden" 
+                                       id="upload-file-input">
+                                <label for="upload-file-input" 
+                                       class="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-block">
+                                    Pilih File
+                                </label>
+                                <p class="text-xs text-gray-500 mt-2">Format: .xlsx, .xls (Max 10MB)</p>
+                            </div>
+                            <div x-show="selectedFileUpload" class="text-left">
+                                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                    <div class="flex items-center">
+                                        <i data-lucide="file-spreadsheet" class="w-8 h-8 text-green-600 mr-3"></i>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900" x-text="selectedFileUpload?.name"></p>
+                                            <p class="text-xs text-gray-500" x-text="formatFileSize(selectedFileUpload?.size)"></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="removeFileUpload()" class="text-red-600 hover:text-red-800">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Jenis Data <span class="text-red-500">*</span>
+                        </label>
+                        <select x-model="uploadFormData.jenis_data" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Jenis Data</option>
+                            <option value="laporan_karyawan">Laporan Karyawan</option>
+                            <option value="job_pekerjaan">Job Pekerjaan</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
-                        <input type="number" 
-                               x-model="quickTemplateData.tahun"
-                               min="2020" max="2030"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+
+                    <!-- Period Selection -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Bulan <span class="text-red-500">*</span>
+                            </label>
+                            <select x-model="uploadFormData.bulan" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Pilih Bulan</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tahun <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" 
+                                   x-model="uploadFormData.tahun"
+                                   min="2020" max="2030"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <!-- Upload Options -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-900 mb-3">Opsi Upload</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="uploadFormData.skip_errors" class="mr-2">
+                                <span class="text-sm text-gray-700">Lewati baris dengan error</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="uploadFormData.update_existing" class="mr-2">
+                                <span class="text-sm text-gray-700">Update data yang sudah ada</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" x-model="uploadFormData.validate_data" class="mr-2">
+                                <span class="text-sm text-gray-700">Validasi data sebelum upload</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                @click="closeUploadModal()"
+                                class="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                :disabled="!selectedFileUpload || !uploadFormData.jenis_data || !uploadFormData.bulan || !uploadFormData.tahun || uploadLoading"
+                                class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+                            <i data-lucide="upload" class="w-4 h-4 mr-2" x-show="!uploadLoading"></i>
+                            <i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin" x-show="uploadLoading"></i>
+                            <span x-text="uploadLoading ? 'Mengupload...' : 'Upload Excel'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Progress Modal -->
+    <div x-show="showUploadProgress" 
+         x-transition
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Progress</h3>
+            
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span x-text="progressText"></span>
+                    <span x-text="progressPercent + '%'"></span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                         :style="'width: ' + progressPercent + '%'"></div>
+                </div>
+            </div>
+            
+            <div x-show="uploadResult" class="mt-4">
+                <div :class="uploadResult.success ? 'text-green-600' : 'text-red-600'">
+                    <i :data-lucide="uploadResult.success ? 'check-circle' : 'alert-circle'" class="w-5 h-5 mr-2 inline"></i>
+                    <span x-text="uploadResult.message"></span>
+                </div>
+                
+                <div x-show="uploadResult.success && uploadResult.data" class="mt-3">
+                    <div class="flex items-center bg-green-50 p-3 rounded-lg border border-green-200">
+                        <i data-lucide="file-spreadsheet" class="w-8 h-8 text-green-600 mr-3"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900" x-text="selectedFileUpload?.name || 'File Excel'"></p>
+                            <p class="text-xs text-gray-600 mt-1">Data diproses: <span x-text="uploadResult.data.processed || 0"></span></p>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Data</label>
-                    <select x-model="quickTemplateData.jenis_data" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <option value="">Pilih Jenis Data</option>
-                        <option value="laporan_karyawan">Laporan Karyawan</option>
-                        <option value="job_pekerjaan">Job Pekerjaan</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kelompok (Opsional)</label>
-                    <select x-model="quickTemplateData.kelompok_id" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <option value="">Semua Kelompok</option>
-                        @foreach($kelompoks as $kelompok)
-                        <option value="{{ $kelompok->id }}">{{ $kelompok->nama_kelompok }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" 
-                        :disabled="!quickTemplateData.bulan || !quickTemplateData.tahun || !quickTemplateData.jenis_data"
-                        class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
-                    Buat Template
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button @click="closeUploadProgress()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    Tutup
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Notification -->
     <div x-show="message" 
-         x-transition
-         :class="messageType === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'"
-         class="fixed top-4 right-4 border rounded-lg px-4 py-3 shadow-lg z-50">
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-x-full"
+         x-transition:enter-end="opacity-100 transform translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-x-0"
+         x-transition:leave-end="opacity-0 transform translate-x-full"
+         :class="messageType === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' : 'bg-gradient-to-r from-red-500 to-red-600 text-white'"
+         class="fixed top-4 right-4 rounded-xl px-6 py-4 shadow-2xl z-50 min-w-[300px] max-w-md border border-white/20 backdrop-blur-sm">
         <div class="flex items-center">
-            <i :data-lucide="messageType === 'success' ? 'check-circle' : 'alert-circle'" class="w-5 h-5 mr-2"></i>
-            <span x-text="message"></span>
+            <div class="flex-shrink-0">
+                <i :data-lucide="messageType === 'success' ? 'check-circle' : 'alert-circle'" class="w-6 h-6"></i>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm font-semibold" x-text="message"></p>
+            </div>
+            <button @click="message = ''" class="ml-4 text-white/80 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -446,10 +612,27 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('excelManagement', () => ({
         excelFiles: @json($excelFiles),
-        selectedFile: null,
         loading: false,
         message: '',
         messageType: '',
+        
+        // Upload Modal
+        showUploadModal: false,
+        selectedFileUpload: null,
+        uploadLoading: false,
+        showUploadProgress: false,
+        progressPercent: 0,
+        progressText: '',
+        uploadResult: null,
+        
+        uploadFormData: {
+            jenis_data: '',
+            bulan: '',
+            tahun: new Date().getFullYear(),
+            skip_errors: true,
+            update_existing: false,
+            validate_data: true
+        },
         
         filterLaporan: {
             bulan: '',
@@ -461,29 +644,22 @@ document.addEventListener('alpine:init', () => {
             tahun: ''
         },
         
-        quickUploadData: {
-            bulan: '',
-            tahun: new Date().getFullYear(),
-            jenis_data: ''
-        },
-        
-        quickTemplateData: {
-            bulan: '',
-            tahun: new Date().getFullYear(),
-            jenis_data: '',
-            kelompok_id: ''
-        },
-        
         get totalFiles() {
             return this.excelFiles.length;
         },
         
-        get templateCount() {
-            return this.excelFiles.filter(file => file.type === 'template').length;
+        get laporanCount() {
+            return this.excelFiles.filter(file => 
+                file.name.toLowerCase().includes('laporan_karyawan') || 
+                file.name.toLowerCase().includes('laporan')
+            ).length;
         },
         
-        get uploadCount() {
-            return this.excelFiles.filter(file => file.type === 'upload').length;
+        get jobCount() {
+            return this.excelFiles.filter(file => 
+                file.name.toLowerCase().includes('job_pekerjaan') || 
+                file.name.toLowerCase().includes('job')
+            ).length;
         },
         
         get filteredLaporanFiles() {
@@ -533,84 +709,6 @@ document.addEventListener('alpine:init', () => {
             await this.refreshFiles();
         },
         
-        handleFileSelect(event) {
-            this.selectedFile = event.target.files[0];
-        },
-        
-        async quickUpload() {
-            if (!this.selectedFile) {
-                this.showMessage('Pilih file Excel terlebih dahulu', 'error');
-                return;
-            }
-            
-            this.loading = true;
-            
-            const formData = new FormData();
-            formData.append('excel_file', this.selectedFile);
-            formData.append('bulan', this.quickUploadData.bulan);
-            formData.append('tahun', this.quickUploadData.tahun);
-            formData.append('jenis_data', this.quickUploadData.jenis_data);
-            
-            try {
-                const response = await fetch('/api/excel/upload', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    this.showMessage(result.message, 'success');
-                    await this.refreshFiles();
-                    // Reset form
-                    this.selectedFile = null;
-                    this.quickUploadData = { bulan: '', tahun: new Date().getFullYear(), jenis_data: '' };
-                    document.querySelector('input[type="file"]').value = '';
-                } else {
-                    this.showMessage(result.message, 'error');
-                }
-            } catch (error) {
-                this.showMessage('Terjadi kesalahan saat upload', 'error');
-            }
-            
-            this.loading = false;
-        },
-        
-        async quickTemplate() {
-            this.loading = true;
-            
-            try {
-                const response = await fetch('/api/excel/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify(this.quickTemplateData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    this.showMessage(result.message, 'success');
-                    await this.refreshFiles();
-                    // Download file
-                    window.open(result.file_url, '_blank');
-                    // Reset form
-                    this.quickTemplateData = { bulan: '', tahun: new Date().getFullYear(), jenis_data: '', kelompok_id: '' };
-                } else {
-                    this.showMessage(result.message, 'error');
-                }
-            } catch (error) {
-                this.showMessage('Terjadi kesalahan saat membuat template', 'error');
-            }
-            
-            this.loading = false;
-        },
-        
         async downloadFile(fileName) {
             try {
                 const response = await fetch(`/api/excel/download/${fileName}`);
@@ -649,7 +747,13 @@ document.addEventListener('alpine:init', () => {
                 
                 if (result.success) {
                     this.showMessage(result.message, 'success');
-                    this.refreshFiles();
+                    await this.refreshFiles();
+                    // Reinitialize icons after refresh
+                    setTimeout(() => {
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }, 200);
                 } else {
                     this.showMessage(result.message, 'error');
                 }
@@ -680,6 +784,20 @@ document.addEventListener('alpine:init', () => {
                     
                     this.excelFiles = result.files || [];
                     this.showMessage(`Berhasil memuat ${this.excelFiles.length} file Excel`, 'success');
+                    
+                    // Reinitialize Lucide icons after files are loaded
+                    setTimeout(() => {
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }, 100);
+                    
+                    // Initialize again after Alpine.js updates the DOM
+                    setTimeout(() => {
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }, 300);
                 } else {
                     console.error('Failed to load files:', response.status);
                     const errorText = await response.text();
@@ -691,6 +809,13 @@ document.addEventListener('alpine:init', () => {
                 this.showMessage('Terjadi kesalahan saat memuat file Excel', 'error');
             } finally {
                 this.loading = false;
+                
+                // Final initialization after loading completes
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 500);
             }
         },
         
@@ -739,6 +864,165 @@ document.addEventListener('alpine:init', () => {
                 this.message = '';
                 this.messageType = '';
             }, 5000);
+        },
+        
+        // Upload Modal Functions
+        closeUploadModal() {
+            this.showUploadModal = false;
+            this.selectedFileUpload = null;
+            this.uploadFormData = {
+                jenis_data: '',
+                bulan: '',
+                tahun: new Date().getFullYear(),
+                skip_errors: true,
+                update_existing: false,
+                validate_data: true
+            };
+            document.getElementById('upload-file-input').value = '';
+        },
+        
+        handleFileSelect(event) {
+            this.selectedFileUpload = event.target.files[0];
+        },
+        
+        handleFileDrop(event) {
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                this.selectedFileUpload = files[0];
+            }
+        },
+        
+        removeFileUpload() {
+            this.selectedFileUpload = null;
+            document.getElementById('upload-file-input').value = '';
+        },
+        
+        closeUploadProgress() {
+            const wasSuccess = this.uploadResult && this.uploadResult.success;
+            this.showUploadProgress = false;
+            this.progressPercent = 0;
+            this.progressText = '';
+            this.uploadResult = null;
+            if (wasSuccess) {
+                this.closeUploadModal();
+                this.refreshFiles();
+            }
+            // Reinitialize Lucide icons after closing
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }, 100);
+        },
+        
+        async uploadExcel() {
+            if (!this.selectedFileUpload) {
+                this.showMessage('Pilih file Excel terlebih dahulu', 'error');
+                return;
+            }
+            
+            this.uploadLoading = true;
+            this.showUploadProgress = true;
+            this.progressPercent = 0;
+            this.progressText = 'Mempersiapkan upload...';
+            
+            // Initialize Lucide icons when modal opens
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }, 100);
+            
+            const formData = new FormData();
+            formData.append('excel_file', this.selectedFileUpload);
+            formData.append('jenis_data', this.uploadFormData.jenis_data);
+            formData.append('bulan', this.uploadFormData.bulan);
+            formData.append('tahun', this.uploadFormData.tahun);
+            formData.append('skip_errors', this.uploadFormData.skip_errors);
+            formData.append('update_existing', this.uploadFormData.update_existing);
+            formData.append('validate_data', this.uploadFormData.validate_data);
+            
+            try {
+                this.progressText = 'Mengupload file...';
+                this.progressPercent = 30;
+                
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+                
+                const response = await fetch('/api/excel/upload', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                
+                this.progressText = 'Memproses data...';
+                this.progressPercent = 70;
+                
+                const contentType = response.headers.get('content-type');
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    throw new Error('Server mengembalikan response HTML, bukan JSON. Status: ' + response.status);
+                }
+                
+                const result = await response.json();
+                
+                this.progressPercent = 100;
+                this.progressText = 'Selesai!';
+                
+                this.uploadResult = result;
+                
+                // Reinitialize Lucide icons after showing result
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 200);
+                
+                // Initialize again after a bit more delay to ensure DOM is ready
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 500);
+                
+                if (result.success) {
+                    this.showMessage(result.message, 'success');
+                    setTimeout(async () => {
+                        this.closeUploadModal();
+                        await this.refreshFiles();
+                        // Reinitialize icons after refresh
+                        setTimeout(() => {
+                            if (typeof lucide !== 'undefined') {
+                                lucide.createIcons();
+                            }
+                        }, 200);
+                    }, 2000);
+                } else {
+                    this.showMessage(result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                this.progressPercent = 0;
+                this.progressText = 'Error!';
+                
+                let errorMessage = 'Terjadi kesalahan saat upload';
+                if (error.message.includes('Unexpected token')) {
+                    errorMessage = 'Server mengembalikan response yang tidak valid. Pastikan Anda sudah login dan memiliki akses.';
+                } else {
+                    errorMessage = 'Terjadi kesalahan saat upload: ' + error.message;
+                }
+                
+                this.uploadResult = {
+                    success: false,
+                    message: errorMessage
+                };
+                this.showMessage(errorMessage, 'error');
+            }
+            
+            this.uploadLoading = false;
         }
     }));
 });

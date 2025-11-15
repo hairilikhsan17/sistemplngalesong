@@ -12,6 +12,67 @@ class JobPekerjaanController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        
+        // Check if request wants JSON (API call) or HTML (page view)
+        if ($request->wantsJson() || $request->expectsJson()) {
+            // API response for JavaScript
+            $query = JobPekerjaan::with('kelompok');
+
+            // If user is karyawan, only show their group's jobs
+            if ($user->isKaryawan() && $user->kelompok_id) {
+                $query->where('kelompok_id', $user->kelompok_id);
+            }
+
+            // Filter by day if provided
+            if ($request->has('day') && $request->day) {
+                $query->where('hari', $request->day);
+            }
+
+            // Search functionality
+            if ($request->has('search') && $request->search) {
+                $searchTerm = $request->search;
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('lokasi', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('hari', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('perbaikan_kwh', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('pemeliharaan_pengkabelan', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('pengecekan_gardu', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('penanganan_gangguan', 'like', '%' . $searchTerm . '%');
+                });
+            }
+
+            $jobs = $query->orderBy('tanggal', 'desc')
+                         ->orderBy('created_at', 'desc')
+                         ->paginate($request->get('per_page', 10));
+            
+            return response()->json([
+                'data' => $jobs->items(),
+                'current_page' => $jobs->currentPage(),
+                'last_page' => $jobs->lastPage(),
+                'per_page' => $jobs->perPage(),
+                'total' => $jobs->total(),
+                'from' => $jobs->firstItem(),
+                'to' => $jobs->lastItem(),
+                'prev_page_url' => $jobs->previousPageUrl(),
+                'next_page_url' => $jobs->nextPageUrl()
+            ]);
+        }
+        
+        // Base query for statistics (without filters)
+        $baseQuery = JobPekerjaan::query();
+        
+        // If user is karyawan, only show their group's jobs
+        if ($user->isKaryawan() && $user->kelompok_id) {
+            $baseQuery->where('kelompok_id', $user->kelompok_id);
+        }
+        
+        // Calculate statistics (without filters)
+        $totalJob = (clone $baseQuery)->count();
+        $totalWaktu = (clone $baseQuery)->sum('waktu_penyelesaian');
+        $hariIni = (clone $baseQuery)->whereDate('tanggal', today())->count();
+        $lokasiBerbeda = (clone $baseQuery)->distinct('lokasi')->count('lokasi');
+        
+        // Query for paginated data (with filters)
         $query = JobPekerjaan::with('kelompok');
 
         // If user is karyawan, only show their group's jobs
@@ -20,12 +81,12 @@ class JobPekerjaanController extends Controller
         }
 
         // Filter by day if provided
-        if ($request->has('day') && $request->day) {
+        if ($request->filled('day')) {
             $query->where('hari', $request->day);
         }
 
         // Search functionality
-        if ($request->has('search') && $request->search) {
+        if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
                 $q->where('lokasi', 'like', '%' . $searchTerm . '%')
@@ -37,8 +98,18 @@ class JobPekerjaanController extends Controller
             });
         }
 
-        $jobs = $query->orderBy('created_at', 'desc')->get();
-        return response()->json($jobs);
+        $jobPekerjaans = $query->orderBy('tanggal', 'desc')
+                              ->orderBy('created_at', 'desc')
+                              ->paginate(10);
+
+        $statistics = [
+            'totalJob' => $totalJob,
+            'totalWaktu' => $totalWaktu ?? 0,
+            'hariIni' => $hariIni,
+            'lokasiBerbeda' => $lokasiBerbeda,
+        ];
+
+        return view('dashboard.job-pekerjaan', compact('jobPekerjaans', 'statistics'));
     }
 
     public function store(Request $request)

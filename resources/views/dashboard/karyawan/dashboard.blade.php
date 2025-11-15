@@ -1,4 +1,30 @@
 <div class="space-y-6">
+    <!-- Performance Chart for All Kelompok -->
+    @if(isset($performanceData) && count($performanceData) > 0)
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">📊 Grafik Peringkat Performa Kelompok</h3>
+            <p class="text-sm text-gray-500 mt-1">Perbandingan performa semua kelompok berdasarkan data asli</p>
+        </div>
+        <div class="p-6">
+            <div class="relative" id="kelompokPerformanceChart" style="min-height: 400px;"></div>
+            <div class="mt-4 text-xs text-gray-500">
+                <p><strong>Keterangan:</strong> Skor dihitung berdasarkan Laporan (40%), Rata-rata Waktu Penyelesaian (30%), dan Konsistensi (30%)</p>
+            </div>
+        </div>
+    </div>
+    @else
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">📊 Grafik Peringkat Performa Kelompok</h3>
+            <p class="text-sm text-gray-500 mt-1">Belum ada data performa</p>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-500 text-center">Data performa belum tersedia</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Recent Activities -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Laporan -->
@@ -137,7 +163,122 @@
     </div>
 </div>
 
-
-
-
+@if(isset($performanceData) && count($performanceData) > 0)
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get performance data from PHP
+    const dataKelompok = @json($performanceData);
+    
+    // Debug: Check data
+    console.log('Data Kelompok:', dataKelompok);
+    console.log('Data length:', dataKelompok ? dataKelompok.length : 0);
+    
+    if (!dataKelompok || dataKelompok.length === 0) {
+        console.warn('No performance data available');
+        return;
+    }
+    
+    // Get current user's kelompok for highlighting
+    const currentKelompok = @json(isset($kelompok) && $kelompok ? $kelompok->nama_kelompok : null);
+    
+    // Format data for ApexCharts horizontal bar
+    const chartData = dataKelompok.map(item => ({
+        x: item.nama,
+        y: item.skor || 0
+    }));
+    
+    console.log('Chart Data:', chartData);
+    
+    // Color: highlight current kelompok
+    const colors = dataKelompok.map(item => {
+        return item.nama === currentKelompok ? '#22c55e' : '#3b82f6';
+    });
+    
+    // Check if ApexCharts is loaded
+    if (typeof ApexCharts === 'undefined') {
+        console.error('ApexCharts is not loaded');
+        return;
+    }
+    
+    const chartElement = document.getElementById('kelompokPerformanceChart');
+    if (!chartElement) {
+        console.error('Chart element not found');
+        return;
+    }
+    
+    try {
+        const options = {
+            series: [{
+                name: 'Skor Performa',
+                data: chartData
+            }],
+            chart: {
+                type: 'bar',
+                height: 400,
+                horizontal: true,
+                toolbar: {
+                    show: true
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 4,
+                    dataLabels: {
+                        position: 'right'
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(val) {
+                    return val.toFixed(2) + '/100';
+                },
+                style: {
+                    fontSize: '12px',
+                    colors: ['#1f2937']
+                }
+            },
+            xaxis: {
+                title: {
+                    text: 'Skor Performa (0-100)'
+                },
+                min: 0,
+                max: 100,
+                labels: {
+                    formatter: function(val) {
+                        return val + '/100';
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Kelompok'
+                }
+            },
+            colors: colors,
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return 'Skor: ' + val.toFixed(2) + '/100';
+                    }
+                }
+            },
+            grid: {
+                borderColor: '#e5e7eb',
+                strokeDashArray: 4
+            }
+        };
+        
+        const chart = new ApexCharts(chartElement, options);
+        chart.render();
+        
+        console.log('ApexCharts initialized successfully with', chartData.length, 'groups');
+    } catch (error) {
+        console.error('Error initializing ApexCharts:', error);
+    }
+});
+</script>
+@endif
 

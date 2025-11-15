@@ -31,27 +31,6 @@ class ExcelController extends Controller
     }
 
     /**
-     * Upload Excel data page
-     */
-    public function upload()
-    {
-        $kelompoks = Kelompok::with(['karyawan'])->get();
-        $uploadedFiles = $this->getExcelFiles();
-        
-        return view('dashboard.atasan.excel-upload', compact('kelompoks', 'uploadedFiles'));
-    }
-
-    /**
-     * Create new Excel file page
-     */
-    public function create()
-    {
-        $kelompoks = Kelompok::with(['karyawan', 'laporanKaryawan'])->get();
-        
-        return view('dashboard.atasan.excel-create', compact('kelompoks'));
-    }
-
-    /**
      * Process Excel upload
      */
     public function store(Request $request)
@@ -329,19 +308,103 @@ class ExcelController extends Controller
             $processedData = [];
             $errors = [];
             
-            // Start from row 2 (skip header)
-            for ($row = 2; $row <= $highestRow; $row++) {
+            // Find the actual data header row
+            $headerRow = $this->findHeaderRow($worksheet, $highestRow);
+            
+            if (!$headerRow) {
+                return [
+                    'success' => false,
+                    'error' => 'Tidak dapat menemukan baris header data. Pastikan file Excel memiliki format yang benar.'
+                ];
+            }
+            
+            // Keywords to skip (metadata/header rows)
+            $skipKeywords = [
+                'shift:', 'jumlah', 'tanggal export:', 'tabel', 'no', 
+                'nama karyawan', 'kelompok', 'tanggal', 'waktu', 'keterangan',
+                'perbaikan', 'pemeliharaan', 'pengecekan', 'penanganan', 'lokasi'
+            ];
+            
+            // Start from row after header
+            for ($row = $headerRow + 1; $row <= $highestRow; $row++) {
+                $cellA = trim((string)$worksheet->getCell('A' . $row)->getValue());
+                $cellB = trim((string)$worksheet->getCell('B' . $row)->getValue());
+                
+                // Skip empty rows
+                if (empty($cellA) && empty($cellB)) {
+                    continue;
+                }
+                
+                // Get cell C early for validation
+                $cellC = trim((string)$worksheet->getCell('C' . $row)->getValue());
+                
+                // Skip if cell A is numeric only (likely a row number/No column)
+                // This handles cases where column A contains just row numbers like "1", "2", "3"
+                if (preg_match('/^\d+$/', $cellA)) {
+                    $numValue = (int)$cellA;
+                    // Skip if it's a small number (1-10000) which is definitely a row number
+                    if ($numValue > 0 && $numValue <= 10000) {
+                        // Get other cells to check if this is really a data row
+                        $cellD = trim((string)$worksheet->getCell('D' . $row)->getValue());
+                        $cellE = trim((string)$worksheet->getCell('E' . $row)->getValue());
+                        
+                        // Very aggressive skip: If cell C (tanggal) is empty, definitely skip
+                        // This means the row number column doesn't have corresponding data
+                        if (empty($cellC)) {
+                            continue; // Skip - no date means this is just row number, no data
+                        }
+                        
+                        // If cell B is empty, numeric, or very short (< 4 chars) - it's a row number
+                        if (empty($cellB) || is_numeric($cellB) || strlen(trim($cellB)) < 4) {
+                            continue; // Skip - this is definitely a row number, not data
+                        }
+                        
+                        // If cell B exists but is too short and cell D is empty, skip
+                        if (strlen(trim($cellB)) < 4 && empty($cellD)) {
+                            continue; // Skip - too short to be a valid name and missing required data
+                        }
+                    }
+                }
+                
+                // Skip if looks like header/metadata row
+                $cellALower = strtolower($cellA);
+                foreach ($skipKeywords as $keyword) {
+                    if (strpos($cellALower, $keyword) !== false) {
+                        continue 2; // Skip this row, continue to next row
+                    }
+                }
+                
+                // Skip if cell A contains colon (likely metadata like "Shift: Shift 2")
+                if (strpos($cellA, ':') !== false && strlen($cellA) < 50) {
+                    continue;
+                }
+                
+                // Skip if cell A looks like "TABEL" or "INPUT"
+                if (stripos($cellA, 'TABEL') !== false || stripos($cellA, 'INPUT') !== false) {
+                    continue;
+                }
+                
+                // Skip if cell A is only digits and cell B is empty or looks like header
+                if (preg_match('/^\d+$/', $cellA) && (empty($cellB) || strlen($cellB) < 3)) {
+                    continue;
+                }
+                
+                // Final check: If cell A is numeric and cell C is empty, definitely skip
+                // This catches any row numbers that might have slipped through
+                if (preg_match('/^\d+$/', $cellA)) {
+                    $numValue = (int)$cellA;
+                    if ($numValue > 0 && $numValue <= 10000 && empty($cellC)) {
+                        continue; // Skip - this is definitely a row number column
+                    }
+                }
+                
                 $data = [
-                    'nama_karyawan' => $worksheet->getCell('A' . $row)->getValue(),
-                    'kelompok' => $worksheet->getCell('B' . $row)->getValue(),
-                    'tanggal' => $worksheet->getCell('C' . $row)->getValue(),
+                    'nama_karyawan' => $cellA,
+                    'kelompok' => $cellB,
+                    'tanggal' => $cellC,
                     'waktu_penyelesaian' => $worksheet->getCell('D' . $row)->getValue(),
                     'keterangan' => $worksheet->getCell('E' . $row)->getValue(),
                 ];
-                
-                if (empty($data['nama_karyawan'])) {
-                    continue; // Skip empty rows
-                }
                 
                 // Validate and process data
                 $result = $this->validateAndSaveData($data, $jenisData, $bulan, $tahun);
@@ -369,6 +432,36 @@ class ExcelController extends Controller
             ];
         }
     }
+    
+    /**
+     * Find the header row that contains actual data columns
+     */
+    private function findHeaderRow($worksheet, $highestRow)
+    {
+        $headerKeywords = ['nama', 'kelompok', 'tanggal', 'waktu', 'keterangan', 'no'];
+        
+        // Search from row 1 to row 20 for header
+        for ($row = 1; $row <= min(20, $highestRow); $row++) {
+            $cellA = trim(strtolower((string)$worksheet->getCell('A' . $row)->getValue()));
+            $cellB = trim(strtolower((string)$worksheet->getCell('B' . $row)->getValue()));
+            
+            // Check if this row looks like a header row
+            $matches = 0;
+            foreach ($headerKeywords as $keyword) {
+                if (strpos($cellA, $keyword) !== false || strpos($cellB, $keyword) !== false) {
+                    $matches++;
+                }
+            }
+            
+            // If we find 2+ header keywords, this is likely the header row
+            if ($matches >= 2 && ($cellA === 'no' || $cellA === 'nama' || strpos($cellA, 'nama') !== false)) {
+                return $row;
+            }
+        }
+        
+        // Fallback: return row 1 if no header found
+        return 1;
+    }
 
     /**
      * Validate and save data from Excel
@@ -376,10 +469,21 @@ class ExcelController extends Controller
     private function validateAndSaveData($data, $jenisData, $bulan, $tahun)
     {
         try {
+            // Validate nama karyawan is not just a number
+            $namaKaryawan = trim($data['nama_karyawan']);
+            if (empty($namaKaryawan) || preg_match('/^\d+$/', $namaKaryawan)) {
+                return ['success' => false, 'error' => 'Baris ini sepertinya bukan data karyawan (hanya berisi angka)'];
+            }
+            
+            // Validate nama karyawan has at least 3 characters
+            if (strlen($namaKaryawan) < 3) {
+                return ['success' => false, 'error' => 'Nama karyawan terlalu pendek: ' . $namaKaryawan];
+            }
+            
             // Find karyawan by name
-            $karyawan = Karyawan::where('nama', $data['nama_karyawan'])->first();
+            $karyawan = Karyawan::where('nama', $namaKaryawan)->first();
             if (!$karyawan) {
-                return ['success' => false, 'error' => 'Karyawan tidak ditemukan: ' . $data['nama_karyawan']];
+                return ['success' => false, 'error' => 'Karyawan tidak ditemukan: ' . $namaKaryawan];
             }
             
             // Find kelompok

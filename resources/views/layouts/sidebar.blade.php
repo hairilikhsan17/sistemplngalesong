@@ -204,18 +204,6 @@
                             <i data-lucide="settings" class="w-4 h-4 mr-3 flex-shrink-0"></i>
                             <span>Manajemen Excel</span>
                         </a>
-                        <a href="{{ route('atasan.excel.upload') }}" 
-                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
-                            <i data-lucide="file-plus" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                            <span>Upload Data Bulan Ini</span>
-                        </a>
-                        <a href="{{ route('atasan.excel.create') }}" 
-                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
-                            <i data-lucide="plus-circle" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                            <span>Buat File Excel Baru</span>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -327,11 +315,6 @@ function exportKelompokData() {
 function uploadExcel() {
     // Upload Excel functionality
     showAlert('Fitur upload Excel akan segera tersedia', 'info');
-}
-
-function createNewExcel() {
-    // Create new Excel file functionality
-    showAlert('Fitur buat file Excel baru akan segera tersedia', 'info');
 }
 
 // Mobile sidebar toggle

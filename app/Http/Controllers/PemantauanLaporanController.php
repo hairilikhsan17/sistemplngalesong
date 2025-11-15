@@ -129,6 +129,19 @@ class PemantauanLaporanController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $laporan = LaporanKaryawan::with('kelompok')->findOrFail($id);
+            return response()->json($laporan);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Gagal memuat detail laporan',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getDokumentasi($id)
     {
         try {
@@ -163,15 +176,29 @@ class PemantauanLaporanController extends Controller
                 'nama' => 'required|string|max:255',
                 'instansi' => 'required|string|max:255',
                 'alamat_tujuan' => 'required|string|max:255',
-                'dokumentasi' => 'nullable|string'
+                'dokumentasi' => 'nullable|string',
+                'tanggal' => 'required|date',
+                'hari' => 'nullable|string|max:255',
+                'jabatan' => 'nullable|string|max:255'
             ]);
 
             $laporan = LaporanKaryawan::findOrFail($id);
-            $laporan->update($request->all());
+            
+            // Update only allowed fields
+            $laporan->update([
+                'nama' => $request->nama,
+                'instansi' => $request->instansi,
+                'alamat_tujuan' => $request->alamat_tujuan,
+                'dokumentasi' => $request->dokumentasi,
+                'tanggal' => $request->tanggal,
+                'hari' => $request->hari,
+                'jabatan' => $request->jabatan
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Laporan berhasil diperbarui'
+                'message' => 'Laporan berhasil diperbarui',
+                'data' => $laporan->load('kelompok')
             ]);
         } catch (\Exception $e) {
             return response()->json([

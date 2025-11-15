@@ -50,9 +50,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/kelompok/laporan', [App\Http\Controllers\LaporanKaryawanController::class, 'index'])->name('kelompok.laporan');
     
     // Job Pekerjaan Routes
-    Route::get('/kelompok/job-pekerjaan', function () {
-        return view('dashboard.job-pekerjaan');
-    })->name('kelompok.job-pekerjaan');
+    Route::get('/kelompok/job-pekerjaan', [JobPekerjaanController::class, 'index'])->name('kelompok.job-pekerjaan');
 
     // Atasan Management Routes
     Route::get('/atasan/manajemen', [ManajemenController::class, 'index'])->name('atasan.manajemen');
@@ -65,8 +63,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Excel Management Routes
     Route::get('/atasan/excel', [App\Http\Controllers\ExcelController::class, 'index'])->name('atasan.excel.index');
-    Route::get('/atasan/excel/upload', [App\Http\Controllers\ExcelController::class, 'upload'])->name('atasan.excel.upload');
-    Route::get('/atasan/excel/create', [App\Http\Controllers\ExcelController::class, 'create'])->name('atasan.excel.create');
     
     // Admin Settings Routes
     Route::get('/atasan/pengaturan', [App\Http\Controllers\SettingsController::class, 'adminIndex'])->name('atasan.settings');
@@ -121,7 +117,10 @@ Route::get('/test-simple', function () {
         
         // Pemantauan Laporan Routes
         Route::get('/laporan-karyawan/statistics', [App\Http\Controllers\PemantauanLaporanController::class, 'getStatistics']);
+        Route::get('/laporan-karyawan/{id}', [App\Http\Controllers\PemantauanLaporanController::class, 'show']);
         Route::get('/laporan-karyawan/{id}/dokumentasi', [App\Http\Controllers\PemantauanLaporanController::class, 'getDokumentasi']);
+        Route::put('/laporan-karyawan/{id}', [App\Http\Controllers\PemantauanLaporanController::class, 'update']);
+        Route::delete('/laporan-karyawan/{id}', [App\Http\Controllers\PemantauanLaporanController::class, 'destroy']);
         Route::get('/export/laporan-karyawan', [App\Http\Controllers\PemantauanLaporanController::class, 'exportExcel']);
 
         // Pemantauan Job Pekerjaan Routes
