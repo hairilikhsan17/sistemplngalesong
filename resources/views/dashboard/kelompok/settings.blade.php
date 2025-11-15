@@ -190,71 +190,6 @@
                 </form>
             </div>
 
-           
-
-                    
-
-            <!-- Work Schedule -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold text-gray-900 mb-6">Jadwal Kerja</h2>
-                
-                <form @submit.prevent="updateWorkSchedule()" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Jam Masuk
-                            </label>
-                            <input type="time" 
-                                   x-model="workSchedule.start_time"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Jam Keluar
-                            </label>
-                            <input type="time" 
-                                   x-model="workSchedule.end_time"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Hari Kerja
-                        </label>
-                        <div class="grid grid-cols-7 gap-2">
-                            <template x-for="(day, index) in workDays" :key="index">
-                                <label class="flex flex-col items-center p-2 border rounded-lg cursor-pointer hover:bg-gray-50"
-                                       :class="workSchedule.work_days.includes(day.value) ? 'bg-blue-50 border-blue-300' : 'border-gray-300'">
-                                    <input type="checkbox" 
-                                           x-model="workSchedule.work_days"
-                                           :value="day.value"
-                                           class="hidden">
-                                    <span class="text-xs font-medium" x-text="day.label"></span>
-                                    <span class="text-xs text-gray-500" x-text="day.name"></span>
-                                </label>
-                            </template>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Durasi Istirahat (menit)
-                        </label>
-                        <input type="number" 
-                               x-model="workSchedule.break_duration"
-                               min="15" max="120"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-
-                    <button type="submit" 
-                            :disabled="loading"
-                            class="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
-                        Simpan Jadwal
-                    </button>
-                </form>
-            </div>
         </div>
     </div>
 
@@ -367,23 +302,6 @@ document.addEventListener('alpine:init', () => {
             performance_update: true,
             reminder_time: '08:00'
         },
-        
-        workSchedule: {
-            start_time: '08:00',
-            end_time: '17:00',
-            work_days: ['senin', 'selasa', 'rabu', 'kamis', 'jumat'],
-            break_duration: 60
-        },
-        
-        workDays: [
-            { value: 'senin', label: 'S', name: 'Senin' },
-            { value: 'selasa', label: 'S', name: 'Selasa' },
-            { value: 'rabu', label: 'R', name: 'Rabu' },
-            { value: 'kamis', label: 'K', name: 'Kamis' },
-            { value: 'jumat', label: 'J', name: 'Jumat' },
-            { value: 'sabtu', label: 'S', name: 'Sabtu' },
-            { value: 'minggu', label: 'M', name: 'Minggu' }
-        ],
         
         async init() {
             await this.loadMonthlyReports();
@@ -614,34 +532,6 @@ document.addEventListener('alpine:init', () => {
                 
             } catch (error) {
                 this.showMessage('Terjadi kesalahan saat menyimpan pengaturan notifikasi', 'error');
-            }
-            
-            this.loading = false;
-        },
-        
-        async updateWorkSchedule() {
-            this.loading = true;
-            
-            try {
-                const response = await fetch('/api/kelompok/work-schedule', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify(this.workSchedule)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    this.showMessage(result.message, 'success');
-                } else {
-                    this.showMessage(result.message, 'error');
-                }
-                
-            } catch (error) {
-                this.showMessage('Terjadi kesalahan saat menyimpan jadwal kerja', 'error');
             }
             
             this.loading = false;

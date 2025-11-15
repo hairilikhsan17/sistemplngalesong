@@ -382,6 +382,134 @@
         </div>
     </div>
 
+    <!-- Modal Lihat Detail -->
+    <div x-show="showDetailModal" 
+         x-transition
+         x-cloak
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm"
+         @click.self="closeDetailModal()"
+         @keydown.escape="closeDetailModal()">
+        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i data-lucide="eye" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900">Detail Laporan</h3>
+                        <p class="text-sm text-gray-500">Informasi lengkap laporan kerja</p>
+                    </div>
+                </div>
+                <button @click="closeDetailModal()" 
+                        class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div x-show="loadingDetail" class="flex items-center justify-center py-12">
+                <div class="text-center">
+                    <i data-lucide="loader-2" class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3"></i>
+                    <p class="text-gray-600">Memuat data...</p>
+                </div>
+            </div>
+
+            <div x-show="!loadingDetail && detailLaporan" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Hari -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">
+                            <i data-lucide="calendar-days" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Hari
+                        </label>
+                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.hari || '-'"></p>
+                    </div>
+
+                    <!-- Tanggal -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">
+                            <i data-lucide="calendar" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Tanggal
+                        </label>
+                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.tanggal ? (() => { const date = new Date(detailLaporan.tanggal); return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }); })() : '-'"></p>
+                    </div>
+
+                    <!-- Nama -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">
+                            <i data-lucide="user" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Nama Karyawan
+                        </label>
+                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.nama || '-'"></p>
+                    </div>
+
+                    <!-- Jabatan -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">
+                            <i data-lucide="briefcase" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Jabatan
+                        </label>
+                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.jabatan || '-'"></p>
+                    </div>
+
+                    <!-- Instansi -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">
+                            <i data-lucide="building" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Instansi
+                        </label>
+                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.instansi || '-'"></p>
+                    </div>
+
+                    <!-- File -->
+                    <div class="bg-gray-50 rounded-lg p-4" x-show="detailLaporan?.file_path">
+                        <label class="block text-xs font-semibold text-gray-500 mb-2">
+                            <i data-lucide="file" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            File Dokumentasi
+                        </label>
+                        <a :href="'/api/laporan-karyawan/' + detailLaporan?.id + '/download'" 
+                           target="_blank"
+                           class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            <span>Download File</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Alamat Tujuan -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <label class="block text-xs font-semibold text-gray-500 mb-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                        Alamat/Tujuan
+                    </label>
+                    <p class="text-sm text-gray-900" x-text="detailLaporan?.alamat_tujuan || '-'"></p>
+                </div>
+
+                <!-- Dokumentasi -->
+                <div class="bg-gray-50 rounded-lg p-4" x-show="detailLaporan?.dokumentasi">
+                    <label class="block text-xs font-semibold text-gray-500 mb-2">
+                        <i data-lucide="file-text" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                        Dokumentasi
+                    </label>
+                    <p class="text-sm text-gray-900 whitespace-pre-wrap" x-text="detailLaporan?.dokumentasi || '-'"></p>
+                </div>
+            </div>
+
+            <div x-show="!loadingDetail && !detailLaporan" class="text-center py-12">
+                <p class="text-gray-500">Data tidak ditemukan</p>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+                <button type="button" 
+                        @click="closeDetailModal()"
+                        class="px-6 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all font-medium min-h-[44px]">
+                    <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Data Table -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
         <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
@@ -476,7 +604,25 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex items-center justify-center space-x-2 relative z-10">
-                                    <!-- Download Button - Lebih Kentara -->
+                                    <!-- Lihat Detail Button -->
+                                    <button type="button"
+                                            @click.stop="lihatDetail('{{ $laporan->id }}')"
+                                            class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-blue-600 cursor-pointer pointer-events-auto"
+                                            style="pointer-events: auto !important; position: relative; z-index: 20;"
+                                            title="Lihat Detail">
+                                        <i data-lucide="eye" class="w-5 h-5 group-hover:scale-110 transition-transform pointer-events-none"></i>
+                                    </button>
+                                    
+                                    <!-- Edit Button -->
+                                    <button type="button"
+                                            @click.stop="bukaFormEdit('{{ $laporan->id }}')" 
+                                            class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-green-600 cursor-pointer pointer-events-auto"
+                                            style="pointer-events: auto !important; position: relative; z-index: 20;"
+                                            title="Edit Laporan">
+                                        <i data-lucide="edit-2" class="w-5 h-5 group-hover:scale-110 transition-transform pointer-events-none"></i>
+                                    </button>
+                                    
+                                    <!-- Download Button -->
                                     @if($laporan->file_path)
                                     <button type="button"
                                             @click.stop="downloadFile('{{ $laporan->id }}')"
@@ -494,7 +640,7 @@
                                     </button>
                                     @endif
                                     
-                                    <!-- Delete Button - Lebih Kentara -->
+                                    <!-- Delete Button -->
                                     <button type="button"
                                             @click.stop="deleteLaporan('{{ $laporan->id }}')" 
                                             class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-red-600 cursor-pointer pointer-events-auto"
@@ -647,10 +793,13 @@ document.addEventListener('alpine:init', () => {
         karyawans: [],
         kelompok: null,
         showForm: false,
+        showDetailModal: false,
         editingId: null,
         loading: false,
+        loadingDetail: false,
         message: '',
         messageType: '',
+        detailLaporan: null,
         formData: {
             hari: '',
             tanggal: '',
@@ -920,6 +1069,159 @@ document.addEventListener('alpine:init', () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        },
+        
+        async lihatDetail(id) {
+            try {
+                console.log('lihatDetail called with id:', id);
+                if (!id) {
+                    console.error('ID is missing');
+                    this.showMessage('ID laporan tidak ditemukan', 'error');
+                    return;
+                }
+                
+                // Reset state
+                this.loadingDetail = true;
+                this.detailLaporan = null;
+                
+                // Show modal first to display loading state
+                this.showDetailModal = true;
+                
+                // Force Alpine.js to update DOM
+                await this.$nextTick();
+                
+                // Fetch data from API
+                const response = await fetch(`/api/laporan-karyawan/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result && result.id) {
+                    this.detailLaporan = result;
+                    console.log('Detail laporan loaded:', this.detailLaporan);
+                } else {
+                    throw new Error('Data laporan tidak ditemukan');
+                }
+                
+                // Reinitialize lucide icons
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error loading detail:', error);
+                this.showMessage('Gagal memuat detail laporan: ' + error.message, 'error');
+                this.detailLaporan = null;
+            } finally {
+                this.loadingDetail = false;
+            }
+        },
+        
+        closeDetailModal() {
+            this.showDetailModal = false;
+            this.detailLaporan = null;
+            this.loadingDetail = false;
+        },
+        
+        async bukaFormEdit(id) {
+            try {
+                console.log('bukaFormEdit called with id:', id);
+                if (!id) {
+                    this.showMessage('ID laporan tidak ditemukan', 'error');
+                    return;
+                }
+                
+                this.loading = true;
+                this.editingId = id;
+                
+                // Load data dari API
+                const response = await fetch(`/api/laporan-karyawan/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result) {
+                    // Parse tanggal untuk input date (format: YYYY-MM-DD)
+                    let tanggalFormatted = '';
+                    if (result.tanggal) {
+                        const date = new Date(result.tanggal);
+                        if (!isNaN(date.getTime())) {
+                            tanggalFormatted = date.toISOString().split('T')[0];
+                        } else {
+                            // Fallback: try to extract date from string
+                            tanggalFormatted = result.tanggal.split(' ')[0];
+                        }
+                    }
+                    
+                    // Set form data dari API response
+                    this.formData = {
+                        hari: result.hari || '',
+                        tanggal: tanggalFormatted,
+                        nama: result.nama || '',
+                        instansi: result.instansi || '',
+                        jabatan: result.jabatan || '',
+                        alamat_tujuan: result.alamat_tujuan || '',
+                        dokumentasi: result.dokumentasi || ''
+                    };
+                    
+                    // Set current file if exists
+                    if (result.file_path) {
+                        this.currentFile = result.file_path.split('/').pop();
+                    } else {
+                        this.currentFile = null;
+                    }
+                    
+                    this.selectedFile = null;
+                    
+                    console.log('Form data loaded:', this.formData);
+                    
+                    // Show modal
+                    this.showForm = true;
+                    
+                    // Force Alpine.js to update
+                    await this.$nextTick();
+                    
+                    // Reinitialize lucide icons
+                    setTimeout(() => {
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }, 100);
+                } else {
+                    throw new Error('Data laporan tidak ditemukan');
+                }
+                
+            } catch (error) {
+                console.error('Error loading laporan for edit:', error);
+                this.showMessage('Gagal memuat data laporan: ' + error.message, 'error');
+                this.editingId = null;
+            } finally {
+                this.loading = false;
+            }
         }
     }));
 });

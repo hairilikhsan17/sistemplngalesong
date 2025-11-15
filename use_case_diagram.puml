@@ -1,0 +1,68 @@
+@startuml Use Case Diagram - Aplikasi PLN Galesong
+
+!define RECTANGLE class
+
+left to right direction
+
+actor "Atasan\n(Admin)" as Atasan
+actor "Karyawan\n(Kelompok)" as Karyawan
+
+rectangle "Aplikasi PLN Galesong" {
+    ' Use Case Login
+    usecase "Login" as UC0
+    
+    ' Use Cases untuk Atasan
+    usecase "Lihat Dashboard" as UC1
+    usecase "Kelola Data Kelompok" as UC2
+    usecase "Kelola Data Karyawan" as UC3
+    usecase "Pemantauan Laporan" as UC4
+    usecase "Pemantauan Job\nPekerjaan" as UC5
+    usecase "Generate Prediksi" as UC6
+    usecase "Lihat Statistik" as UC7
+    usecase "Export Data" as UC8
+    usecase "Kelola Excel" as UC9
+    usecase "Pengaturan Admin" as UC10
+    
+    ' Use Cases untuk Karyawan
+    usecase "Lihat Dashboard\nKelompok" as UC11
+    usecase "Input Laporan Kerja" as UC12
+    usecase "Input Job Pekerjaan" as UC13
+    usecase "Export Data Kelompok" as UC14
+    usecase "Pengaturan Kelompok" as UC15
+}
+
+' Relationships Login
+Atasan --> UC0
+Karyawan --> UC0
+
+' Relationships Atasan
+Atasan --> UC1
+Atasan --> UC2
+Atasan --> UC3
+Atasan --> UC4
+Atasan --> UC5
+Atasan --> UC6
+Atasan --> UC7
+Atasan --> UC8
+Atasan --> UC9
+Atasan --> UC10
+
+' Relationships Karyawan
+Karyawan --> UC11
+Karyawan --> UC12
+Karyawan --> UC13
+Karyawan --> UC14
+Karyawan --> UC15
+
+note right of UC1
+  Atasan dapat melihat dashboard
+  dengan statistik lengkap
+end note
+
+note right of UC12
+  Karyawan dapat membuat, melihat,
+  mengedit, dan menghapus laporan
+end note
+
+@enduml
+

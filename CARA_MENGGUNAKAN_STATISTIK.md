@@ -164,3 +164,4 @@ Contoh struktur data kegiatan:
 **Catatan**: Pastikan data kegiatan sudah ada sebelum menggunakan fitur statistik. Jika belum ada, jalankan seeder terlebih dahulu.
 
 
+
