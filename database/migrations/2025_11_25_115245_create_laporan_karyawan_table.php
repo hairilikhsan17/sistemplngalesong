@@ -17,10 +17,20 @@ return new class extends Migration
             $table->date('tanggal');
             $table->string('nama');
             $table->string('instansi');
-            $table->string('jabatan');
             $table->string('alamat_tujuan');
-            $table->string('dokumentasi')->nullable();
-            $table->uuid('kelompok_id');
+            $table->enum('jenis_kegiatan', [
+                'Perbaikan KWH',
+                'Pemeliharaan Pengkabelan',
+                'Pengecekan Gardu',
+                'Penanganan Gangguan'
+            ])->nullable();
+            $table->text('deskripsi_kegiatan')->nullable();
+            $table->time('waktu_mulai_kegiatan')->nullable();
+            $table->time('waktu_selesai_kegiatan')->nullable();
+            $table->decimal('durasi_waktu', 5, 2)->default(0)->comment('Durasi dalam jam, dihitung otomatis');
+            $table->string('lokasi')->nullable();
+            $table->string('file_path')->nullable()->comment('Path untuk foto/file dokumentasi');
+            $table->uuid('kelompok_id')->nullable();
             $table->timestamps();
             
             $table->foreign('kelompok_id')->references('id')->on('kelompok')->onDelete('cascade');
@@ -35,6 +45,3 @@ return new class extends Migration
         Schema::dropIfExists('laporan_karyawan');
     }
 };
-
-
-

@@ -20,9 +20,13 @@ class LaporanKaryawan extends Model
         'tanggal',
         'nama',
         'instansi',
-        'jabatan',
         'alamat_tujuan',
-        'dokumentasi',
+        'jenis_kegiatan',
+        'deskripsi_kegiatan',
+        'waktu_mulai_kegiatan',
+        'waktu_selesai_kegiatan',
+        'durasi_waktu',
+        'lokasi',
         'file_path',
         'kelompok_id',
     ];
@@ -31,6 +35,7 @@ class LaporanKaryawan extends Model
         'id' => 'string',
         'tanggal' => 'date',
         'kelompok_id' => 'string',
+        'durasi_waktu' => 'decimal:2',
     ];
 
     /**
@@ -41,6 +46,3 @@ class LaporanKaryawan extends Model
         return $this->belongsTo(Kelompok::class);
     }
 }
-
-
-

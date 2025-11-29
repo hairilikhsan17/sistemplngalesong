@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\LaporanKaryawan;
 use App\Models\Kelompok;
 use App\Models\Karyawan;
-use App\Models\JobPekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +27,28 @@ class ExcelController extends Controller
         $excelFiles = $this->getExcelFiles();
         
         return view('dashboard.atasan.excel-management', compact('kelompoks', 'excelFiles'));
+    }
+
+    /**
+     * Display Excel upload page
+     */
+    public function upload()
+    {
+        $kelompoks = Kelompok::with(['karyawan', 'laporanKaryawan'])->get();
+        $excelFiles = $this->getExcelFiles();
+        
+        return view('dashboard.atasan.excel-management', compact('kelompoks', 'excelFiles'))->with('activeTab', 'upload');
+    }
+
+    /**
+     * Display Excel create page
+     */
+    public function create()
+    {
+        $kelompoks = Kelompok::with(['karyawan', 'laporanKaryawan'])->get();
+        $excelFiles = $this->getExcelFiles();
+        
+        return view('dashboard.atasan.excel-management', compact('kelompoks', 'excelFiles'))->with('activeTab', 'create');
     }
 
     /**

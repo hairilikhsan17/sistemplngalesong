@@ -49,64 +49,52 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <!-- Total Kelompok -->
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-3 sm:p-4 hover:shadow-lg transition-all duration-200 border border-blue-200">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-4 sm:p-5 hover:shadow-xl transition-all duration-200 border border-blue-200">
             <div class="flex flex-col items-center text-center">
-                <div class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm mb-2">
-                    <i data-lucide="users" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
+                <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md mb-3">
+                    <i data-lucide="users" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                 </div>
-                <p class="text-xs font-semibold text-gray-700 mb-1">Total Kelompok</p>
-                <p class="text-xl sm:text-2xl font-bold text-gray-900" x-text="stats.total_kelompok"></p>
-                <p class="text-[10px] text-gray-500 mt-1">Kelompok aktif</p>
+                <p class="text-sm font-semibold text-gray-700 mb-2">Total Kelompok</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" x-text="stats.total_kelompok"></p>
+                <p class="text-xs text-gray-500">Kelompok aktif</p>
             </div>
         </div>
 
         <!-- Total Karyawan -->
-        <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg shadow-md p-3 sm:p-4 hover:shadow-lg transition-all duration-200 border border-green-200">
+        <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg p-4 sm:p-5 hover:shadow-xl transition-all duration-200 border border-green-200">
             <div class="flex flex-col items-center text-center">
-                <div class="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-sm mb-2">
-                    <i data-lucide="user-check" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
+                <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-md mb-3">
+                    <i data-lucide="user-check" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                 </div>
-                <p class="text-xs font-semibold text-gray-700 mb-1">Total Karyawan</p>
-                <p class="text-xl sm:text-2xl font-bold text-gray-900" x-text="stats.total_karyawan"></p>
-                <p class="text-[10px] text-gray-500 mt-1">Karyawan terdaftar</p>
+                <p class="text-sm font-semibold text-gray-700 mb-2">Total Karyawan</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" x-text="stats.total_karyawan"></p>
+                <p class="text-xs text-gray-500">Karyawan terdaftar</p>
             </div>
         </div>
 
         <!-- Laporan Hari Ini -->
-        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-3 sm:p-4 hover:shadow-lg transition-all duration-200 border border-purple-200">
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-4 sm:p-5 hover:shadow-xl transition-all duration-200 border border-purple-200">
             <div class="flex flex-col items-center text-center">
-                <div class="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-sm mb-2">
-                    <i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
+                <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md mb-3">
+                    <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                 </div>
-                <p class="text-xs font-semibold text-gray-700 mb-1">Laporan Hari Ini</p>
-                <p class="text-xl sm:text-2xl font-bold text-gray-900" x-text="stats.laporan_hari_ini"></p>
-                <p class="text-[10px] text-gray-500 mt-1">Laporan masuk hari ini</p>
+                <p class="text-sm font-semibold text-gray-700 mb-2">Laporan Hari Ini</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" x-text="stats.laporan_hari_ini"></p>
+                <p class="text-xs text-gray-500">Laporan masuk hari ini</p>
             </div>
         </div>
 
         <!-- Total Laporan -->
-        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg shadow-md p-3 sm:p-4 hover:shadow-lg transition-all duration-200 border border-indigo-200">
+        <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-lg p-4 sm:p-5 hover:shadow-xl transition-all duration-200 border border-indigo-200">
             <div class="flex flex-col items-center text-center">
-                <div class="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg shadow-sm mb-2">
-                    <i data-lucide="file-text" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
+                <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-md mb-3">
+                    <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
                 </div>
-                <p class="text-xs font-semibold text-gray-700 mb-1">Total Laporan</p>
-                <p class="text-xl sm:text-2xl font-bold text-gray-900" x-text="stats.total_laporan"></p>
-                <p class="text-[10px] text-gray-500 mt-1">Semua laporan karyawan</p>
-            </div>
-        </div>
-
-        <!-- Total Job Pekerjaan -->
-        <div class="bg-gradient-to-br from-teal-50 to-cyan-100 rounded-lg shadow-md p-3 sm:p-4 hover:shadow-lg transition-all duration-200 border border-teal-200">
-            <div class="flex flex-col items-center text-center">
-                <div class="p-2 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg shadow-sm mb-2">
-                    <i data-lucide="briefcase" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
-                </div>
-                <p class="text-xs font-semibold text-gray-700 mb-1">Total Job Pekerjaan</p>
-                <p class="text-xl sm:text-2xl font-bold text-gray-900" x-text="stats.total_job_pekerjaan || 0"></p>
-                <p class="text-[10px] text-gray-500 mt-1">Semua job pekerjaan</p>
+                <p class="text-sm font-semibold text-gray-700 mb-2">Total Laporan</p>
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1" x-text="stats.total_laporan"></p>
+                <p class="text-xs text-gray-500">Semua laporan karyawan</p>
             </div>
         </div>
     </div>

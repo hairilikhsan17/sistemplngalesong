@@ -76,15 +76,6 @@
                     <i data-lucide="file-text" class="w-5 h-5"></i>
                     Input Laporan
                 </button>
-                <button
-                    x-data="{ activeTab: 'job' }"
-                    @click="activeTab = 'job'"
-                    :class="activeTab === 'job' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-900'"
-                    class="flex items-center gap-2 px-6 py-4 font-medium transition-colors"
-                >
-                    <i data-lucide="briefcase" class="w-5 h-5"></i>
-                    Input Job Pekerjaan
-                </button>
             </div>
 
             <div class="p-6">
@@ -96,11 +87,6 @@
                 <!-- Laporan Tab -->
                 <div x-show="activeTab === 'laporan'" x-cloak>
                     @include('dashboard.karyawan.laporan')
-                </div>
-
-                <!-- Job Tab -->
-                <div x-show="activeTab === 'job'" x-cloak>
-                    @include('dashboard.karyawan.job')
                 </div>
             </div>
         </div>

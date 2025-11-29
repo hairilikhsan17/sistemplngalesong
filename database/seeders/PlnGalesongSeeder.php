@@ -26,6 +26,12 @@ class PlnGalesongSeeder extends Seeder
         $kelompok2 = Kelompok::create([
             'id' => Str::uuid(),
             'nama_kelompok' => 'Kelompok 2',
+            'shift' => 'Shift 1',
+        ]);
+
+        $kelompok3 = Kelompok::create([
+            'id' => Str::uuid(),
+            'nama_kelompok' => 'Kelompok 3',
             'shift' => 'Shift 2',
         ]);
 
@@ -53,29 +59,63 @@ class PlnGalesongSeeder extends Seeder
             'kelompok_id' => $kelompok2->id,
         ]);
 
-        // Create Karyawan
+        User::create([
+            'id' => Str::uuid(),
+            'username' => 'kelompok3',
+            'password' => Hash::make('kelompok3123'),
+            'role' => 'karyawan',
+            'kelompok_id' => $kelompok3->id,
+        ]);
+
+        // Create Karyawan untuk Kelompok 1
         Karyawan::create([
             'id' => Str::uuid(),
-            'nama' => 'Fajar',
+            'nama' => 'Karyawan 1',
+            'kelompok_id' => $kelompok1->id,
+        ]);
+        Karyawan::create([
+            'id' => Str::uuid(),
+            'nama' => 'Karyawan 2',
+            'kelompok_id' => $kelompok1->id,
+        ]);
+        Karyawan::create([
+            'id' => Str::uuid(),
+            'nama' => 'Karyawan 3',
             'kelompok_id' => $kelompok1->id,
         ]);
 
+        // Create Karyawan untuk Kelompok 2
         Karyawan::create([
             'id' => Str::uuid(),
-            'nama' => 'Hairil',
-            'kelompok_id' => $kelompok1->id,
+            'nama' => 'Karyawan 1',
+            'kelompok_id' => $kelompok2->id,
         ]);
-
         Karyawan::create([
             'id' => Str::uuid(),
-            'nama' => 'Andi',
+            'nama' => 'Karyawan 2',
+            'kelompok_id' => $kelompok2->id,
+        ]);
+        Karyawan::create([
+            'id' => Str::uuid(),
+            'nama' => 'Karyawan 3',
             'kelompok_id' => $kelompok2->id,
         ]);
 
+        // Create Karyawan untuk Kelompok 3
         Karyawan::create([
             'id' => Str::uuid(),
-            'nama' => 'Budi',
-            'kelompok_id' => $kelompok2->id,
+            'nama' => 'Karyawan 1',
+            'kelompok_id' => $kelompok3->id,
+        ]);
+        Karyawan::create([
+            'id' => Str::uuid(),
+            'nama' => 'Karyawan 2',
+            'kelompok_id' => $kelompok3->id,
+        ]);
+        Karyawan::create([
+            'id' => Str::uuid(),
+            'nama' => 'Karyawan 3',
+            'kelompok_id' => $kelompok3->id,
         ]);
     }
 }

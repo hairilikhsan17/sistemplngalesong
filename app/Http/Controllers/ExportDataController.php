@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelompok;
 use App\Models\LaporanKaryawan;
-use App\Models\JobPekerjaan;
+use App\Models\Karyawan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -32,8 +33,7 @@ class ExportDataController extends Controller
             $totalData = [
                 'kelompok' => Kelompok::count(),
                 'karyawan' => DB::table('karyawan')->count(),
-                'laporan' => DB::table('laporan_karyawan')->count(),
-                'job' => DB::table('job_pekerjaan')->count()
+                'laporan' => DB::table('laporan_karyawan')->count()
             ];
             
             return view('dashboard.atasan.export-data', compact('kelompoks', 'totalData'));
@@ -44,8 +44,7 @@ class ExportDataController extends Controller
                 'totalData' => [
                     'kelompok' => 0,
                     'karyawan' => 0,
-                    'laporan' => 0,
-                    'job' => 0
+                    'laporan' => 0
                 ]
             ]);
         }
@@ -69,10 +68,12 @@ class ExportDataController extends Controller
             }
 
             // Get all data - DINAMIS: Otomatis mengambil semua kelompok yang ada
-            $kelompoks = Kelompok::with(['karyawan'])->orderBy('created_at')->get();
-            $karyawans = DB::table('karyawan')->get();
+            // Urutkan berdasarkan nama_kelompok untuk konsistensi
+            $kelompoks = Kelompok::orderBy('nama_kelompok', 'asc')->get();
+            $karyawans = Karyawan::all();
             $laporanKaryawans = LaporanKaryawan::with(['kelompok'])->get();
-            $jobPekerjaans = JobPekerjaan::with(['kelompok'])->get();
+            // Job Pekerjaan tidak digunakan karena hanya ada input laporan
+            $jobPekerjaans = collect(); // Empty collection
             $spreadsheet = new Spreadsheet();
             
             // Export semua data kelompok dengan struktur DINAMIS
@@ -111,12 +112,13 @@ class ExportDataController extends Controller
                 return response()->json(['error' => 'Kelompok ID required'], 400);
             }
 
-            $kelompok = Kelompok::with(['karyawan'])->findOrFail($kelompokId);
+            $kelompok = Kelompok::findOrFail($kelompokId);
             
             // Get data for this kelompok
-            $karyawans = DB::table('karyawan')->where('kelompok_id', $kelompokId)->get();
+            $karyawans = Karyawan::where('kelompok_id', $kelompokId)->get();
             $laporanKaryawans = LaporanKaryawan::where('kelompok_id', $kelompokId)->get();
-            $jobPekerjaans = JobPekerjaan::where('kelompok_id', $kelompokId)->get();
+            // Job Pekerjaan tidak digunakan karena hanya ada input laporan
+            $jobPekerjaans = collect(); // Empty collection
             $spreadsheet = new Spreadsheet();
             
             // Export data kelompok dengan struktur yang sama seperti export karyawan
@@ -378,19 +380,18 @@ class ExportDataController extends Controller
         $sheet->setCellValue('A2', 'Shift: ' . $kelompok->shift);
         $sheet->setCellValue('A3', 'Jumlah Karyawan: ' . $karyawans->count());
         $sheet->setCellValue('A4', 'Jumlah Laporan: ' . $laporanKaryawans->count());
-        $sheet->setCellValue('A5', 'Jumlah Job: ' . $jobPekerjaans->count());
-        $sheet->setCellValue('A6', 'Tanggal Export: ' . now()->format('Y-m-d H:i:s'));
+        $sheet->setCellValue('A5', 'Tanggal Export: ' . now()->format('Y-m-d H:i:s'));
         
-        // Tabel 1: Input Laporan (dimulai dari baris 8)
-        $startRowLaporan = 8;
+        // Tabel 1: Input Laporan (dimulai dari baris 7)
+        $startRowLaporan = 7;
         $sheet->setCellValue('A' . $startRowLaporan, 'TABEL 1: INPUT LAPORAN');
         $sheet->getStyle('A' . $startRowLaporan)->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A' . $startRowLaporan)->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('3B82F6');
         
-        // Header tabel laporan
-        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Dokumentasi'];
+        // Header tabel laporan - sesuai dengan field yang ada di database
+        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Lokasi', 'Dokumentasi'];
         $col = 'A';
         $headerRow = $startRowLaporan + 1;
         foreach ($laporanHeaders as $header) {
@@ -399,8 +400,8 @@ class ExportDataController extends Controller
         }
         
         // Style header tabel laporan
-        $sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->getFont()->setBold(true);
-        $sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->getFill()
+        $sheet->getStyle('A' . $headerRow . ':L' . $headerRow)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $headerRow . ':L' . $headerRow)->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('E5E7EB');
         
@@ -413,60 +414,26 @@ class ExportDataController extends Controller
             $sheet->setCellValue('C' . $row, $laporan->nama);
             $sheet->setCellValue('D' . $row, $laporan->instansi);
             $sheet->setCellValue('E' . $row, $laporan->alamat_tujuan);
-            $sheet->setCellValue('F' . $row, $laporan->dokumentasi ?? '-');
-            $row++;
-            $no++;
-        }
-        
-        // Tabel 2: Input Job Pekerjaan (dimulai 3 baris setelah tabel laporan)
-        $startRowJob = $row + 3;
-        $sheet->setCellValue('A' . $startRowJob, 'TABEL 2: INPUT JOB PEKERJAAN');
-        $sheet->getStyle('A' . $startRowJob)->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle('A' . $startRowJob)->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('8B5CF6');
-        
-        // Header tabel job pekerjaan
-        $jobHeaders = ['No', 'Tanggal', 'Hari', 'Perbaikan KWH', 'Pemeliharaan Pengkabelan', 'Pengecekan Gardu', 'Penanganan Gangguan', 'Lokasi', 'Waktu (jam)', 'Created At'];
-        $col = 'A';
-        $headerRowJob = $startRowJob + 1;
-        foreach ($jobHeaders as $header) {
-            $sheet->setCellValue($col . $headerRowJob, $header);
-            $col++;
-        }
-        
-        // Style header tabel job pekerjaan
-        $sheet->getStyle('A' . $headerRowJob . ':J' . $headerRowJob)->getFont()->setBold(true);
-        $sheet->getStyle('A' . $headerRowJob . ':J' . $headerRowJob)->getFill()
-            ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setRGB('E5E7EB');
-        
-        // Data job pekerjaan
-        $row = $headerRowJob + 1;
-        $no = 1;
-        foreach ($jobPekerjaans as $job) {
-            $sheet->setCellValue('A' . $row, $no);
-            $sheet->setCellValue('B' . $row, $job->tanggal->format('Y-m-d'));
-            $sheet->setCellValue('C' . $row, $job->hari);
-            $sheet->setCellValue('D' . $row, $job->perbaikan_kwh);
-            $sheet->setCellValue('E' . $row, $job->pemeliharaan_pengkabelan);
-            $sheet->setCellValue('F' . $row, $job->pengecekan_gardu);
-            $sheet->setCellValue('G' . $row, $job->penanganan_gangguan);
-            $sheet->setCellValue('H' . $row, $job->lokasi);
-            $sheet->setCellValue('I' . $row, $job->waktu_penyelesaian);
-            $sheet->setCellValue('J' . $row, $job->created_at->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('F' . $row, $laporan->waktu_mulai_kegiatan ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('G' . $row, $laporan->jenis_kegiatan ?? '-');
+            $sheet->setCellValue('H' . $row, $laporan->deskripsi_kegiatan ?? '-');
+            $sheet->setCellValue('I' . $row, $laporan->waktu_selesai_kegiatan ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('J' . $row, $laporan->durasi_waktu ? number_format($laporan->durasi_waktu, 2) . ' jam' : '0 jam');
+            $sheet->setCellValue('K' . $row, $laporan->lokasi ?? '-');
+            $sheet->setCellValue('L' . $row, $laporan->file_path ? 'Ada File' : '-');
             $row++;
             $no++;
         }
         
         // Auto size semua kolom
-        foreach (range('A', 'J') as $col) {
+        foreach (range('A', 'L') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Set border untuk semua tabel
-        $this->setTableBorders($sheet, 'A' . $headerRow . ':F' . ($headerRow + $laporanKaryawans->count()));
-        $this->setTableBorders($sheet, 'A' . $headerRowJob . ':J' . ($headerRowJob + $jobPekerjaans->count()));
+        // Set border untuk tabel laporan
+        if ($laporanKaryawans->count() > 0) {
+            $this->setTableBorders($sheet, 'A' . $headerRow . ':L' . ($headerRow + $laporanKaryawans->count()));
+        }
     }
     
     private function setTableBorders($sheet, $range)
@@ -491,18 +458,17 @@ class ExportDataController extends Controller
         $sheet->setCellValue('A2', 'Total Kelompok: ' . $kelompoks->count() . ' (Otomatis menyesuaikan)');
         $sheet->setCellValue('A3', 'Total Karyawan: ' . $karyawans->count());
         $sheet->setCellValue('A4', 'Total Laporan: ' . $laporanKaryawans->count());
-        $sheet->setCellValue('A5', 'Total Job Pekerjaan: ' . $jobPekerjaans->count());
-        $sheet->setCellValue('A6', 'Tanggal Export: ' . now()->format('Y-m-d H:i:s'));
-        $sheet->setCellValue('A7', 'Catatan: Sistem otomatis menyesuaikan dengan perubahan kelompok (tambah/hapus)');
+        $sheet->setCellValue('A5', 'Tanggal Export: ' . now()->format('Y-m-d H:i:s'));
+        $sheet->setCellValue('A6', 'Catatan: Sistem otomatis menyesuaikan dengan perubahan kelompok (tambah/hapus)');
         
-        $currentRow = 9;
+        $currentRow = 8;
         
         // DINAMIS: Loop untuk setiap kelompok yang ada
         // Jika ada kelompok baru, akan otomatis ditambahkan
         // Jika ada kelompok yang dihapus, akan otomatis tidak muncul
         foreach ($kelompoks as $index => $kelompok) {
-            // Header Kelompok - DINAMIS: Otomatis menyesuaikan nama kelompok
-            $sheet->setCellValue('A' . $currentRow, 'KELOMPOK ' . ($index + 1) . ': ' . strtoupper($kelompok->nama_kelompok));
+            // Header Kelompok - Gunakan nama kelompok langsung, tidak pakai nomor urut
+            $sheet->setCellValue('A' . $currentRow, strtoupper($kelompok->nama_kelompok));
             $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(14);
             $sheet->getStyle('A' . $currentRow)->getFill()
                 ->setFillType(Fill::FILL_SOLID)
@@ -518,16 +484,19 @@ class ExportDataController extends Controller
             $sheet->setCellValue('A' . $currentRow, 'Shift: ' . $kelompok->shift);
             $currentRow++;
             
-            // Get data for this kelompok
-            $kelompokKaryawans = $karyawans->where('kelompok_id', $kelompok->id);
-            $kelompokLaporans = $laporanKaryawans->where('kelompok_id', $kelompok->id);
-            $kelompokJobs = $jobPekerjaans->where('kelompok_id', $kelompok->id);
+            // Get data for this kelompok - Pastikan menggunakan ID yang benar
+            $kelompokId = $kelompok->id;
+            // Filter menggunakan filter() untuk memastikan perbandingan yang benar
+            $kelompokKaryawans = $karyawans->filter(function($karyawan) use ($kelompokId) {
+                return $karyawan->kelompok_id == $kelompokId;
+            });
+            $kelompokLaporans = $laporanKaryawans->filter(function($laporan) use ($kelompokId) {
+                return $laporan->kelompok_id == $kelompokId;
+            });
             
             $sheet->setCellValue('A' . $currentRow, 'Jumlah Karyawan: ' . $kelompokKaryawans->count());
             $currentRow++;
             $sheet->setCellValue('A' . $currentRow, 'Jumlah Laporan: ' . $kelompokLaporans->count());
-            $currentRow++;
-            $sheet->setCellValue('A' . $currentRow, 'Jumlah Job: ' . $kelompokJobs->count());
             $currentRow += 2;
             
             // Tabel 1: Input Laporan
@@ -540,8 +509,8 @@ class ExportDataController extends Controller
             
             $currentRow++;
             
-            // Header tabel laporan
-            $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Dokumentasi'];
+            // Header tabel laporan - sesuai dengan field yang ada di database
+            $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Lokasi', 'Dokumentasi'];
             $col = 'A';
             $headerRow = $currentRow;
             foreach ($laporanHeaders as $header) {
@@ -550,8 +519,8 @@ class ExportDataController extends Controller
             }
             
             // Style header tabel laporan
-            $sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->getFont()->setBold(true);
-            $sheet->getStyle('A' . $headerRow . ':F' . $headerRow)->getFill()
+            $sheet->getStyle('A' . $headerRow . ':L' . $headerRow)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $headerRow . ':L' . $headerRow)->getFill()
                 ->setFillType(Fill::FILL_SOLID)
                 ->getStartColor()->setRGB('E5E7EB');
             
@@ -565,7 +534,13 @@ class ExportDataController extends Controller
                 $sheet->setCellValue('C' . $currentRow, $laporan->nama);
                 $sheet->setCellValue('D' . $currentRow, $laporan->instansi);
                 $sheet->setCellValue('E' . $currentRow, $laporan->alamat_tujuan);
-                $sheet->setCellValue('F' . $currentRow, $laporan->dokumentasi ?? '-');
+                $sheet->setCellValue('F' . $currentRow, $laporan->waktu_mulai_kegiatan ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+                $sheet->setCellValue('G' . $currentRow, $laporan->jenis_kegiatan ?? '-');
+                $sheet->setCellValue('H' . $currentRow, $laporan->deskripsi_kegiatan ?? '-');
+                $sheet->setCellValue('I' . $currentRow, $laporan->waktu_selesai_kegiatan ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+                $sheet->setCellValue('J' . $currentRow, $laporan->durasi_waktu ? number_format($laporan->durasi_waktu, 2) . ' jam' : '0 jam');
+                $sheet->setCellValue('K' . $currentRow, $laporan->lokasi ?? '-');
+                $sheet->setCellValue('L' . $currentRow, $laporan->file_path ? 'Ada File' : '-');
                 $currentRow++;
                 $no++;
             }
@@ -576,66 +551,9 @@ class ExportDataController extends Controller
                 $currentRow++;
             }
             
-            $currentRow += 2;
-            
-            // Tabel 2: Input Job Pekerjaan
-            $startRowJob = $currentRow;
-            $sheet->setCellValue('A' . $startRowJob, 'Tabel Input Job Pekerjaan');
-            $sheet->getStyle('A' . $startRowJob)->getFont()->setBold(true)->setSize(12);
-            $sheet->getStyle('A' . $startRowJob)->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('8B5CF6');
-            
-            $currentRow++;
-            
-            // Header tabel job pekerjaan
-            $jobHeaders = ['No', 'Tanggal', 'Hari', 'Perbaikan KWH', 'Pemeliharaan Pengkabelan', 'Pengecekan Gardu', 'Penanganan Gangguan', 'Lokasi', 'Waktu (jam)', 'Created At'];
-            $col = 'A';
-            $headerRowJob = $currentRow;
-            foreach ($jobHeaders as $header) {
-                $sheet->setCellValue($col . $headerRowJob, $header);
-                $col++;
-            }
-            
-            // Style header tabel job pekerjaan
-            $sheet->getStyle('A' . $headerRowJob . ':J' . $headerRowJob)->getFont()->setBold(true);
-            $sheet->getStyle('A' . $headerRowJob . ':J' . $headerRowJob)->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('E5E7EB');
-            
-            $currentRow++;
-            $no = 1;
-            
-            // Data job pekerjaan
-            foreach ($kelompokJobs as $job) {
-                $sheet->setCellValue('A' . $currentRow, $no);
-                $sheet->setCellValue('B' . $currentRow, $job->tanggal->format('Y-m-d'));
-                $sheet->setCellValue('C' . $currentRow, $job->hari);
-                $sheet->setCellValue('D' . $currentRow, $job->perbaikan_kwh);
-                $sheet->setCellValue('E' . $currentRow, $job->pemeliharaan_pengkabelan);
-                $sheet->setCellValue('F' . $currentRow, $job->pengecekan_gardu);
-                $sheet->setCellValue('G' . $currentRow, $job->penanganan_gangguan);
-                $sheet->setCellValue('H' . $currentRow, $job->lokasi);
-                $sheet->setCellValue('I' . $currentRow, $job->waktu_penyelesaian);
-                $sheet->setCellValue('J' . $currentRow, $job->created_at->format('Y-m-d H:i:s'));
-                $currentRow++;
-                $no++;
-            }
-            
-            // DINAMIS: Jika tidak ada job (kelompok baru atau data kosong)
-            if ($kelompokJobs->count() == 0) {
-                $sheet->setCellValue('A' . $currentRow, 'Tidak ada data job pekerjaan untuk kelompok ini');
-                $currentRow++;
-            }
-            
             // Set border untuk tabel laporan
             if ($kelompokLaporans->count() > 0) {
-                $this->setTableBorders($sheet, 'A' . $headerRow . ':F' . ($headerRow + $kelompokLaporans->count()));
-            }
-            
-            // Set border untuk tabel job pekerjaan
-            if ($kelompokJobs->count() > 0) {
-                $this->setTableBorders($sheet, 'A' . $headerRowJob . ':J' . ($headerRowJob + $kelompokJobs->count()));
+                $this->setTableBorders($sheet, 'A' . $headerRow . ':L' . ($headerRow + $kelompokLaporans->count()));
             }
             
             // Spasi antar kelompok (5 baris)
@@ -643,7 +561,7 @@ class ExportDataController extends Controller
         }
         
         // DINAMIS: Auto size semua kolom - otomatis menyesuaikan lebar kolom
-        foreach (range('A', 'J') as $col) {
+        foreach (range('A', 'L') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         

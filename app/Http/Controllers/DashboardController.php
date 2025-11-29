@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Kelompok;
 use App\Models\Karyawan;
 use App\Models\LaporanKaryawan;
-use App\Models\JobPekerjaan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,9 +42,6 @@ class DashboardController extends Controller
             // Calculate average reports per day (last 30 days)
             $avgPerHari = $this->calculateAvgPerHari();
             
-            // Calculate total job pekerjaan
-            $totalJobPekerjaan = JobPekerjaan::count();
-            
             $stats = [
                 // Basic counts
                 'total_kelompok' => Kelompok::count(),
@@ -58,9 +54,6 @@ class DashboardController extends Controller
                 'laporan_bulan_ini' => LaporanKaryawan::whereMonth('created_at', now()->month)
                     ->whereYear('created_at', now()->year)->count(),
                 'laporan_pending' => $pendingReview,
-                
-                // Job Pekerjaan statistics
-                'total_job_pekerjaan' => $totalJobPekerjaan,
                 
                 // Performance metrics
                 'avg_waktu_penyelesaian' => 0,
@@ -83,7 +76,6 @@ class DashboardController extends Controller
                 'laporan_hari_ini' => 0,
                 'laporan_bulan_ini' => 0,
                 'laporan_pending' => 0,
-                'total_job_pekerjaan' => 0,
                 'avg_waktu_penyelesaian' => 0,
                 'best_performing_group' => 'Error',
                 'monthly_trend' => [],
@@ -130,12 +122,7 @@ class DashboardController extends Controller
         
         if ($kelompok) {
             $laporanCount = LaporanKaryawan::where('kelompok_id', $kelompok->id)->count();
-            $jobsCount = JobPekerjaan::where('kelompok_id', $kelompok->id)->count();
             $recentLaporan = LaporanKaryawan::where('kelompok_id', $kelompok->id)
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get();
-            $recentJobs = JobPekerjaan::where('kelompok_id', $kelompok->id)
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get();
@@ -144,13 +131,11 @@ class DashboardController extends Controller
             $prediksis = collect([]); // You can add prediksi logic here if needed
         } else {
             $laporanCount = 0;
-            $jobsCount = 0;
             $recentLaporan = collect([]);
-            $recentJobs = collect([]);
             $prediksis = collect([]);
         }
         
-        return view('dashboard.kelompok.index', compact('performanceData', 'kelompok', 'laporanCount', 'jobsCount', 'recentLaporan', 'recentJobs', 'prediksis', 'userRanking'));
+        return view('dashboard.kelompok.index', compact('performanceData', 'kelompok', 'laporanCount', 'recentLaporan', 'prediksis', 'userRanking'));
     }
     
     /**
@@ -171,26 +156,8 @@ class DashboardController extends Controller
                 ->pluck('total', 'kelompok_id')
                 ->toArray();
             
-            // Get total job per kelompok (bulan ini)
-            $totalJobPerKelompok = JobPekerjaan::whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->select('kelompok_id', DB::raw('COUNT(*) as total'))
-                ->groupBy('kelompok_id')
-                ->pluck('total', 'kelompok_id')
-                ->toArray();
-            
             // Get max values for normalization
             $maxLaporan = !empty($totalLaporanPerKelompok) ? max($totalLaporanPerKelompok) : 1;
-            $maxJob = !empty($totalJobPerKelompok) ? max($totalJobPerKelompok) : 1;
-            
-            // Get rata-rata waktu penyelesaian per kelompok
-            $avgWaktuPerKelompok = JobPekerjaan::where('waktu_penyelesaian', '>', 0)
-                ->select('kelompok_id', DB::raw('AVG(waktu_penyelesaian) as avg_waktu'))
-                ->groupBy('kelompok_id')
-                ->pluck('avg_waktu', 'kelompok_id')
-                ->toArray();
-            
-            $maxWaktu = !empty($avgWaktuPerKelompok) ? max($avgWaktuPerKelompok) : 1;
             
             // Get konsistensi (laporan hari ini dan minggu ini)
             $laporanHariIniPerKelompok = LaporanKaryawan::whereDate('created_at', today())
@@ -211,25 +178,12 @@ class DashboardController extends Controller
             foreach ($kelompoks as $kelompok) {
                 $score = 0;
                 
-                // 1. Laporan (40% weight) - total laporan bulan ini
+                // 1. Laporan (70% weight) - total laporan bulan ini
                 $totalLaporan = $totalLaporanPerKelompok[$kelompok->id] ?? 0;
                 $laporanScore = ($totalLaporan / $maxLaporan) * 100;
-                $score += $laporanScore * 0.4;
+                $score += $laporanScore * 0.7;
                 
-                // 2. Rata-rata waktu penyelesaian (30% weight) - lower is better
-                $avgWaktu = $avgWaktuPerKelompok[$kelompok->id] ?? 0;
-                
-                if ($avgWaktu > 0 && $maxWaktu > 0) {
-                    // Invert: lower time = higher score
-                    // Scale: 0 jam = 100, maxWaktu jam = 0
-                    $waktuScore = max(0, 100 - (($avgWaktu / $maxWaktu) * 100));
-                    $score += $waktuScore * 0.3;
-                } else {
-                    // No data, give neutral score (50% of 30% = 15%)
-                    $score += 50 * 0.3;
-                }
-                
-                // 3. Konsistensi (30% weight) - laporan hari ini dan minggu ini
+                // 2. Konsistensi (30% weight) - laporan hari ini dan minggu ini
                 $laporanHariIni = $laporanHariIniPerKelompok[$kelompok->id] ?? 0;
                 $laporanMingguIni = $laporanMingguIniPerKelompok[$kelompok->id] ?? 0;
                 
@@ -390,10 +344,6 @@ class DashboardController extends Controller
                 
                 'performance_ranking' => $performanceRanking,
                 'monthly_performance' => $this->getGroupMonthlyPerformance($kelompok->id),
-                
-                // Job statistics
-                'total_job' => 0, // Will be implemented when JobPekerjaan structure is clear
-                'job_selesai' => 0, // Will be implemented when JobPekerjaan structure is clear
                 
                 // Recent activities
                 'recent_laporan' => $this->getGroupRecentLaporan($kelompok->id),
@@ -665,24 +615,12 @@ class DashboardController extends Controller
     
     /**
      * Calculate average waktu penyelesaian for a kelompok
-     * waktu_penyelesaian is in hours, convert to days (divide by 24)
+     * Based on laporan data
      */
     private function calculateAvgWaktuPenyelesaian($kelompokId)
     {
-        try {
-            $avgWaktuHours = JobPekerjaan::where('kelompok_id', $kelompokId)
-                ->where('waktu_penyelesaian', '>', 0)
-                ->avg('waktu_penyelesaian');
-            
-            if ($avgWaktuHours > 0) {
-                // Convert hours to days
-                return $avgWaktuHours / 24;
-            }
-            
-            return 0;
-        } catch (\Exception $e) {
-            return 0;
-        }
+        // Return 0 since job pekerjaan is removed
+        return 0;
     }
 
     /**
@@ -731,8 +669,6 @@ class DashboardController extends Controller
      */
     private function getUpcomingTasks($kelompokId)
     {
-        // For now, return empty array since JobPekerjaan structure is not clear
-        // This can be implemented later when JobPekerjaan structure is defined
         return collect([]);
     }
 
@@ -803,7 +739,6 @@ class DashboardController extends Controller
      */
     private function getJobCompletionChart()
     {
-        // For now, return sample data since JobPekerjaan structure is not clear
         return [
             'labels' => ['Selesai', 'Progress', 'Pending'],
             'datasets' => [[
@@ -915,8 +850,6 @@ class DashboardController extends Controller
      */
     private function getGroupJobDistribution($kelompokId)
     {
-        // For now, return empty data since JobPekerjaan structure is not clear
-        // This can be implemented later when JobPekerjaan structure is defined
         return [
             'labels' => ['Maintenance', 'Installation', 'Repair'],
             'datasets' => [[

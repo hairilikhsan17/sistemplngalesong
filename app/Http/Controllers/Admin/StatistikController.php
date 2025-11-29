@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Kegiatan;
 use App\Models\Kelompok;
 use App\Models\LaporanKaryawan;
-use App\Models\JobPekerjaan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;

@@ -3,912 +3,672 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Kegiatan;
-use App\Models\Prediksi;
 use App\Models\Kelompok;
 use App\Models\LaporanKaryawan;
-use App\Models\JobPekerjaan;
+use App\Models\PrediksiKegiatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
 
 class PrediksiController extends Controller
 {
+    // Jenis kegiatan yang tersedia
+    private $jenisKegiatan = [
+        'Perbaikan KWH' => 'Perbaikan KWH',
+        'Pemeliharaan Pengkabelan' => 'Pemeliharaan Pengkabelan',
+        'Pengecekan Gardu' => 'Pengecekan Gardu',
+        'Penanganan Gangguan' => 'Penanganan Gangguan'
+    ];
+
+    // Parameter Triple Exponential Smoothing
+    private $alpha = 0.4; // Smoothing constant for level
+    private $beta = 0.3;  // Smoothing constant for trend
+
     /**
-     * Display prediction page
+     * Normalize jenis kegiatan format
+     * Convert various formats to standard format
      */
-    public function index(Request $request)
+    private function normalizeJenisKegiatan($jenisKegiatan)
+    {
+        // Mapping untuk format yang berbeda
+        $mapping = [
+            'perbaikan_kwh' => 'Perbaikan KWH',
+            'perbaikan kwh' => 'Perbaikan KWH',
+            'Perbaikan KWH' => 'Perbaikan KWH',
+            'pemeliharaan_pengkabelan' => 'Pemeliharaan Pengkabelan',
+            'pemeliharaan pengkabelan' => 'Pemeliharaan Pengkabelan',
+            'Pemeliharaan Pengkabelan' => 'Pemeliharaan Pengkabelan',
+            'pengecekan_gardu' => 'Pengecekan Gardu',
+            'pengecekan gardu' => 'Pengecekan Gardu',
+            'Pengecekan Gardu' => 'Pengecekan Gardu',
+            'penanganan_gangguan' => 'Penanganan Gangguan',
+            'penanganan gangguan' => 'Penanganan Gangguan',
+            'Penanganan Gangguan' => 'Penanganan Gangguan',
+        ];
+
+        $normalized = trim($jenisKegiatan);
+        return $mapping[$normalized] ?? $normalized;
+    }
+
+    /**
+     * Display generate kegiatan page
+     */
+    public function generateKegiatan()
     {
         // Ensure only atasan can access
         if (!auth()->user()->isAtasan()) {
             abort(403, 'Unauthorized access');
         }
-        
-        $tipe = $request->get('tipe', 'laporan'); // 'laporan' or 'job'
-        
-        // Validate tipe
-        if (!in_array($tipe, ['laporan', 'job'])) {
-            $tipe = 'laporan';
-        }
-        
-        // Get all kelompok that are registered in the system
+
         $kelompoks = Kelompok::orderBy('nama_kelompok')->get();
         
-        // Get list of kelompok names for filter dropdown
-        $kelompokList = $kelompoks->pluck('nama_kelompok')->toArray();
-        
-        // Get latest predictions (filter by tipe if needed)
-        $latestPredictions = Prediksi::orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->filter(function ($prediksi) use ($tipe) {
-                $params = $prediksi->params ?? [];
-                return ($params['tipe'] ?? 'laporan') === $tipe;
-            })
-            ->values();
-        
-        // Format predictions for frontend
-        $formattedPredictions = $latestPredictions->map(function ($prediksi) {
-            $params = $prediksi->params ?? [];
-            $tipe = $params['tipe'] ?? 'laporan';
-            $kelompokName = $params['kelompok'] ?? 'N/A';
-            $bulanTarget = $params['bulan_target'] ?? (strpos($prediksi->bulan, '_') !== false ? explode('_', $prediksi->bulan)[0] : $prediksi->bulan);
-            $kelompokDisplay = $kelompokName === 'all' ? 'Semua Kelompok' : $kelompokName;
-            $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
-            $hasilLabel = $tipe === 'laporan' ? 'jumlah laporan' : 'hari';
-            
+        // Format kelompok untuk dropdown
+        $kelompoksFormatted = $kelompoks->map(function ($kelompok) {
             return [
-                'id' => $prediksi->id,
-                'bulan' => $bulanTarget,
-                'tipe' => $tipe,
-                'tipe_label' => $tipeLabel,
-                'kelompok' => $kelompokDisplay,
-                'hasil_prediksi' => round($prediksi->hasil_prediksi, 2),
-                'hasil_label' => $hasilLabel,
-                'akurasi' => round($prediksi->akurasi, 2),
-                'metode' => $prediksi->metode,
-                'created_at' => $prediksi->created_at->format('d/m/Y H:i'),
+                'id' => $kelompok->id,
+                'label' => $kelompok->nama_kelompok . ' (' . $kelompok->shift . ')'
             ];
-        })->values();
-        
-        return view('admin.prediksi.index', compact('kelompoks', 'kelompokList', 'latestPredictions', 'formattedPredictions', 'tipe'));
+        });
+
+        // Get latest predictions if any
+        $latestPredictions = PrediksiKegiatan::with('kelompok')
+            ->orderBy('waktu_generate', 'desc')
+            ->get()
+            ->groupBy('kelompok_id')
+            ->map(function ($predictions) {
+                return $predictions->first();
+            });
+
+        $formattedPredictions = collect();
+        foreach ($latestPredictions as $prediction) {
+            $formattedPredictions->push([
+                'kelompok_id' => $prediction->kelompok_id,
+                'kelompok' => $prediction->kelompok->nama_kelompok ?? 'N/A',
+                'tanggal_prediksi' => $prediction->tanggal_prediksi->format('Y-m-d'),
+                'waktu_generate' => $prediction->waktu_generate->format('H:i'),
+            ]);
+        }
+
+        // Define jenisKegiatan variable for view
+        $jenisKegiatan = $this->jenisKegiatan;
+
+        return view('admin.prediksi.generate-kegiatan', compact(
+            'kelompoksFormatted',
+            'jenisKegiatan',
+            'formattedPredictions'
+        ));
     }
 
     /**
-     * Get latest predictions (API)
+     * Generate prediksi kegiatan using Triple Exponential Smoothing
      */
-    public function getLatest(Request $request)
+    public function generatePrediksiKegiatan(Request $request)
     {
         // Ensure only atasan can access
         if (!auth()->user()->isAtasan()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
-        
-        try {
-            $tipe = $request->get('tipe', 'laporan');
-            
-            // Validate tipe
-            if (!in_array($tipe, ['laporan', 'job'])) {
-                $tipe = 'laporan';
-            }
-            
-            // Get latest predictions (filter by tipe if needed)
-            $latestPredictions = Prediksi::orderBy('created_at', 'desc')
-                ->limit(10)
-                ->get()
-                ->filter(function ($prediksi) use ($tipe) {
-                    $params = $prediksi->params ?? [];
-                    return ($params['tipe'] ?? 'laporan') === $tipe;
-                })
-                ->values();
-            
-            // Format data for frontend
-            $formattedPredictions = $latestPredictions->map(function ($prediksi) {
-                $params = $prediksi->params ?? [];
-                $tipe = $params['tipe'] ?? 'laporan';
-                $kelompokName = $params['kelompok'] ?? 'N/A';
-                $bulanTarget = $params['bulan_target'] ?? (strpos($prediksi->bulan, '_') !== false ? explode('_', $prediksi->bulan)[0] : $prediksi->bulan);
-                $kelompokDisplay = $kelompokName === 'all' ? 'Semua Kelompok' : $kelompokName;
-                $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
-                $hasilLabel = $tipe === 'laporan' ? 'jumlah laporan' : 'hari';
-                
-                return [
-                    'id' => $prediksi->id,
-                    'bulan' => $bulanTarget,
-                    'tipe' => $tipe,
-                    'tipe_label' => $tipeLabel,
-                    'kelompok' => $kelompokDisplay,
-                    'hasil_prediksi' => round($prediksi->hasil_prediksi, 2),
-                    'hasil_label' => $hasilLabel,
-                    'akurasi' => round($prediksi->akurasi, 2),
-                    'metode' => $prediksi->metode,
-                    'created_at' => $prediksi->created_at->format('d/m/Y H:i'),
-                    'created_at_raw' => $prediksi->created_at->toIso8601String(),
-                ];
-            });
-            
-            return response()->json([
-                'success' => true,
-                'data' => $formattedPredictions->values(),
-            ]);
-        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ], 500);
+                'message' => 'Unauthorized access'
+            ], 403);
         }
-    }
 
-    /**
-     * Generate prediction using Holt-Winters
-     */
-    public function generate(Request $request)
-    {
-        // Ensure only atasan can access
-        if (!auth()->user()->isAtasan()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
-        
-        $kelompokNames = Kelompok::pluck('nama_kelompok')->toArray();
-        $validKelompok = array_merge(['all'], $kelompokNames);
-        
         $request->validate([
-            'tipe' => 'required|string|in:laporan,job',
-            'kelompok' => ['required', 'string', function ($attribute, $value, $fail) use ($validKelompok) {
-                if (!in_array($value, $validKelompok)) {
-                    $fail('Kelompok yang dipilih tidak valid.');
-                }
-            }],
-            'bulan_target' => 'required|date_format:Y-m',
-            'alpha' => 'required|numeric|min:0|max:1',
-            'beta' => 'required|numeric|min:0|max:1',
-            'gamma' => 'required|numeric|min:0|max:1',
+            'kelompok_id' => 'required|exists:kelompok,id',
+            'jenis_kegiatan' => 'nullable|in:all,Perbaikan KWH,Pemeliharaan Pengkabelan,Pengecekan Gardu,Penanganan Gangguan'
         ]);
 
-        try {
-            $tipe = $request->tipe;
-            $kelompok = $request->kelompok;
-            $bulanTarget = $request->bulan_target;
-            $alpha = (float) $request->alpha;
-            $beta = (float) $request->beta;
-            $gamma = (float) $request->gamma;
+        $kelompokId = $request->kelompok_id;
+        $jenisKegiatanFilter = $request->jenis_kegiatan;
+
+        // Get kelompok
+        $kelompok = Kelompok::findOrFail($kelompokId);
+
+        // Determine which jenis kegiatan to predict
+        $jenisKegiatanList = $jenisKegiatanFilter === 'all' 
+            ? array_keys($this->jenisKegiatan) 
+            : [$jenisKegiatanFilter];
+
+        $results = [];
+        
+        // Set timezone ke Makassar (WITA - UTC+8)
+        $now = Carbon::now('Asia/Makassar');
+        $tanggalPrediksi = $now->copy()->addDay()->startOfDay(); // Besok
+
+        foreach ($jenisKegiatanList as $jenisKegiatan) {
+            // Normalize jenis kegiatan to standard format
+            $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
             
-            // Get historical data (last 12 months or more if available)
-            $startDate = Carbon::parse($bulanTarget)->subMonths(24)->startOfMonth();
-            $endDate = Carbon::parse($bulanTarget)->subMonth()->endOfMonth();
-            
-            if ($tipe === 'laporan') {
-                // Query untuk Laporan Karyawan
-                $query = LaporanKaryawan::with('kelompok')
-                    ->whereBetween('tanggal', [$startDate, $endDate]);
-                
-                if ($kelompok !== 'all') {
-                    $kelompokModel = Kelompok::where('nama_kelompok', $kelompok)->first();
-                    if ($kelompokModel) {
-                        $query->where('kelompok_id', $kelompokModel->id);
-                    }
-                }
-                
-                // Get data grouped by month - untuk laporan, kita hitung jumlah laporan per bulan
-                // Karena laporan tidak ada durasi, kita gunakan jumlah laporan sebagai metrik
-                $historicalData = (clone $query)->select(
-                        DB::raw('YEAR(tanggal) as year'),
-                        DB::raw('MONTH(tanggal) as month'),
-                        DB::raw('COUNT(*) as jumlah_laporan')
-                    )
-                    ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-                    ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-                    ->get();
-                
-                // Convert jumlah laporan menjadi "durasi" untuk prediksi (asumsi 1 laporan = 1 hari)
-                $series = $historicalData->pluck('jumlah_laporan')->toArray();
-                
-            } else {
-                // Query untuk Job Pekerjaan
-                $query = JobPekerjaan::with('kelompok')
-                    ->whereBetween('tanggal', [$startDate, $endDate]);
-                
-                if ($kelompok !== 'all') {
-                    $kelompokModel = Kelompok::where('nama_kelompok', $kelompok)->first();
-                    if ($kelompokModel) {
-                        $query->where('kelompok_id', $kelompokModel->id);
-                    }
-                }
-                
-                // Get data grouped by month - rata-rata waktu penyelesaian
-                $historicalData = (clone $query)->select(
-                        DB::raw('YEAR(tanggal) as year'),
-                        DB::raw('MONTH(tanggal) as month'),
-                        DB::raw('AVG(waktu_penyelesaian) as rata_durasi')
-                    )
-                    ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-                    ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-                    ->get();
-                
-                $series = $historicalData->pluck('rata_durasi')->toArray();
+            // Get historical data for this jenis kegiatan
+            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan);
+
+            if (count($historicalData) < 3) {
+                continue; // Skip if not enough data
             }
+
+            // Calculate prediction using Triple Exponential Smoothing
+            $prediction = $this->calculateTripleExponentialSmoothing($historicalData);
+
+            // Calculate MAPE
+            $mape = $this->calculateMAPE($historicalData, $prediction['forecasts']);
+
+            // Delete old predictions with different format for same jenis kegiatan
+            PrediksiKegiatan::where('kelompok_id', $kelompokId)
+                ->where('tanggal_prediksi', $tanggalPrediksi->format('Y-m-d'))
+                ->where(function($query) use ($normalizedJenisKegiatan) {
+                    $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
+                          ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
+                          ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
+                })
+                ->delete();
+
+            // Save prediction to database with normalized format
+            // Waktu generate menggunakan timezone Makassar
+            $waktuGenerate = Carbon::now('Asia/Makassar');
             
-            if (count($series) < 12) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Data historis kurang. Dibutuhkan minimal 12 bulan data untuk melakukan prediksi.',
-                ], 400);
-            }
-            
-            // Prepare labels
-            $labels = $historicalData->map(function ($item) {
-                return Carbon::create($item->year, $item->month, 1)->format('Y-m');
-            })->toArray();
-            
-            // Apply Holt-Winters algorithm
-            $s = 12; // season length (monthly with yearly seasonality)
-            $h = 1; // forecast horizon (1 month ahead)
-            
-            $result = $this->holtWintersAdditive($series, $alpha, $beta, $gamma, $s, $h);
-            
-            // Calculate accuracy (MAPE)
-            $akurasi = $this->calculateMAPE($series, $result['in_sample']);
-            
-            // Get forecast value
-            $hasilPrediksi = $result['forecast'][0];
-            
-            // Save prediction to database
-            // Store bulan_target, kelompok, and tipe info in params for better tracking
-            $prediksiKey = $bulanTarget . '_' . $tipe . ($kelompok !== 'all' ? '_' . $kelompok : '_all');
-            
-            $prediksi = Prediksi::updateOrCreate(
-                [
-                    'bulan' => $prediksiKey,
-                ],
-                [
-                    'hasil_prediksi' => $hasilPrediksi,
-                    'akurasi' => $akurasi,
-                    'metode' => 'Holt-Winters',
-                    'params' => [
-                        'tipe' => $tipe,
-                        'alpha' => $alpha,
-                        'beta' => $beta,
-                        'gamma' => $gamma,
-                        'kelompok' => $kelompok,
-                        'bulan_target' => $bulanTarget,
-                    ],
+            $prediksiKegiatan = PrediksiKegiatan::create([
+                'kelompok_id' => $kelompokId,
+                'jenis_kegiatan' => $normalizedJenisKegiatan,
+                'tanggal_prediksi' => $tanggalPrediksi->format('Y-m-d'),
+                'prediksi_jam' => $prediction['nextForecast'],
+                'mape' => $mape,
+                'waktu_generate' => $waktuGenerate,
+                'params' => [
+                    'alpha' => $this->alpha,
+                    'beta' => $this->beta,
+                    'level' => $prediction['lastLevel'],
+                    'trend' => $prediction['lastTrend']
                 ]
-            );
-            
-            // Prepare response data for chart
-            $chartLabels = array_merge($labels, [$bulanTarget]);
-            $historisData = $series;
-            $prediksiData = array_fill(0, count($series), null);
-            $prediksiData[] = $hasilPrediksi;
-            
-            $kelompokLabel = $kelompok === 'all' ? 'Semua Kelompok' : $kelompok;
-            $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
-            $hasilLabel = $tipe === 'laporan' ? 'jumlah laporan' : 'hari';
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Prediksi ' . $tipeLabel . ' berhasil dihasilkan untuk ' . $kelompokLabel,
-                'data' => [
-                    'id' => $prediksi->id,
-                    'tipe' => $tipe,
-                    'tipe_label' => $tipeLabel,
-                    'bulan' => $bulanTarget,
-                    'hasil_prediksi' => round($hasilPrediksi, 2),
-                    'hasil_label' => $hasilLabel,
-                    'akurasi' => round($akurasi, 2),
-                    'labels' => $chartLabels,
-                    'historis' => $historisData,
-                    'prediksi' => $prediksiData,
-                    'final_params' => $result['final'],
-                    'kelompok' => $kelompokLabel,
-                    'metode' => 'Holt-Winters',
-                    'created_at' => $prediksi->created_at->format('d/m/Y H:i'),
-                ],
             ]);
-            
-        } catch (\Exception $e) {
+
+            $results[] = [
+                'jenis_kegiatan' => $normalizedJenisKegiatan,
+                'prediksi_jam' => round($prediction['nextForecast'], 2),
+                'tanggal_prediksi' => $tanggalPrediksi->format('Y-m-d'),
+                'mape' => round($mape, 2),
+                'waktu_generate' => $waktuGenerate->format('H:i')
+            ];
+        }
+
+        if (empty($results)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ], 500);
+                'message' => 'Tidak ada data historis yang cukup untuk melakukan prediksi. Minimal diperlukan 3 data historis.'
+            ]);
         }
+
+        // Prepare chart data
+        $chartData = $this->prepareChartData($results);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Prediksi berhasil dihasilkan untuk ' . count($results) . ' jenis kegiatan',
+            'kelompok' => $kelompok->nama_kelompok,
+            'chart' => $chartData,
+            'table' => $results
+        ]);
     }
 
     /**
-     * Holt-Winters Additive (Triple Exponential Smoothing) algorithm
-     * 
-     * @param array $series Array of values indexed from 0..N-1 (Y_1 ... Y_N)
-     * @param float $alpha Level smoothing parameter
-     * @param float $beta Trend smoothing parameter
-     * @param float $gamma Seasonal smoothing parameter
-     * @param int $s Season length (12 for monthly with yearly seasonality)
-     * @param int $h Forecast horizon (number of steps ahead)
-     * @return array ['in_sample' => [], 'forecast' => [], 'final' => ['L' => float, 'T' => float, 'seasonals' => []]]
+     * Get historical data for prediction
      */
-    private function holtWintersAdditive(array $series, $alpha, $beta, $gamma, $s = 12, $h = 1)
+    private function getHistoricalData($kelompokId, $jenisKegiatan)
     {
-        $N = count($series);
+        // Normalize jenis kegiatan
+        $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
         
-        if ($N < $s * 2) {
-            throw new \Exception("Butuh minimal " . ($s * 2) . " data poin untuk season length $s");
+        // Get data from last 12 months, grouped by month
+        $startDate = Carbon::now()->subMonths(12)->startOfMonth();
+        
+        // Get data with normalized jenis_kegiatan and also check for variations
+        $data = LaporanKaryawan::where('kelompok_id', $kelompokId)
+            ->where(function($query) use ($normalizedJenisKegiatan) {
+                $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
+                      ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
+                      ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
+            })
+            ->where('tanggal', '>=', $startDate)
+            ->whereNotNull('durasi_waktu')
+            ->where('durasi_waktu', '>', 0)
+            ->select(
+                DB::raw('YEAR(tanggal) as year'),
+                DB::raw('MONTH(tanggal) as month'),
+                DB::raw('AVG(durasi_waktu) as avg_durasi')
+            )
+            ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
+            ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
+            ->get();
+
+        // Convert to simple array of values
+        return $data->pluck('avg_durasi')->toArray();
+    }
+
+    /**
+     * Calculate Triple Exponential Smoothing (Holt's Method - Double Exponential Smoothing)
+     * Since we don't have clear seasonality, we use Double Exponential Smoothing
+     */
+    private function calculateTripleExponentialSmoothing($data)
+    {
+        $n = count($data);
+        
+        if ($n < 3) {
+            throw new \Exception('Minimal 3 data diperlukan untuk prediksi');
         }
+
+        // Initialize level and trend
+        // Level awal = rata-rata dari 3-4 data pertama
+        $initialLevel = array_sum(array_slice($data, 0, min(4, $n))) / min(4, $n);
         
-        // Initialize seasonals (multiplicative)
-        $seasonals = [];
-        
-        // Initial level: average of first season
-        $avgSeason = array_sum(array_slice($series, 0, $s)) / $s;
-        
-        for ($i = 0; $i < $s; $i++) {
-            $seasonals[$i] = $series[$i] / $avgSeason;
-        }
-        
-        // Initial L and T
-        $L = $avgSeason;
-        
-        // Initial trend: average difference between seasons
-        $firstSeasonAvg = array_sum(array_slice($series, 0, $s)) / $s;
-        $secondSeasonAvg = array_sum(array_slice($series, $s, $s)) / $s;
-        $T = ($secondSeasonAvg - $firstSeasonAvg) / $s;
-        
-        $results = [];
-        
-        // Apply Holt-Winters formula
-        for ($t = 0; $t < $N; $t++) {
-            $seasonIndex = $t % $s;
-            $season = $seasonals[$seasonIndex] ?? 1;
-            $Yt = $series[$t];
-            
-            $lastL = $L;
-            $lastT = $T;
-            
-            // Level: L_t = α(Y_t / S_{t-s}) + (1-α)(L_{t-1} + T_{t-1})
-            $L = $alpha * ($Yt / $season) + (1 - $alpha) * ($lastL + $lastT);
-            
-            // Trend: T_t = β(L_t - L_{t-1}) + (1-β)T_{t-1}
-            $T = $beta * ($L - $lastL) + (1 - $beta) * $lastT;
-            
-            // Seasonal: S_t = γ(Y_t / L_t) + (1-γ)S_{t-s}
-            $seasonals[$seasonIndex] = $gamma * ($Yt / $L) + (1 - $gamma) * $season;
-            
-            // One-step forecast (in-sample)
-            $forecast = ($L + $T) * $seasonals[$seasonIndex];
-            $results[] = $forecast;
-        }
-        
-        // Forecast h steps ahead
+        // Trend awal = (rata-rata 2 data terakhir - rata-rata 2 data pertama) / jumlah periode tengah
+        $firstHalf = array_slice($data, 0, min(2, floor($n/2)));
+        $lastHalf = array_slice($data, -min(2, floor($n/2)));
+        $avgFirst = array_sum($firstHalf) / count($firstHalf);
+        $avgLast = array_sum($lastHalf) / count($lastHalf);
+        $initialTrend = ($avgLast - $avgFirst) / max(1, $n - 2);
+
+        // Initialize arrays
+        $levels = [$initialLevel];
+        $trends = [$initialTrend];
         $forecasts = [];
-        for ($i = 1; $i <= $h; $i++) {
-            $m = $i;
-            $seasonIndex = ($N + $i - 1) % $s;
-            $season = $seasonals[$seasonIndex];
-            $forecast = ($L + $m * $T) * $season;
-            $forecasts[] = $forecast;
+
+        // Calculate level and trend for each period
+        for ($i = 0; $i < $n; $i++) {
+            $currentData = $data[$i];
+            $prevLevel = $levels[$i];
+            $prevTrend = $trends[$i];
+
+            // Calculate new level: S_t = α * Y_t + (1-α) * (S_{t-1} + b_{t-1})
+            $newLevel = $this->alpha * $currentData + (1 - $this->alpha) * ($prevLevel + $prevTrend);
+            $levels[] = $newLevel;
+
+            // Calculate new trend: b_t = β * (S_t - S_{t-1}) + (1-β) * b_{t-1}
+            $newTrend = $this->beta * ($newLevel - $prevLevel) + (1 - $this->beta) * $prevTrend;
+            $trends[] = $newTrend;
+
+            // Forecast for next period: F_{t+1} = S_t + b_t
+            if ($i < $n - 1) {
+                $forecasts[] = $prevLevel + $prevTrend;
+            }
         }
-        
+
+        // Forecast for next period (besok)
+        $lastLevel = $levels[$n];
+        $lastTrend = $trends[$n];
+        $nextForecast = $lastLevel + $lastTrend;
+
         return [
-            'in_sample' => $results,
-            'forecast' => $forecasts,
-            'final' => [
-                'L' => $L,
-                'T' => $T,
-                'seasonals' => $seasonals,
-            ],
+            'levels' => $levels,
+            'trends' => $trends,
+            'forecasts' => $forecasts,
+            'lastLevel' => $lastLevel,
+            'lastTrend' => $lastTrend,
+            'nextForecast' => $nextForecast
         ];
     }
 
     /**
      * Calculate MAPE (Mean Absolute Percentage Error)
      */
-    private function calculateMAPE(array $actual, array $forecast)
+    private function calculateMAPE($actualData, $forecasts)
     {
-        $n = count($actual);
-        $sum = 0;
-        $count = 0;
-        
-        for ($i = 0; $i < $n; $i++) {
-            if ($actual[$i] != 0) {
-                $sum += abs(($actual[$i] - $forecast[$i]) / $actual[$i]) * 100;
-                $count++;
-            }
-        }
-        
-        if ($count == 0) {
+        if (count($forecasts) === 0 || count($actualData) <= 1) {
             return 0;
         }
-        
-        $mape = $sum / $count;
-        
-        // Convert to accuracy percentage (100 - MAPE)
-        $accuracy = 100 - $mape;
-        
-        return max(0, $accuracy); // Ensure non-negative
-    }
 
-    /**
-     * Show prediction detail
-     */
-    public function show($id)
-    {
-        // Ensure only atasan can access
-        if (!auth()->user()->isAtasan()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
-        
-        try {
-            $prediksi = Prediksi::findOrFail($id);
-            $params = $prediksi->params ?? [];
-            
-            $tipe = $params['tipe'] ?? 'laporan';
-            $kelompok = $params['kelompok'] ?? 'N/A';
-            $bulanTarget = $params['bulan_target'] ?? (strpos($prediksi->bulan, '_') !== false ? explode('_', $prediksi->bulan)[0] : $prediksi->bulan);
-            
-            $kelompokLabel = $kelompok === 'all' ? 'Semua Kelompok' : $kelompok;
-            $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
-            $hasilLabel = $tipe === 'laporan' ? 'jumlah laporan' : 'hari';
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $prediksi->id,
-                    'bulan' => $bulanTarget,
-                    'tipe' => $tipe,
-                    'tipe_label' => $tipeLabel,
-                    'kelompok' => $kelompokLabel,
-                    'hasil_prediksi' => round($prediksi->hasil_prediksi, 2),
-                    'hasil_label' => $hasilLabel,
-                    'akurasi' => round($prediksi->akurasi, 2),
-                    'metode' => $prediksi->metode,
-                    'params' => $params,
-                    'created_at' => $prediksi->created_at->format('d/m/Y H:i'),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete prediction by id
-     */
-    public function destroy($id)
-    {
-        // Ensure only atasan can access
-        if (!auth()->user()->isAtasan()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
-        
-        try {
-            $prediksi = Prediksi::findOrFail($id);
-            $prediksi->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Prediksi berhasil dihapus',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Reset prediction data
-     */
-    public function reset(Request $request)
-    {
-        // Ensure only atasan can access
-        if (!auth()->user()->isAtasan()) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        }
-        
-        try {
-            $bulan = $request->get('bulan');
-            
-            if ($bulan) {
-                Prediksi::where('bulan', $bulan)->delete();
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Prediksi untuk bulan ' . $bulan . ' berhasil dihapus',
-                ]);
-            } else {
-                Prediksi::truncate();
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Semua data prediksi berhasil dihapus',
-                ]);
+        $errors = [];
+        // Skip first data point (no forecast for it)
+        for ($i = 1; $i < count($actualData); $i++) {
+            if (isset($forecasts[$i - 1]) && $actualData[$i] > 0) {
+                $error = abs(($actualData[$i] - $forecasts[$i - 1]) / $actualData[$i]) * 100;
+                $errors[] = $error;
             }
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ], 500);
         }
+
+        if (empty($errors)) {
+            return 0;
+        }
+
+        return array_sum($errors) / count($errors);
     }
 
     /**
-     * Export prediction data
+     * Prepare chart data for Chart.js
      */
-    public function export($format, Request $request)
+    private function prepareChartData($results)
+    {
+        $labels = [];
+        $data = [];
+
+        foreach ($results as $result) {
+            $labels[] = $result['jenis_kegiatan'];
+            $data[] = $result['prediksi_jam'];
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Prediksi (Jam)',
+                    'data' => $data,
+                    'backgroundColor' => [
+                        'rgba(59, 130, 246, 0.5)',
+                        'rgba(16, 185, 129, 0.5)',
+                        'rgba(245, 158, 11, 0.5)',
+                        'rgba(239, 68, 68, 0.5)'
+                    ],
+                    'borderColor' => [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(239, 68, 68, 1)'
+                    ],
+                    'borderWidth' => 2
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Get prediksi kegiatan by kelompok
+     */
+    public function getPrediksiKegiatanByKelompok(Request $request)
     {
         // Ensure only atasan can access
         if (!auth()->user()->isAtasan()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        $kelompokId = $request->get('kelompok_id');
+
+        if (!$kelompokId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelompok ID diperlukan'
+            ]);
+        }
+
+        $kelompok = Kelompok::findOrFail($kelompokId);
+        // Set timezone ke Makassar untuk tanggal prediksi besok
+        $tanggalPrediksi = Carbon::now('Asia/Makassar')->addDay()->startOfDay();
+
+        // Get latest predictions for this kelompok, grouped by normalized jenis_kegiatan
+        $allPredictions = PrediksiKegiatan::where('kelompok_id', $kelompokId)
+            ->where('tanggal_prediksi', $tanggalPrediksi->format('Y-m-d'))
+            ->orderBy('waktu_generate', 'desc')
+            ->get();
+
+        if ($allPredictions->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada prediksi untuk kelompok ini'
+            ]);
+        }
+
+        // Group by normalized jenis_kegiatan and get only the latest one
+        $groupedPredictions = $allPredictions->groupBy(function($prediction) {
+            return $this->normalizeJenisKegiatan($prediction->jenis_kegiatan);
+        });
+
+        $results = [];
+        foreach ($groupedPredictions as $normalizedJenis => $predictions) {
+            // Get the latest prediction for this jenis kegiatan
+            $latestPrediction = $predictions->first();
+            
+            // Format waktu_generate dengan timezone Makassar
+            $waktuGenerate = Carbon::parse($latestPrediction->waktu_generate)->setTimezone('Asia/Makassar');
+            
+            $results[] = [
+                'jenis_kegiatan' => $normalizedJenis,
+                'prediksi_jam' => round($latestPrediction->prediksi_jam, 2),
+                'tanggal_prediksi' => $latestPrediction->tanggal_prediksi->format('Y-m-d'),
+                'mape' => round($latestPrediction->mape ?? 0, 2),
+                'waktu_generate' => $waktuGenerate->format('H:i')
+            ];
+        }
+
+        // Sort by jenis_kegiatan
+        usort($results, function($a, $b) {
+            return strcmp($a['jenis_kegiatan'], $b['jenis_kegiatan']);
+        });
+
+        // Prepare chart data
+        $chartData = $this->prepareChartData($results);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data prediksi berhasil dimuat',
+            'kelompok' => $kelompok->nama_kelompok,
+            'chart' => $chartData,
+            'table' => $results
+        ]);
+    }
+
+    /**
+     * Display generate kegiatan page for karyawan
+     */
+    public function generateKegiatanKaryawan()
+    {
+        // Ensure only karyawan can access
+        $user = auth()->user();
+        if (!$user->isKaryawan() || !$user->kelompok_id) {
             abort(403, 'Unauthorized access');
         }
-        
-        try {
-            // Get tipe parameter (laporan or job)
-            $tipe = $request->get('tipe', 'laporan');
-            
-            // Validate tipe
-            if (!in_array($tipe, ['laporan', 'job'])) {
-                $tipe = 'laporan';
-            }
-            
-            // Check if we should export latest prediction only
-            $latestOnly = $request->get('latest', false);
-            
-            if ($latestOnly) {
-                // Get only the latest prediction for this tipe
-                $prediction = Prediksi::orderBy('created_at', 'desc')
-                    ->get()
-                    ->filter(function ($prediksi) use ($tipe) {
-                        $params = $prediksi->params ?? [];
-                        return ($params['tipe'] ?? 'laporan') === $tipe;
-                    })
-                    ->first();
-                
-                if (!$prediction) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak ada data prediksi ' . ($tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan') . ' untuk diexport',
-                    ], 404);
-                }
-                
-                $predictions = collect([$prediction]);
-            } else {
-                // Get ALL latest predictions (last 20) - tidak filter tipe
-                // Akan dipisahkan di export berdasarkan tipe masing-masing
-                $allPredictions = Prediksi::orderBy('created_at', 'desc')
-                    ->limit(20)
-                    ->get();
-                
-                // Separate by tipe
-                $laporanPredictions = $allPredictions->filter(function ($prediksi) {
-                    $params = $prediksi->params ?? [];
-                    return ($params['tipe'] ?? 'laporan') === 'laporan';
-                })->take(10);
-                
-                $jobPredictions = $allPredictions->filter(function ($prediksi) {
-                    $params = $prediksi->params ?? [];
-                    return ($params['tipe'] ?? 'laporan') === 'job';
-                })->take(10);
-                
-                // Use the tipe that user requested
-                if ($tipe === 'laporan') {
-                    $predictions = $laporanPredictions;
-                } else {
-                    $predictions = $jobPredictions;
-                }
-                
-                if (count($predictions) === 0) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak ada data prediksi ' . ($tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan') . ' untuk diexport',
-                    ], 404);
-                }
-            }
-            
-            if ($format === 'pdf') {
-                // TODO: Implement PDF export using dompdf
-                return response()->json([
-                    'success' => false,
-                    'message' => 'PDF export belum diimplementasikan',
-                ], 501);
-            } elseif ($format === 'excel') {
-                return $this->exportToExcel($predictions, $latestOnly, $tipe);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Format tidak didukung',
-                ], 400);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage(),
-            ], 500);
+
+        // Get kelompok from user
+        $kelompok = Kelompok::findOrFail($user->kelompok_id);
+
+        // Get latest predictions if any
+        $latestPredictions = PrediksiKegiatan::with('kelompok')
+            ->where('kelompok_id', $user->kelompok_id)
+            ->orderBy('waktu_generate', 'desc')
+            ->get()
+            ->groupBy('kelompok_id')
+            ->map(function ($predictions) {
+                return $predictions->first();
+            });
+
+        $formattedPredictions = collect();
+        foreach ($latestPredictions as $prediction) {
+            $formattedPredictions->push([
+                'kelompok_id' => $prediction->kelompok_id,
+                'kelompok' => $prediction->kelompok->nama_kelompok ?? 'N/A',
+                'tanggal_prediksi' => $prediction->tanggal_prediksi->format('Y-m-d'),
+                'waktu_generate' => $prediction->waktu_generate->format('H:i'),
+            ]);
         }
+
+        // Define jenisKegiatan variable for view
+        $jenisKegiatan = $this->jenisKegiatan;
+
+        return view('kelompok.prediksi.generate-kegiatan', compact(
+            'kelompok',
+            'jenisKegiatan',
+            'formattedPredictions'
+        ));
     }
 
     /**
-     * Export predictions to Excel
+     * Generate prediksi kegiatan for karyawan (using their kelompok)
      */
-    private function exportToExcel($predictions, $latestOnly = false, $tipe = 'laporan')
+    public function generatePrediksiKegiatanKaryawan(Request $request)
     {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        // Get tipe label
-        $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
-        
-        // Set sheet title
-        $sheetTitle = $latestOnly 
-            ? 'Hasil Prediksi ' . $tipeLabel 
-            : 'Rekap Prediksi ' . $tipeLabel;
-        $sheet->setTitle($sheetTitle);
-        
-        // Title
-        $title = $latestOnly 
-            ? 'HASIL PREDIKSI TERAKHIR - ' . strtoupper($tipeLabel)
-            : 'REKAP HASIL PREDIKSI - ' . strtoupper($tipeLabel);
-        $sheet->setCellValue('A1', $title);
-        $sheet->mergeCells('A1:G1');
-        // Set header color based on tipe
-        $headerColor = $tipe === 'laporan' ? '2563EB' : '059669'; // Blue for laporan, Green for job
-        
-        $sheet->getStyle('A1')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 16,
-                'color' => ['rgb' => 'FFFFFF']
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => $headerColor]
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ]
-        ]);
-        $sheet->getRowDimension(1)->setRowHeight(30);
-        
-        // Subtitle
-        $sheet->setCellValue('A2', 'Sistem Prediksi PLN Galesong - ' . $tipeLabel);
-        $sheet->mergeCells('A2:G2');
-        $sheet->getStyle('A2')->applyFromArray([
-            'font' => [
-                'size' => 12,
-                'italic' => true,
-                'color' => ['rgb' => '6B7280']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ]
-        ]);
-        $sheet->getRowDimension(2)->setRowHeight(20);
-        
-        // Export date
-        $sheet->setCellValue('A3', 'Tanggal Export: ' . now()->format('d F Y H:i:s'));
-        $sheet->mergeCells('A3:G3');
-        $sheet->getStyle('A3')->applyFromArray([
-            'font' => [
-                'size' => 10,
-                'color' => ['rgb' => '6B7280']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ]
-        ]);
-        $sheet->getRowDimension(3)->setRowHeight(18);
-        
-        // Empty row
-        $sheet->getRowDimension(4)->setRowHeight(10);
-        
-        // Headers
-        $headers = [
-            'No',
-            'Bulan yang Diprediksi',
-            'Jenis Data',
-            'Kelompok',
-            'Hasil Prediksi',
-            'Akurasi Model (MAPE)',
-            'Tanggal Dibuat'
-        ];
-        
-        $col = 'A';
-        $row = 5;
-        foreach ($headers as $header) {
-            $sheet->setCellValue($col . $row, $header);
-            $col++;
+        // Ensure only karyawan can access
+        $user = auth()->user();
+        if (!$user->isKaryawan() || !$user->kelompok_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
         }
-        
-        // Style headers - use different color based on tipe
-        $tableHeaderColor = $tipe === 'laporan' ? 'F59E0B' : '10B981'; // Orange for laporan, Green for job
-        $headerRange = 'A5:' . chr(64 + count($headers)) . '5';
-        $sheet->getStyle($headerRange)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 11,
-                'color' => ['rgb' => 'FFFFFF']
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => $tableHeaderColor]
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-                'wrapText' => true
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => '000000']
-                ]
-            ]
+
+        $request->validate([
+            'jenis_kegiatan' => 'nullable|in:all,Perbaikan KWH,Pemeliharaan Pengkabelan,Pengecekan Gardu,Penanganan Gangguan'
         ]);
-        $sheet->getRowDimension($row)->setRowHeight(25);
+
+        // Use kelompok_id from logged in user
+        $kelompokId = $user->kelompok_id;
+        $jenisKegiatanFilter = $request->jenis_kegiatan ?? 'all';
+
+        // Get kelompok
+        $kelompok = Kelompok::findOrFail($kelompokId);
+
+        // Determine which jenis kegiatan to predict
+        $jenisKegiatanList = $jenisKegiatanFilter === 'all' 
+            ? array_keys($this->jenisKegiatan) 
+            : [$jenisKegiatanFilter];
+
+        $results = [];
         
-        // Data
-        $row = 6;
-        $no = 1;
-        foreach ($predictions as $prediksi) {
-            $params = $prediksi->params ?? [];
-            $tipe = $params['tipe'] ?? 'laporan';
-            $kelompokName = $params['kelompok'] ?? 'N/A';
-            $bulanTarget = $params['bulan_target'] ?? (strpos($prediksi->bulan, '_') !== false ? explode('_', $prediksi->bulan)[0] : $prediksi->bulan);
-            $kelompokDisplay = $kelompokName === 'all' ? 'Semua Kelompok' : $kelompokName;
-            $tipeLabel = $tipe === 'laporan' ? 'Laporan Karyawan' : 'Job Pekerjaan';
-            $hasilLabel = $tipe === 'laporan' ? 'jumlah laporan' : 'hari';
+        // Set timezone ke Makassar (WITA - UTC+8)
+        $now = Carbon::now('Asia/Makassar');
+        $tanggalPrediksi = $now->copy()->addDay()->startOfDay(); // Besok
+
+        foreach ($jenisKegiatanList as $jenisKegiatan) {
+            // Normalize jenis kegiatan to standard format
+            $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
             
-            // Format bulan
-            try {
-                $bulanFormatted = Carbon::createFromFormat('Y-m', $bulanTarget)->format('F Y');
-            } catch (\Exception $e) {
-                $bulanFormatted = $bulanTarget;
+            // Get historical data for this jenis kegiatan
+            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan);
+
+            if (count($historicalData) < 3) {
+                continue; // Skip if not enough data
             }
+
+            // Calculate prediction using Triple Exponential Smoothing
+            $prediction = $this->calculateTripleExponentialSmoothing($historicalData);
+
+            // Calculate MAPE
+            $mape = $this->calculateMAPE($historicalData, $prediction['forecasts']);
+
+            // Delete old predictions with different format for same jenis kegiatan
+            PrediksiKegiatan::where('kelompok_id', $kelompokId)
+                ->where('tanggal_prediksi', $tanggalPrediksi->format('Y-m-d'))
+                ->where(function($query) use ($normalizedJenisKegiatan) {
+                    $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
+                          ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
+                          ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
+                })
+                ->delete();
+
+            // Save prediction to database with normalized format
+            // Waktu generate menggunakan timezone Makassar
+            $waktuGenerate = Carbon::now('Asia/Makassar');
             
-            $sheet->setCellValue('A' . $row, $no);
-            $sheet->setCellValue('B' . $row, $bulanFormatted);
-            $sheet->setCellValue('C' . $row, $tipeLabel);
-            $sheet->setCellValue('D' . $row, $kelompokDisplay);
-            $sheet->setCellValue('E' . $row, number_format($prediksi->hasil_prediksi, 2) . ' ' . $hasilLabel);
-            $sheet->setCellValue('F' . $row, number_format($prediksi->akurasi, 2) . '%');
-            $sheet->setCellValue('G' . $row, $prediksi->created_at->format('d/m/Y H:i'));
-            
-            // Style data rows
-            $dataRange = 'A' . $row . ':' . chr(64 + count($headers)) . $row;
-            $isEven = ($no % 2) === 0;
-            $sheet->getStyle($dataRange)->applyFromArray([
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => $isEven ? 'F9FAFB' : 'FFFFFF']
-                ],
-                'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['rgb' => 'E5E7EB']
-                    ]
-                ],
-                'alignment' => [
-                    'horizontal' => Alignment::HORIZONTAL_LEFT,
-                    'vertical' => Alignment::VERTICAL_CENTER,
-                    'wrapText' => true
+            $prediksiKegiatan = PrediksiKegiatan::create([
+                'kelompok_id' => $kelompokId,
+                'jenis_kegiatan' => $normalizedJenisKegiatan,
+                'tanggal_prediksi' => $tanggalPrediksi->format('Y-m-d'),
+                'prediksi_jam' => $prediction['nextForecast'],
+                'mape' => $mape,
+                'waktu_generate' => $waktuGenerate,
+                'params' => [
+                    'alpha' => $this->alpha,
+                    'beta' => $this->beta,
+                    'level' => $prediction['lastLevel'],
+                    'trend' => $prediction['lastTrend']
                 ]
             ]);
-            
-            // Center align for No, Hasil Prediksi, Akurasi
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('F' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
-            // Color code accuracy
-            $accuracy = $prediksi->akurasi;
-            $accuracyColor = '10B981'; // Green
-            if ($accuracy < 70) {
-                $accuracyColor = 'EF4444'; // Red
-            } elseif ($accuracy < 85) {
-                $accuracyColor = 'F59E0B'; // Orange
-            }
-            $sheet->getStyle('F' . $row)->applyFromArray([
-                'font' => [
-                    'bold' => true,
-                    'color' => ['rgb' => $accuracyColor]
-                ]
+
+            $results[] = [
+                'jenis_kegiatan' => $normalizedJenisKegiatan,
+                'prediksi_jam' => round($prediction['nextForecast'], 2),
+                'tanggal_prediksi' => $tanggalPrediksi->format('Y-m-d'),
+                'mape' => round($mape, 2),
+                'waktu_generate' => $waktuGenerate->format('H:i')
+            ];
+        }
+
+        if (empty($results)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data historis yang cukup untuk melakukan prediksi. Minimal diperlukan 3 data historis.'
             ]);
+        }
+
+        // Prepare chart data
+        $chartData = $this->prepareChartData($results);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Prediksi berhasil dihasilkan untuk ' . count($results) . ' jenis kegiatan',
+            'kelompok' => $kelompok->nama_kelompok,
+            'chart' => $chartData,
+            'table' => $results
+        ]);
+    }
+
+    /**
+     * Get prediksi kegiatan by kelompok for karyawan
+     */
+    public function getPrediksiKegiatanByKelompokKaryawan(Request $request)
+    {
+        // Ensure only karyawan can access
+        $user = auth()->user();
+        if (!$user->isKaryawan() || !$user->kelompok_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        // Use kelompok_id from logged in user
+        $kelompokId = $user->kelompok_id;
+        $kelompok = Kelompok::findOrFail($kelompokId);
+        // Set timezone ke Makassar untuk tanggal prediksi besok
+        $tanggalPrediksi = Carbon::now('Asia/Makassar')->addDay()->startOfDay();
+
+        // Get latest predictions for this kelompok, grouped by normalized jenis_kegiatan
+        $allPredictions = PrediksiKegiatan::where('kelompok_id', $kelompokId)
+            ->where('tanggal_prediksi', $tanggalPrediksi->format('Y-m-d'))
+            ->orderBy('waktu_generate', 'desc')
+            ->get();
+
+        if ($allPredictions->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada prediksi untuk kelompok ini'
+            ]);
+        }
+
+        // Group by normalized jenis_kegiatan and get only the latest one
+        $groupedPredictions = $allPredictions->groupBy(function($prediction) {
+            return $this->normalizeJenisKegiatan($prediction->jenis_kegiatan);
+        });
+
+        $results = [];
+        foreach ($groupedPredictions as $normalizedJenis => $predictions) {
+            // Get the latest prediction for this jenis kegiatan
+            $latestPrediction = $predictions->first();
             
-            $sheet->getRowDimension($row)->setRowHeight(20);
-            $row++;
-            $no++;
+            // Format waktu_generate dengan timezone Makassar
+            $waktuGenerate = Carbon::parse($latestPrediction->waktu_generate)->setTimezone('Asia/Makassar');
+            
+            $results[] = [
+                'jenis_kegiatan' => $normalizedJenis,
+                'prediksi_jam' => round($latestPrediction->prediksi_jam, 2),
+                'tanggal_prediksi' => $latestPrediction->tanggal_prediksi->format('Y-m-d'),
+                'mape' => round($latestPrediction->mape ?? 0, 2),
+                'waktu_generate' => $waktuGenerate->format('H:i')
+            ];
         }
-        
-        // Summary section
-        $summaryRow = $row + 2;
-        $sheet->setCellValue('A' . $summaryRow, 'RINGKASAN');
-        $sheet->mergeCells('A' . $summaryRow . ':B' . $summaryRow);
-        $sheet->getStyle('A' . $summaryRow)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 12,
-                'color' => ['rgb' => 'FFFFFF']
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '059669']
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ]
+
+        // Sort by jenis_kegiatan
+        usort($results, function($a, $b) {
+            return strcmp($a['jenis_kegiatan'], $b['jenis_kegiatan']);
+        });
+
+        // Prepare chart data
+        $chartData = $this->prepareChartData($results);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data prediksi berhasil dimuat',
+            'kelompok' => $kelompok->nama_kelompok,
+            'chart' => $chartData,
+            'table' => $results
         ]);
-        $sheet->getRowDimension($summaryRow)->setRowHeight(25);
-        
-        $summaryRow++;
-        $sheet->setCellValue('A' . $summaryRow, 'Total Prediksi:');
-        $sheet->setCellValue('B' . $summaryRow, count($predictions));
-        $sheet->getStyle('A' . $summaryRow)->applyFromArray([
-            'font' => ['bold' => true]
-        ]);
-        
-        $summaryRow++;
-        $avgAccuracy = $predictions->avg('akurasi');
-        $sheet->setCellValue('A' . $summaryRow, 'Rata-rata Akurasi:');
-        $sheet->setCellValue('B' . $summaryRow, number_format($avgAccuracy, 2) . '%');
-        $sheet->getStyle('A' . $summaryRow)->applyFromArray([
-            'font' => ['bold' => true]
-        ]);
-        $sheet->getStyle('B' . $summaryRow)->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => $avgAccuracy >= 85 ? '10B981' : ($avgAccuracy >= 70 ? 'F59E0B' : 'EF4444')]
-            ]
-        ]);
-        
-        // Auto size columns
-        foreach (range('A', chr(64 + count($headers))) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-            if ($col === 'A') {
-                $sheet->getColumnDimension($col)->setWidth(8);
-            } elseif ($col === 'B') {
-                $sheet->getColumnDimension($col)->setWidth(25);
-            } elseif ($col === 'C') {
-                $sheet->getColumnDimension($col)->setWidth(18);
-            } elseif ($col === 'D') {
-                $sheet->getColumnDimension($col)->setWidth(20);
-            } elseif ($col === 'E') {
-                $sheet->getColumnDimension($col)->setWidth(20);
-            } elseif ($col === 'F') {
-                $sheet->getColumnDimension($col)->setWidth(20);
-            } elseif ($col === 'G') {
-                $sheet->getColumnDimension($col)->setWidth(20);
-            }
-        }
-        
-        // Set print area
-        $sheet->getPageSetup()->setPrintArea('A1:' . chr(64 + count($headers)) . ($row - 1));
-        
-        // Generate filename based on tipe
-        $tipeLabelForFile = $tipe === 'laporan' ? 'Laporan_Karyawan' : 'Job_Pekerjaan';
-        $filenamePrefix = $latestOnly 
-            ? 'Hasil_Prediksi_' . $tipeLabelForFile 
-            : 'Rekap_Prediksi_' . $tipeLabelForFile;
-        $filename = $filenamePrefix . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
-        
-        // Download file
-        $writer = new Xlsx($spreadsheet);
-        
-        $response = response()->streamDownload(function() use ($writer) {
-            $writer->save('php://output');
-        }, $filename);
-        
-        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
-        
-        return $response;
     }
 }
+

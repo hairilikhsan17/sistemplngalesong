@@ -1,24 +1,22 @@
 <!-- Sidebar Component -->
-<div class="h-full flex flex-col">
+<div class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out" 
+     x-data="{ sidebarOpen: false }" 
+     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0"
+     id="sidebar">
+    
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-between h-16 px-4 sm:px-6 bg-gradient-to-r from-amber-600 to-orange-600 flex-shrink-0 relative">
-        <div class="flex items-center flex-1 min-w-0">
+    <div class="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-amber-600 to-orange-600">
+        <div class="flex items-center">
             <div class="flex-shrink-0">
                 <i data-lucide="zap" class="w-8 h-8 text-white"></i>
             </div>
-            <div class="ml-3 min-w-0">
-                <h1 class="text-base sm:text-lg font-bold text-white truncate">PLN Galesong</h1>
-                <p class="text-xs text-amber-100 hidden sm:block">Sistem Prediksi</p>
+            <div class="ml-3">
+                <h1 class="text-lg font-bold text-white">PLN Galesong</h1>
+                <p class="text-xs text-amber-100">Sistem Prediksi</p>
             </div>
         </div>
-        <button x-on:click.stop.prevent="$dispatch('close-sidebar')"
-                x-on:touchstart.stop
-                x-on:touchend.stop.prevent="$dispatch('close-sidebar')"
-                class="lg:hidden text-white hover:text-amber-200 p-2 rounded-md hover:bg-amber-700 active:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ml-2 cursor-pointer select-none"
-                aria-label="Close sidebar"
-                type="button"
-                style="touch-action: manipulation; -webkit-tap-highlight-color: rgba(255,255,255,0.3); position: relative; z-index: 100;">
-            <i data-lucide="x" class="w-6 h-6 pointer-events-none"></i>
+        <button @click="sidebarOpen = false" class="lg:hidden text-white hover:text-amber-200">
+            <i data-lucide="x" class="w-6 h-6"></i>
         </button>
     </div>
 
@@ -66,16 +64,15 @@
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="mt-6 px-3 flex-1 overflow-y-auto">
+    <nav class="mt-6 px-3">
         @if(Auth::user()->isAtasan())
             <!-- Atasan Menu -->
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="{{ route('atasan.dashboard') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors min-h-[44px] {{ request()->routeIs('atasan.dashboard') ? 'bg-amber-100 text-amber-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Dashboard</span>
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('atasan.dashboard') ? 'bg-amber-100 text-amber-700' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                    Dashboard
                 </a>
 
                 <!-- Manajemen Kelompok & Karyawan -->
@@ -90,102 +87,50 @@
                     </button>
                     <div x-show="open" x-collapse class="ml-6 space-y-1">
                         <a href="{{ route('atasan.manajemen') }}" 
-                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.manajemen') ? 'bg-amber-50 text-amber-700' : '' }}">
-                            <i data-lucide="user-plus" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                            <span>Kelompok & Karyawan</span>
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.manajemen') ? 'bg-amber-50 text-amber-700' : '' }}">
+                            <i data-lucide="user-plus" class="w-4 h-4 mr-3"></i>
+                            Kelompok & Karyawan
                         </a>
                     </div>
                 </div>
 
-                <!-- Pemantauan Laporan -->
-                <a href="{{ route('atasan.pemantauan-laporan') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.pemantauan-laporan') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="clipboard-list" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Pemantauan Laporan</span>
-                </a>
-
-                <!-- Pemantauan Job Pekerjaan -->
-                <a href="{{ route('atasan.pemantauan-job-pekerjaan') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.pemantauan-job-pekerjaan') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="briefcase" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Pemantauan Job Pekerjaan</span>
-                </a>
-
-
-                <!-- Export Data -->
-                <a href="{{ route('atasan.export-data') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('atasan.export-data') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="download" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Export Data</span>
-                </a>
-
                 <!-- Statistik & Prediksi -->
-                <div x-data="{ open: {{ request()->routeIs('admin.statistik.*') || request()->routeIs('admin.prediksi.*') ? 'true' : 'false' }} }" class="space-y-1">
+                <div x-data="{ open: {{ request()->routeIs('admin.statistik.index') || request()->routeIs('admin.prediksi.index') || request()->routeIs('admin.prediksi.*') || request()->routeIs('admin.statistik.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open" 
-                            class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') || request()->routeIs('admin.prediksi.*') ? 'bg-amber-100 text-amber-700' : '' }}">
+                            class="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('admin.statistik.index') || request()->routeIs('admin.prediksi.index') || request()->routeIs('admin.prediksi.*') || request()->routeIs('admin.statistik.*') ? 'bg-amber-100 text-amber-700' : '' }}">
                         <div class="flex items-center">
-                            <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                            <span>Statistik & Prediksi</span>
+                            <i data-lucide="trending-up" class="w-5 h-5 mr-3"></i>
+                            Statistik & Prediksi
                         </div>
                         <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="open ? 'rotate-180' : ''"></i>
                     </button>
                     <div x-show="open" x-collapse class="ml-6 space-y-1">
-                        <!-- Statistik Submenu -->
-                        <div x-data="{ openStatistik: {{ request()->routeIs('admin.statistik.*') ? 'true' : 'false' }} }" class="space-y-1">
-                            <button @click="openStatistik = !openStatistik" 
-                                    class="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') ? 'bg-amber-50 text-amber-700' : '' }}">
-                                <div class="flex items-center">
-                                    <i data-lucide="trending-up" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                                    <span>📊 Statistik</span>
-                                </div>
-                                <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" :class="openStatistik ? 'rotate-90' : ''"></i>
-                            </button>
-                            <div x-show="openStatistik" x-collapse class="ml-4 space-y-1">
-                                <a href="{{ route('admin.statistik.index', ['tipe' => 'laporan']) }}" 
-                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') && request()->get('tipe') == 'laporan' ? 'bg-amber-100 text-amber-700' : '' }}">
-                                    <i data-lucide="file-text" class="w-3 h-3 mr-3 flex-shrink-0"></i>
-                                    <span>Laporan Karyawan</span>
-                                </a>
-                                <a href="{{ route('admin.statistik.index', ['tipe' => 'job']) }}" 
-                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.statistik.*') && request()->get('tipe') == 'job' ? 'bg-amber-100 text-amber-700' : '' }}">
-                                    <i data-lucide="briefcase" class="w-3 h-3 mr-3 flex-shrink-0"></i>
-                                    <span>Job Pekerjaan</span>
-                                </a>
-                            </div>
-                        </div>
-                        <!-- Prediksi Submenu -->
-                        <div x-data="{ openPrediksi: {{ request()->routeIs('admin.prediksi.*') ? 'true' : 'false' }} }" class="space-y-1">
-                            <button @click="openPrediksi = !openPrediksi" 
-                                    class="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.prediksi.*') ? 'bg-amber-50 text-amber-700' : '' }}">
-                                <div class="flex items-center">
-                                    <i data-lucide="activity" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                                    <span>🔮 Prediksi</span>
-                                </div>
-                                <i data-lucide="chevron-right" class="w-3 h-3 transition-transform" :class="openPrediksi ? 'rotate-90' : ''"></i>
-                            </button>
-                            <div x-show="openPrediksi" x-collapse class="ml-4 space-y-1">
-                                <a href="{{ route('admin.prediksi.index', ['tipe' => 'laporan']) }}" 
-                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.prediksi.*') && request()->get('tipe') == 'laporan' ? 'bg-amber-100 text-amber-700' : '' }}">
-                                    <i data-lucide="file-text" class="w-3 h-3 mr-3 flex-shrink-0"></i>
-                                    <span>Laporan Karyawan</span>
-                                </a>
-                                <a href="{{ route('admin.prediksi.index', ['tipe' => 'job']) }}" 
-                                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                                   class="flex items-center px-3 py-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('admin.prediksi.*') && request()->get('tipe') == 'job' ? 'bg-amber-100 text-amber-700' : '' }}">
-                                    <i data-lucide="briefcase" class="w-3 h-3 mr-3 flex-shrink-0"></i>
-                                    <span>Job Pekerjaan</span>
-                                </a>
-                            </div>
-                        </div>
+                        <a href="{{ route('admin.statistik.index') }}" 
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('admin.statistik.index') || request()->routeIs('admin.statistik.*') ? 'bg-amber-50 text-amber-700' : '' }}">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 mr-3"></i>
+                            Statistik
+                        </a>
+                        <a href="{{ route('admin.prediksi.generate-kegiatan') }}" 
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('admin.prediksi.generate-kegiatan') || request()->routeIs('admin.prediksi.generate-kegiatan.*') ? 'bg-amber-50 text-amber-700' : '' }}">
+                            <i data-lucide="sparkles" class="w-4 h-4 mr-3"></i>
+                            Generate Prediksi
+                        </a>
                     </div>
                 </div>
+
+                <!-- Export Data -->
+                <a href="{{ route('atasan.export-data') }}" 
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.export-data') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="download" class="w-5 h-5 mr-3"></i>
+                    Export Data
+                </a>
+
+                <!-- Pemantauan Laporan -->
+                <a href="{{ route('atasan.pemantauan-laporan') }}" 
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.pemantauan-laporan') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="eye" class="w-5 h-5 mr-3"></i>
+                    Pemantauan Laporan
+                </a>
 
                 <!-- Upload Excel -->
                 <div x-data="{ open: false }" class="space-y-1">
@@ -199,10 +144,9 @@
                     </button>
                     <div x-show="open" x-collapse class="ml-6 space-y-1">
                         <a href="{{ route('atasan.excel.index') }}" 
-                           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
-                            <i data-lucide="settings" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                            <span>Manajemen Excel</span>
+                           class="flex items-center px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i data-lucide="settings" class="w-4 h-4 mr-3"></i>
+                            Manajemen Excel
                         </a>
                     </div>
                 </div>
@@ -213,28 +157,24 @@
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="{{ route('karyawan.dashboard') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors min-h-[44px] {{ request()->routeIs('karyawan.dashboard') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Dashboard</span>
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors {{ request()->routeIs('karyawan.dashboard') ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                    Dashboard
                 </a>
 
                 <!-- Input Laporan -->
                 <a href="{{ route('kelompok.laporan') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('kelompok.laporan') ? 'bg-blue-100 text-blue-700' : '' }}">
-                    <i data-lucide="file-text" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Input Laporan</span>
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('kelompok.laporan') ? 'bg-blue-100 text-blue-700' : '' }}">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                    Input Laporan
                 </a>
 
-                <!-- Input Job Pekerjaan -->
-                <a href="{{ route('kelompok.job-pekerjaan') }}" 
-                   x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px] {{ request()->routeIs('kelompok.job-pekerjaan') ? 'bg-blue-100 text-blue-700' : '' }}">
-                    <i data-lucide="briefcase" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                    <span>Input Job Pekerjaan</span>
+                <!-- Generate Prediksi -->
+                <a href="{{ route('kelompok.prediksi.generate-kegiatan') }}" 
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('kelompok.prediksi.*') ? 'bg-blue-100 text-blue-700' : '' }}">
+                    <i data-lucide="sparkles" class="w-5 h-5 mr-3"></i>
+                    Generate Prediksi
                 </a>
-
 
                 <!-- Export Data Kelompok -->
                 <a href="#" onclick="exportKelompokData()" 
@@ -251,17 +191,15 @@
         <!-- Settings -->
         @if(auth()->user()->role === 'atasan')
         <a href="{{ route('atasan.settings') }}" 
-           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
-            <i data-lucide="settings" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-            <span>Pengaturan</span>
+           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+            Pengaturan
         </a>
         @else
         <a href="{{ route('kelompok.settings') }}" 
-           x-on:click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
-           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors min-h-[44px]">
-            <i data-lucide="settings" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-            <span>Pengaturan</span>
+           class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+            Pengaturan
         </a>
         @endif
 
@@ -269,20 +207,34 @@
         <form method="POST" action="{{ route('logout') }}" class="mt-4">
             @csrf
             <button type="submit" 
-                    class="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors min-h-[44px]">
-                <i data-lucide="log-out" class="w-5 h-5 mr-3 flex-shrink-0"></i>
-                <span>Keluar</span>
+                    class="flex items-center w-full px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+                Keluar
             </button>
         </form>
     </nav>
 
     <!-- Sidebar Footer -->
-    <div class="mt-auto p-4 bg-gray-50 border-t">
+    <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t">
         <div class="text-xs text-gray-500 text-center">
-            <p class="truncate">PLN Unit Induk Distribusi</p>
-            <p class="truncate">Sulselrabar</p>
+            <p>PLN Unit Induk Distribusi</p>
+            <p>Sulselrabar</p>
         </div>
     </div>
+</div>
+
+<!-- Mobile Sidebar Overlay -->
+<div x-data="{ sidebarOpen: false }" 
+     x-show="sidebarOpen" 
+     x-transition:enter="transition-opacity ease-linear duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition-opacity ease-linear duration-300"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+     @click="sidebarOpen = false"
+     style="display: none;">
 </div>
 
 <script>
@@ -315,6 +267,11 @@ function exportKelompokData() {
 function uploadExcel() {
     // Upload Excel functionality
     showAlert('Fitur upload Excel akan segera tersedia', 'info');
+}
+
+function createNewExcel() {
+    // Create new Excel file functionality
+    showAlert('Fitur buat file Excel baru akan segera tersedia', 'info');
 }
 
 // Mobile sidebar toggle

@@ -20,7 +20,7 @@
     </div>
 
     <!-- Action Cards & Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <!-- Upload Data -->
         <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-blue-200">
             <div class="flex items-center justify-between mb-4">
@@ -53,22 +53,18 @@
                 </div>
             </div>
             <div class="space-y-3">
-                <div class="flex justify-between items-center bg-white/60 rounded-lg px-3 py-2 backdrop-blur-sm">
-                    <span class="text-sm font-medium text-gray-700">Total File:</span>
-                    <span class="text-lg font-bold text-purple-600" x-text="totalFiles"></span>
+                <div class="flex justify-between items-center bg-white/60 rounded-lg px-4 py-3 backdrop-blur-sm">
+                    <span class="text-sm font-medium text-gray-700">Total Ukuran:</span>
+                    <span class="text-xl font-bold text-purple-600" x-text="formatFileSize(totalFileSize)"></span>
                 </div>
-                <div class="flex justify-between items-center bg-white/60 rounded-lg px-3 py-2 backdrop-blur-sm">
+                <div class="flex justify-between items-center bg-white/60 rounded-lg px-4 py-3 backdrop-blur-sm">
                     <span class="text-sm font-medium text-gray-700">Laporan Karyawan:</span>
-                    <span class="text-lg font-bold text-green-600" x-text="laporanCount"></span>
-                </div>
-                <div class="flex justify-between items-center bg-white/60 rounded-lg px-3 py-2 backdrop-blur-sm">
-                    <span class="text-sm font-medium text-gray-700">Job Pekerjaan:</span>
-                    <span class="text-lg font-bold text-orange-600" x-text="jobCount"></span>
+                    <span class="text-xl font-bold text-green-600" x-text="laporanCount"></span>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Stats Card 1 -->
+        <!-- Quick Stats Card -->
         <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg p-6 border border-green-200">
             <div class="flex items-center mb-4">
                 <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-md">
@@ -80,27 +76,11 @@
                 </div>
             </div>
             <div class="text-center">
-                <div class="text-3xl font-bold text-green-600" x-text="filteredLaporanFiles.length"></div>
-                <p class="text-xs text-gray-600 mt-1">File tersedia</p>
+                <div class="text-4xl font-bold text-green-600" x-text="filteredLaporanFiles.length"></div>
+                <p class="text-sm text-gray-600 mt-2 font-medium">File tersedia</p>
             </div>
         </div>
 
-        <!-- Quick Stats Card 2 -->
-        <div class="bg-gradient-to-br from-orange-50 to-amber-100 rounded-xl shadow-lg p-6 border border-orange-200">
-            <div class="flex items-center mb-4">
-                <div class="p-3 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl shadow-md">
-                    <i data-lucide="briefcase" class="w-6 h-6 text-white"></i>
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-bold text-gray-900">Job</h3>
-                    <p class="text-sm text-gray-600">File Job Pekerjaan</p>
-                </div>
-            </div>
-            <div class="text-center">
-                <div class="text-3xl font-bold text-orange-600" x-text="filteredJobFiles.length"></div>
-                <p class="text-xs text-gray-600 mt-1">File tersedia</p>
-            </div>
-        </div>
     </div>
 
     <!-- Laporan Karyawan Files -->
@@ -248,152 +228,6 @@
         </div>
     </div>
 
-    <!-- Job Pekerjaan Files -->
-    <div class="bg-white rounded-xl shadow-lg mb-6 overflow-hidden border border-gray-200">
-        <div class="bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-5">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <i data-lucide="briefcase" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-white">File Excel Terbaru Job Pekerjaan</h2>
-                        <p class="text-sm text-orange-100">Kelola file Excel job pekerjaan</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <!-- Filter Bulan -->
-                    <select x-model="filterJob.bulan" 
-                            @change="filterJobFiles()"
-                            class="px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm hover:bg-white transition-colors">
-                        <option value="">Semua Bulan</option>
-                        <option value="Januari">Januari</option>
-                        <option value="Februari">Februari</option>
-                        <option value="Maret">Maret</option>
-                        <option value="April">April</option>
-                        <option value="Mei">Mei</option>
-                        <option value="Juni">Juni</option>
-                        <option value="Juli">Juli</option>
-                        <option value="Agustus">Agustus</option>
-                        <option value="September">September</option>
-                        <option value="Oktober">Oktober</option>
-                        <option value="November">November</option>
-                        <option value="Desember">Desember</option>
-                    </select>
-                    
-                    <!-- Filter Tahun -->
-                    <div class="relative">
-                        <input type="number" 
-                               x-model="filterJob.tahun" 
-                               @input="filterJobFiles()"
-                               placeholder="Tahun (contoh: 2024)"
-                               min="2000"
-                               max="2100"
-                               class="px-4 py-2 pr-10 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-white focus:border-transparent shadow-sm hover:bg-white transition-colors w-32">
-                        <button x-show="filterJob.tahun" 
-                                @click="filterJob.tahun = ''; filterJobFiles()"
-                                class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    
-                    <button @click="refreshJobFiles()" 
-                            :disabled="loading"
-                            class="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-gray-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all">
-                        <i data-lucide="refresh-cw" :class="loading ? 'animate-spin' : ''" class="w-4 h-4 mr-2"></i>
-                        <span x-text="loading ? 'Loading...' : 'Refresh'"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Nama File
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Tipe
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Ukuran
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Dibuat
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                            Aksi
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <template x-for="file in filteredJobFiles" :key="file.name">
-                        <tr class="hover:bg-orange-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="p-2 bg-orange-100 rounded-lg mr-3">
-                                        <i data-lucide="file-spreadsheet" class="w-5 h-5 text-orange-600"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm font-semibold text-gray-900" x-text="file.name"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="file.type === 'template' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'"
-                                      class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full shadow-sm" 
-                                      x-text="file.type === 'template' ? 'Template' : 'Upload'">
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center text-sm font-medium text-gray-700">
-                                    <i data-lucide="hard-drive" class="w-4 h-4 mr-2 text-gray-400"></i>
-                                    <span x-text="formatFileSize(file.size)"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center text-sm text-gray-700">
-                                    <i data-lucide="calendar" class="w-4 h-4 mr-2 text-gray-400"></i>
-                                    <span x-text="formatDate(file.created)"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center justify-center space-x-2">
-                                    <button @click="downloadFile(file.name)" 
-                                            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                                            title="Download file">
-                                        <i data-lucide="download" class="w-4 h-4 mr-1.5"></i>
-                                        <span class="text-xs font-semibold">Download</span>
-                                    </button>
-                                    <button @click="deleteFile(file.name)" 
-                                            class="inline-flex items-center px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                                            title="Hapus file">
-                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i>
-                                        <span class="text-xs font-semibold">Hapus</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
-                    
-                    <tr x-show="filteredJobFiles.length === 0">
-                        <td colspan="5" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <div class="p-4 bg-gray-100 rounded-full mb-3">
-                                    <i data-lucide="file-x" class="w-8 h-8 text-gray-400"></i>
-                                </div>
-                                <p class="text-sm font-medium text-gray-500">Belum ada file Excel Job Pekerjaan</p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-
     <!-- Upload Excel Modal -->
     <div x-show="showUploadModal" 
          x-cloak
@@ -454,18 +288,8 @@
                         </div>
                     </div>
 
-                    <!-- Data Type -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Jenis Data <span class="text-red-500">*</span>
-                        </label>
-                        <select x-model="uploadFormData.jenis_data" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Jenis Data</option>
-                            <option value="laporan_karyawan">Laporan Karyawan</option>
-                            <option value="job_pekerjaan">Job Pekerjaan</option>
-                        </select>
-                    </div>
+                    <!-- Data Type - Hidden, default ke laporan_karyawan -->
+                    <input type="hidden" x-model="uploadFormData.jenis_data" value="laporan_karyawan">
 
                     <!-- Period Selection -->
                     <div class="grid grid-cols-2 gap-4">
@@ -528,7 +352,7 @@
                             Batal
                         </button>
                         <button type="submit" 
-                                :disabled="!selectedFileUpload || !uploadFormData.jenis_data || !uploadFormData.bulan || !uploadFormData.tahun || uploadLoading"
+                                :disabled="!selectedFileUpload || !uploadFormData.bulan || !uploadFormData.tahun || uploadLoading"
                                 class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
                             <i data-lucide="upload" class="w-4 h-4 mr-2" x-show="!uploadLoading"></i>
                             <i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin" x-show="uploadLoading"></i>
@@ -626,7 +450,7 @@ document.addEventListener('alpine:init', () => {
         uploadResult: null,
         
         uploadFormData: {
-            jenis_data: '',
+            jenis_data: 'laporan_karyawan', // Default ke laporan karyawan
             bulan: '',
             tahun: new Date().getFullYear(),
             skip_errors: true,
@@ -639,26 +463,18 @@ document.addEventListener('alpine:init', () => {
             tahun: ''
         },
         
-        filterJob: {
-            bulan: '',
-            tahun: ''
-        },
-        
         get totalFiles() {
             return this.excelFiles.length;
+        },
+        
+        get totalFileSize() {
+            return this.excelFiles.reduce((total, file) => total + (file.size || 0), 0);
         },
         
         get laporanCount() {
             return this.excelFiles.filter(file => 
                 file.name.toLowerCase().includes('laporan_karyawan') || 
                 file.name.toLowerCase().includes('laporan')
-            ).length;
-        },
-        
-        get jobCount() {
-            return this.excelFiles.filter(file => 
-                file.name.toLowerCase().includes('job_pekerjaan') || 
-                file.name.toLowerCase().includes('job')
             ).length;
         },
         
@@ -677,27 +493,6 @@ document.addEventListener('alpine:init', () => {
             if (this.filterLaporan.tahun) {
                 files = files.filter(file => 
                     file.name.includes(this.filterLaporan.tahun)
-                );
-            }
-            
-            return files;
-        },
-        
-        get filteredJobFiles() {
-            let files = this.excelFiles.filter(file => 
-                file.name.toLowerCase().includes('job_pekerjaan') || 
-                file.name.toLowerCase().includes('job')
-            );
-            
-            if (this.filterJob.bulan) {
-                files = files.filter(file => 
-                    file.name.toLowerCase().includes(this.filterJob.bulan.toLowerCase())
-                );
-            }
-            
-            if (this.filterJob.tahun) {
-                files = files.filter(file => 
-                    file.name.includes(this.filterJob.tahun)
                 );
             }
             
@@ -824,18 +619,8 @@ document.addEventListener('alpine:init', () => {
             console.log('Filtering laporan files:', this.filterLaporan);
         },
         
-        filterJobFiles() {
-            // Filter sudah dihitung otomatis melalui computed property
-            console.log('Filtering job files:', this.filterJob);
-        },
-        
         async refreshLaporanFiles() {
             console.log('Refreshing Laporan Karyawan files...');
-            await this.refreshFiles();
-        },
-        
-        async refreshJobFiles() {
-            console.log('Refreshing Job Pekerjaan files...');
             await this.refreshFiles();
         },
         

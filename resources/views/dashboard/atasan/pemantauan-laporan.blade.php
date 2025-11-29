@@ -3,1199 +3,853 @@
 @section('title', 'Pemantauan Laporan')
 
 @section('content')
-<div class="p-6" x-data="pemantauanData()">
+<div class="p-3 sm:p-4 lg:p-6">
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Pemantauan Laporan</h1>
-        <p class="text-gray-600 mt-2">Pantau semua laporan kerja dari semua kelompok</p>
-    </div>
-
-    <!-- Notification -->
-    <div x-show="message" 
-         x-transition
-         :class="messageType === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'"
-         class="mb-6 border rounded-lg px-4 py-3">
-        <div class="flex items-center">
-            <div class="flex-shrink-0">
-                <i :data-lucide="messageType === 'success' ? 'check-circle' : 'alert-circle'" class="w-5 h-5"></i>
+    <div class="mb-6 lg:mb-8">
+        <div class="bg-gradient-to-r from-amber-600 to-amber-700 rounded-xl shadow-lg p-6 sm:p-8 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i data-lucide="eye" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-white">Pemantauan Laporan</h1>
+                        <p class="text-amber-100 mt-1 text-sm sm:text-base">Pantau semua laporan kerja dari seluruh kelompok</p>
+                    </div>
+                </div>
             </div>
-            <div class="ml-3">
-                <p class="text-sm font-medium" x-text="message"></p>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-xs font-medium text-gray-600">Total Laporan</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $statistics['totalLaporan'] ?? 0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i data-lucide="calendar-check" class="w-5 h-5 text-green-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-xs font-medium text-gray-600">Laporan Hari Ini</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $statistics['laporanHariIni'] ?? 0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i data-lucide="calendar" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-xs font-medium text-gray-600">Laporan Bulan Ini</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $statistics['laporanBulanIni'] ?? 0 }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Filter Section -->
-    <div class="bg-white rounded-lg shadow mb-6">
+    <div class="bg-white rounded-xl shadow-lg mb-6 border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Filter Laporan</h3>
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-amber-100 rounded-lg">
+                    <i data-lucide="filter" class="w-5 h-5 text-amber-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Filter Laporan</h3>
+                    <p class="text-xs text-gray-500">Saring data laporan sesuai kebutuhan</p>
+                </div>
+            </div>
         </div>
         <div class="px-6 py-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form method="GET" action="{{ route('atasan.pemantauan-laporan') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                <!-- Filter Tanggal -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
-                    <input type="date" x-model="filterTanggal" 
-                           class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="calendar" class="w-4 h-4 inline mr-1 text-amber-600"></i>
+                        Tanggal
+                    </label>
+                    <input type="date" 
+                           name="tanggal" 
+                           value="{{ request('tanggal') }}"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-gray-400">
                 </div>
-                
+
+                <!-- Filter Hari -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Hari</label>
-                    <select x-model="filterHari" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="calendar-days" class="w-4 h-4 inline mr-1 text-amber-600"></i>
+                        Hari
+                    </label>
+                    <select name="hari" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-gray-400">
                         <option value="">Semua Hari</option>
-                        <option value="Senin">Senin</option>
-                        <option value="Selasa">Selasa</option>
-                        <option value="Rabu">Rabu</option>
-                        <option value="Kamis">Kamis</option>
-                        <option value="Jumat">Jumat</option>
-                        <option value="Sabtu">Sabtu</option>
-                        <option value="Minggu">Minggu</option>
+                        <option value="Senin" {{ request('hari') == 'Senin' ? 'selected' : '' }}>Senin</option>
+                        <option value="Selasa" {{ request('hari') == 'Selasa' ? 'selected' : '' }}>Selasa</option>
+                        <option value="Rabu" {{ request('hari') == 'Rabu' ? 'selected' : '' }}>Rabu</option>
+                        <option value="Kamis" {{ request('hari') == 'Kamis' ? 'selected' : '' }}>Kamis</option>
+                        <option value="Jumat" {{ request('hari') == 'Jumat' ? 'selected' : '' }}>Jumat</option>
+                        <option value="Sabtu" {{ request('hari') == 'Sabtu' ? 'selected' : '' }}>Sabtu</option>
+                        <option value="Minggu" {{ request('hari') == 'Minggu' ? 'selected' : '' }}>Minggu</option>
                     </select>
                 </div>
-                
+
+                <!-- Filter Kelompok -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kelompok</label>
-                    <select x-model="filterKelompok" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="users" class="w-4 h-4 inline mr-1 text-amber-600"></i>
+                        Kelompok
+                    </label>
+                    <select name="kelompok_id" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-gray-400">
                         <option value="">Semua Kelompok</option>
                         @foreach($kelompoks as $kelompok)
-                        <option value="{{ $kelompok->id }}">{{ $kelompok->nama_kelompok }}</option>
+                            <option value="{{ $kelompok->id }}" {{ request('kelompok_id') == $kelompok->id ? 'selected' : '' }}>
+                                {{ $kelompok->nama_kelompok }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
-                
-                <div class="flex items-end">
-                    <button @click="applyFilter()" 
-                            class="w-full bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        🔍 Terapkan Filter
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
-                        📋
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Total Laporan</dt>
-                        <dd class="text-lg font-medium text-gray-900">
-                            <span x-text="statistics.totalLaporan || {{ $statistics['totalLaporan'] ?? 0 }}"></span>
-                        </dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
-                        ✅
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Laporan Hari Ini</dt>
-                        <dd class="text-lg font-medium text-gray-900">
-                            <span x-text="statistics.laporanHariIni || {{ $statistics['laporanHariIni'] ?? 0 }}"></span>
-                        </dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
-                        ⏰
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Pending Review</dt>
-                        <dd class="text-lg font-medium text-gray-900">
-                            <span x-text="statistics.pendingReview || {{ $statistics['pendingReview'] ?? 0 }}"></span>
-                        </dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
-                        📊
-                    </div>
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                    <dl>
-                        <dt class="text-sm font-medium text-gray-500 truncate">Avg per Hari</dt>
-                        <dd class="text-lg font-medium text-gray-900">
-                            <span x-text="statistics.avgPerHari || {{ $statistics['avgPerHari'] ?? 0 }}"></span>
-                        </dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Laporan Table -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex justify-between items-center">
+                <!-- Filter Nama -->
                 <div>
-                    <h3 class="text-lg font-medium text-gray-900">Daftar Laporan</h3>
-                    <p class="text-sm text-gray-600 mt-1">Semua laporan kerja yang telah Anda buat</p>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="user" class="w-4 h-4 inline mr-1 text-amber-600"></i>
+                        Nama
+                    </label>
+                    <select name="nama" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-gray-400">
+                        <option value="">Semua Nama</option>
+                        @foreach($namaKaryawans as $nama)
+                            <option value="{{ $nama }}" {{ request('nama') == $nama ? 'selected' : '' }}>
+                                {{ $nama }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-                <div class="flex space-x-2">
-                    <button @click="exportLaporan()" 
-                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        📥 Export CSV
+
+                <!-- Filter Instansi -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="building" class="w-4 h-4 inline mr-1 text-amber-600"></i>
+                        Instansi
+                    </label>
+                    <input type="text" 
+                           name="instansi" 
+                           value="{{ request('instansi') }}"
+                           placeholder="Cari instansi..."
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all bg-white hover:border-gray-400">
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end gap-2">
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg flex items-center justify-center">
+                        <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                        Filter
                     </button>
-                    <button @click="refreshData()" 
-                            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        🔄 Refresh
+                    <a href="{{ route('atasan.pemantauan-laporan') }}" 
+                       class="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg flex items-center justify-center">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+        <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-amber-100 rounded-lg">
+                        <i data-lucide="list" class="w-5 h-5 text-amber-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Daftar Laporan</h3>
+                        <p class="text-xs text-gray-500">Semua laporan kerja dari seluruh kelompok</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('atasan.pemantauan-laporan.export', request()->all()) }}" 
+                       class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium transform hover:scale-105">
+                        <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2"></i>
+                        <span>Export Excel</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Deskripsi Penanganan Gangguan -->
+        <div id="deskripsiModal" style="display: none;" 
+             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-amber-100 rounded-lg">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Deskripsi Penanganan Gangguan</h3>
+                            <p class="text-sm text-gray-500">Detail penanganan gangguan yang dilakukan</p>
+                        </div>
+                    </div>
+                    <button onclick="tutupDeskripsiModal()" 
+                            class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p id="deskripsiContent" class="text-sm text-gray-700 whitespace-pre-wrap"></p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button onclick="tutupDeskripsiModal()"
+                            class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all font-medium min-h-[44px]">
+                        Tutup
                     </button>
                 </div>
             </div>
         </div>
-        
-        <div class="overflow-x-auto" style="position: relative;">
-            <table class="min-w-full divide-y divide-gray-200" style="position: relative;">
-                <thead class="bg-gray-50">
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hari/Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instansi</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat Tujuan</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dokumentasi</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Hari/Tanggal</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">KELOMPOK</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Instansi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Alamat Tujuan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Mulai Kegiatan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jenis Kegiatan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Selesai Kegiatan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Durasi Waktu</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Dokumentasi</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($laporanKaryawans as $index => $laporan)
-                    <tr class="hover:bg-gray-50 transition-colors" style="position: relative;">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $laporanKaryawans->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-gray-700">{{ $laporan->hari ?? '-' }}</span>
-                                <span class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($laporan->tanggal)->locale('id')->format('d M Y') }}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="flex flex-col">
-                                <span class="font-medium">{{ $laporan->nama ?? '-' }}</span>
-                                @if($laporan->jabatan)
-                                <span class="text-xs text-gray-500">{{ $laporan->jabatan }}</span>
-                                @endif
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $laporan->instansi }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                            <div class="truncate" title="{{ $laporan->alamat_tujuan }}">
-                                {{ $laporan->alamat_tujuan }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            <div class="space-y-1 max-w-xs">
-                                @if($laporan->dokumentasi)
-                                    <div class="text-xs text-gray-600 truncate" title="{{ $laporan->dokumentasi }}">
-                                        {{ Str::limit($laporan->dokumentasi, 40) }}
+                    @forelse($laporans as $index => $laporan)
+                        <tr class="hover:bg-amber-50/50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center justify-center w-8 h-8 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">
+                                    {{ $laporans->firstItem() + $index }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-amber-600"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $laporan->hari }}</div>
+                                        <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($laporan->tanggal)->locale('id')->isoFormat('DD MMM YYYY') }}</div>
                                     </div>
-                                @endif
-                                @if($laporan->file_path)
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center space-x-2">
+                                    <div class="p-1.5 bg-amber-100 rounded-lg">
+                                        <i data-lucide="users" class="w-4 h-4 text-amber-600"></i>
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $laporan->kelompok->nama_kelompok ?? '-' }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ $laporan->nama }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ $laporan->instansi }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if($laporan->waktu_mulai_kegiatan)
                                     <div class="flex items-center space-x-2">
-                                        <i data-lucide="file" class="w-4 h-4 text-blue-600"></i>
-                                        <a href="/api/laporan-karyawan/{{ $laporan->id }}/download" 
-                                           target="_blank"
-                                           class="text-blue-600 hover:text-blue-700 text-xs underline">
-                                            Lihat File
-                                        </a>
+                                        <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+                                        <span class="font-medium">{{ \Carbon\Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') }}</span>
                                     </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
                                 @endif
-                                @if(!$laporan->dokumentasi && !$laporan->file_path)
-                                    <span class="text-gray-400 text-xs">-</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div class="flex items-center space-x-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ $laporan->jenis_kegiatan ?? '-' }}
+                                    </span>
+                                    @if($laporan->jenis_kegiatan === 'Penanganan Gangguan' && $laporan->deskripsi_kegiatan)
+                                        <button type="button"
+                                                onclick="lihatDeskripsiGangguan(@js($laporan->deskripsi_kegiatan))"
+                                                class="inline-flex items-center justify-center w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-all duration-200 hover:shadow-md"
+                                                title="Lihat Deskripsi Penanganan Gangguan">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if($laporan->waktu_selesai_kegiatan)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="clock" class="w-4 h-4 text-green-600"></i>
+                                        <span class="font-medium">{{ \Carbon\Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
                                 @endif
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                            <div class="flex items-center justify-center space-x-2 relative z-10">
-                                <!-- Tombol Lihat Detail -->
-                                <button type="button" 
-                                        @click.stop="lihatDetail('{{ $laporan->id }}')" 
-                                        class="relative z-20 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
-                                        style="pointer-events: auto !important; position: relative; z-index: 20;"
-                                        title="Lihat Detail">
-                                    <i data-lucide="eye" class="w-5 h-5 pointer-events-none"></i>
-                                </button>
-                                
-                                <!-- Tombol Edit -->
-                                <button type="button" 
-                                        @click.stop="bukaFormEdit('{{ $laporan->id }}')" 
-                                        class="relative z-20 p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors duration-200 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
-                                        style="pointer-events: auto !important; position: relative; z-index: 20;"
-                                        title="Edit">
-                                    <i data-lucide="pencil" class="w-5 h-5 pointer-events-none"></i>
-                                </button>
-                                
-                                <!-- Tombol Hapus -->
-                                <button type="button" 
-                                        @click.stop="hapusLaporan('{{ $laporan->id }}')" 
-                                        class="relative z-20 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 cursor-pointer shadow-sm hover:shadow-md pointer-events-auto"
-                                        style="pointer-events: auto !important; position: relative; z-index: 20;"
-                                        title="Hapus">
-                                    <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="hourglass" class="w-4 h-4 text-indigo-600"></i>
+                                    <span class="font-medium">{{ number_format($laporan->durasi_waktu ?? 0, 2) }} jam</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div class="truncate" title="{{ $laporan->lokasi }}">{{ Str::limit($laporan->lokasi ?? '-', 50) }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                @if($laporan->file_path)
+                                    <a href="/api/pemantauan-laporan/{{ $laporan->id }}/download" 
+                                       target="_blank"
+                                       class="inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors">
+                                        <i data-lucide="file" class="w-4 h-4 mr-1"></i>
+                                        <span class="text-xs">Lihat File</span>
+                                    </a>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <!-- Edit Button -->
+                                    <button type="button"
+                                            onclick="editLaporan('{{ $laporan->id }}')" 
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
+                                            title="Edit Laporan">
+                                        <i data-lucide="edit-2" class="w-5 h-5"></i>
+                                    </button>
+                                    
+                                    <!-- Download Button -->
+                                    @if($laporan->file_path)
+                                    <a href="/api/pemantauan-laporan/{{ $laporan->id }}/download" 
+                                       target="_blank"
+                                       class="inline-flex items-center justify-center w-10 h-10 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
+                                       title="Download File">
+                                        <i data-lucide="download" class="w-5 h-5"></i>
+                                    </a>
+                                    @else
+                                    <button type="button"
+                                            disabled
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed opacity-50"
+                                            title="Tidak ada file">
+                                        <i data-lucide="download" class="w-5 h-5"></i>
+                                    </button>
+                                    @endif
+                                    
+                                    <!-- Delete Button -->
+                                    <button type="button"
+                                            onclick="hapusLaporan('{{ $laporan->id }}')" 
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
+                                            title="Hapus Laporan">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            Belum ada data laporan
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="13" class="px-6 py-16 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="p-4 bg-gray-100 rounded-full mb-4">
+                                        <i data-lucide="file-text" class="w-16 h-16 text-gray-400"></i>
+                                    </div>
+                                    <p class="text-gray-700 text-lg font-semibold mb-2">Belum ada laporan</p>
+                                    <p class="text-gray-500 text-sm">Tidak ada laporan yang ditemukan berdasarkan filter yang dipilih</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
+        @if($laporans->hasPages())
         <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div class="flex-1 flex justify-between sm:hidden">
-                @if($laporanKaryawans->hasPages())
-                    @if($laporanKaryawans->onFirstPage())
-                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
-                            Previous
-                        </span>
-                    @else
-                        <a href="{{ $laporanKaryawans->previousPageUrl() }}" 
-                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Previous
-                        </a>
-                    @endif
-                    
-                    @if($laporanKaryawans->hasMorePages())
-                        <a href="{{ $laporanKaryawans->nextPageUrl() }}" 
-                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Next
-                        </a>
-                    @else
-                        <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
-                            Next
-                        </span>
-                    @endif
+                @if($laporans->onFirstPage())
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Sebelumnya
+                    </span>
+                @else
+                    <a href="{{ $laporans->appends(request()->except('page'))->previousPageUrl() }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Sebelumnya
+                    </a>
+                @endif
+                
+                @if($laporans->hasMorePages())
+                    <a href="{{ $laporans->appends(request()->except('page'))->nextPageUrl() }}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Selanjutnya
+                    </a>
+                @else
+                    <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Selanjutnya
+                    </span>
                 @endif
             </div>
             <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm text-gray-700">
                         Menampilkan
-                        <span class="font-medium">{{ $laporanKaryawans->firstItem() ?? 0 }}</span>
+                        <span class="font-medium">{{ $laporans->firstItem() ?? 0 }}</span>
                         sampai
-                        <span class="font-medium">{{ $laporanKaryawans->lastItem() ?? 0 }}</span>
+                        <span class="font-medium">{{ $laporans->lastItem() ?? 0 }}</span>
                         dari
-                        <span class="font-medium">{{ $laporanKaryawans->total() }}</span>
+                        <span class="font-medium">{{ $laporans->total() }}</span>
                         hasil
                     </p>
                 </div>
                 <div>
-                    @if($laporanKaryawans->hasPages())
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                            @if($laporanKaryawans->onFirstPage())
-                                <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
-                                    Previous
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        @if($laporans->onFirstPage())
+                            <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </span>
+                        @else
+                            <a href="{{ $laporans->appends(request()->except('page'))->previousPageUrl() }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </a>
+                        @endif
+                        
+                        @php
+                            $currentPage = $laporans->currentPage();
+                            $lastPage = $laporans->lastPage();
+                            $start = max(1, $currentPage - 2);
+                            $end = min($lastPage, $currentPage + 2);
+                        @endphp
+                        
+                        @if($start > 1)
+                            <a href="{{ $laporans->appends(request()->except('page'))->url(1) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                1
+                            </a>
+                            @if($start > 2)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
                                 </span>
+                            @endif
+                        @endif
+                        
+                        @for($page = $start; $page <= $end; $page++)
+                            @if($page == $currentPage)
+                            <span class="relative inline-flex items-center px-4 py-2 border border-amber-500 bg-amber-50 text-sm font-medium text-amber-600">
+                                {{ $page }}
+                            </span>
                             @else
-                                <a href="{{ $laporanKaryawans->previousPageUrl() }}" 
-                                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    Previous
-                                </a>
+                            <a href="{{ $laporans->appends(request()->except('page'))->url($page) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ $page }}
+                            </a>
                             @endif
-                            
-                            @php
-                                $currentPage = $laporanKaryawans->currentPage();
-                                $lastPage = $laporanKaryawans->lastPage();
-                                $start = max(1, $currentPage - 2);
-                                $end = min($lastPage, $currentPage + 2);
-                            @endphp
-                            
-                            @if($start > 1)
-                                <a href="{{ $laporanKaryawans->url(1) }}" 
-                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    1
-                                </a>
-                                @if($start > 2)
-                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                        ...
-                                    </span>
-                                @endif
-                            @endif
-                            
-                            @for($page = $start; $page <= $end; $page++)
-                                @if($page == $currentPage)
-                                <span class="relative inline-flex items-center px-4 py-2 border border-amber-500 bg-amber-50 text-sm font-medium text-amber-600">
-                                    {{ $page }}
-                                </span>
-                                @else
-                                <a href="{{ $laporanKaryawans->url($page) }}" 
-                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    {{ $page }}
-                                </a>
-                                @endif
-                            @endfor
-                            
-                            @if($end < $lastPage)
-                                @if($end < $lastPage - 1)
-                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                        ...
-                                    </span>
-                                @endif
-                                <a href="{{ $laporanKaryawans->url($lastPage) }}" 
-                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                    {{ $lastPage }}
-                                </a>
-                            @endif
-                            
-                            @if($laporanKaryawans->hasMorePages())
-                                <a href="{{ $laporanKaryawans->nextPageUrl() }}" 
-                                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    Next
-                                </a>
-                            @else
-                                <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
-                                    Next
+                        @endfor
+                        
+                        @if($end < $lastPage)
+                            @if($end < $lastPage - 1)
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    ...
                                 </span>
                             @endif
-                        </nav>
-                    @endif
+                            <a href="{{ $laporans->appends(request()->except('page'))->url($lastPage) }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ $lastPage }}
+                            </a>
+                        @endif
+                        
+                        @if($laporans->hasMorePages())
+                            <a href="{{ $laporans->appends(request()->except('page'))->nextPageUrl() }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </a>
+                        @else
+                            <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-300 cursor-not-allowed">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </span>
+                        @endif
+                    </nav>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Modal Lihat Dokumentasi -->
-<div x-show="showDokumentasiModal" x-transition class="fixed inset-0 z-50 overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showDokumentasiModal = false"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Dokumentasi Pekerjaan</h3>
-                
-                <div class="grid grid-cols-2 gap-4" x-show="selectedDokumentasi.length > 0">
-                    <template x-for="(dok, index) in selectedDokumentasi" :key="index">
-                    <div class="bg-gray-100 rounded-lg p-4 text-center">
-                            <div class="text-gray-500 text-sm mb-2">Foto <span x-text="index + 1"></span></div>
-                            <img :src="dok" :alt="'Foto ' + (index + 1)" class="w-full h-32 object-cover rounded">
-                    </div>
-                    </template>
-                    </div>
-                
-                <div x-show="selectedDokumentasi.length === 0" class="text-center py-8">
-                    <div class="text-gray-500">Tidak ada dokumentasi tersedia</div>
-                </div>
-            </div>
-            
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" @click="showDokumentasiModal = false" 
-                        class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Tutup
-                </button>
-            </div>
-        </div>
+        @endif
     </div>
 </div>
 
-<!-- Modal Detail Laporan - Form Baru -->
-<div x-show="showDetailModal" 
-     x-cloak
-     @click.away="showDetailModal = false"
-     @keydown.escape.window="showDetailModal = false"
-     x-transition:enter="ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     x-transition:leave="ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0"
-     class="fixed inset-0 z-[9999] overflow-y-auto"
-     style="display: none;"
-     x-bind:style="showDetailModal ? 'display: flex !important;' : 'display: none !important;'">
-    
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
-         @click="showDetailModal = false"
-         style="z-index: 9998;"></div>
-    
-    <!-- Modal Content -->
-    <div class="relative z-[10000] w-full max-w-4xl mx-auto my-8 px-4"
-         @click.stop>
-        <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i data-lucide="file-text" class="w-6 h-6 text-white"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-white">Detail Laporan Kerja</h3>
-                            <p class="text-sm text-blue-100">Informasi lengkap laporan kerja</p>
-                        </div>
+    <!-- Modal Edit -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i data-lucide="edit-2" class="w-5 h-5 text-green-600"></i>
                     </div>
-                    <button type="button"
-                            @click="showDetailModal = false" 
-                            class="p-2 text-white hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
-                            style="pointer-events: auto !important; position: relative; z-index: 10001;">
-                        <i data-lucide="x" class="w-6 h-6"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Content -->
-            <div class="bg-white px-6 py-6 max-h-[70vh] overflow-y-auto">
-                <!-- Loading State -->
-                <div x-show="!detailLaporan && loading" class="text-center py-12">
-                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-                    <p class="mt-4 text-gray-600 font-medium">Memuat data laporan...</p>
-                </div>
-                
-                <!-- Error State -->
-                <div x-show="!detailLaporan && !loading" class="text-center py-12">
-                    <div class="p-4 bg-red-50 rounded-lg border border-red-200">
-                        <i data-lucide="alert-circle" class="w-12 h-12 text-red-600 mx-auto mb-3"></i>
-                        <p class="text-red-700 font-medium">Gagal memuat data laporan</p>
+                    <div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900">Edit Laporan</h3>
+                        <p class="text-sm text-gray-500">Perbarui informasi laporan kerja</p>
                     </div>
                 </div>
-                
-                <!-- Detail Content -->
-                <div x-show="detailLaporan" class="space-y-6">
-                    <!-- Informasi Utama -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border-2 border-blue-200">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i>
-                                <label class="text-xs font-bold text-blue-700 uppercase tracking-wide">Tanggal</label>
-                            </div>
-                            <p class="text-lg font-bold text-gray-900" x-text="detailLaporan.tanggal ? new Date(detailLaporan.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'"></p>
-                        </div>
-                        
-                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border-2 border-purple-200">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <i data-lucide="calendar-days" class="w-5 h-5 text-purple-600"></i>
-                                <label class="text-xs font-bold text-purple-700 uppercase tracking-wide">Hari</label>
-                            </div>
-                            <p class="text-lg font-bold text-gray-900" x-text="detailLaporan.hari || '-'"></p>
-                        </div>
-                        
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border-2 border-green-200">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <i data-lucide="users" class="w-5 h-5 text-green-600"></i>
-                                <label class="text-xs font-bold text-green-700 uppercase tracking-wide">Kelompok</label>
-                            </div>
-                            <p class="text-lg font-bold text-gray-900" x-text="detailLaporan.kelompok?.nama_kelompok || '-'"></p>
-                        </div>
-                        
-                        <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 border-2 border-amber-200">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <i data-lucide="user" class="w-5 h-5 text-amber-600"></i>
-                                <label class="text-xs font-bold text-amber-700 uppercase tracking-wide">Nama Karyawan</label>
-                            </div>
-                            <p class="text-lg font-bold text-gray-900" x-text="detailLaporan.nama || '-'"></p>
-                        </div>
-                    </div>
-                    
-                    <!-- Informasi Detail -->
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-xl p-5 border-2 border-gray-200">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <i data-lucide="briefcase" class="w-5 h-5 text-gray-600"></i>
-                                <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">Jabatan</label>
-                            </div>
-                            <p class="text-base text-gray-900 font-medium" x-text="detailLaporan.jabatan || '-'"></p>
-                        </div>
-                        
-                        <div class="bg-gray-50 rounded-xl p-5 border-2 border-gray-200">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <i data-lucide="building" class="w-5 h-5 text-gray-600"></i>
-                                <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">Instansi</label>
-                            </div>
-                            <p class="text-base text-gray-900 font-medium" x-text="detailLaporan.instansi || '-'"></p>
-                        </div>
-                        
-                        <div class="bg-gray-50 rounded-xl p-5 border-2 border-gray-200">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <i data-lucide="map-pin" class="w-5 h-5 text-gray-600"></i>
-                                <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">Alamat/Tujuan</label>
-                            </div>
-                            <p class="text-base text-gray-900 font-medium" x-text="detailLaporan.alamat_tujuan || '-'"></p>
-                        </div>
-                        
-                        <div class="bg-gray-50 rounded-xl p-5 border-2 border-gray-200">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <i data-lucide="file-text" class="w-5 h-5 text-gray-600"></i>
-                                <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">Dokumentasi</label>
-                            </div>
-                            <div class="mt-2 text-sm text-gray-900 whitespace-pre-wrap bg-white p-4 rounded-lg border border-gray-300 min-h-[120px] max-h-[200px] overflow-y-auto" 
-                                 x-text="detailLaporan.dokumentasi || '-'"></div>
-                        </div>
-                        
-                        <div class="bg-blue-50 rounded-xl p-5 border-2 border-blue-200" x-show="detailLaporan.file_path">
-                            <div class="flex items-center space-x-2 mb-3">
-                                <i data-lucide="paperclip" class="w-5 h-5 text-blue-600"></i>
-                                <label class="text-sm font-bold text-blue-700 uppercase tracking-wide">File Lampiran</label>
-                            </div>
-                            <div class="flex items-center justify-between bg-white p-4 rounded-lg border border-blue-300">
-                                <div class="flex items-center space-x-3">
-                                    <div class="p-2 bg-blue-100 rounded-lg">
-                                        <i data-lucide="file" class="w-6 h-6 text-blue-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan.file_path ? detailLaporan.file_path.split('/').pop() : ''"></p>
-                                        <p class="text-xs text-gray-500">File dokumentasi</p>
-                                    </div>
-                                </div>
-                                <a :href="'/api/laporan-karyawan/' + detailLaporan.id + '/download'" 
-                                   target="_blank"
-                                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                                   style="pointer-events: auto !important;">
-                                    <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-                                    Download
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button type="button" 
-                        @click="showDetailModal = false" 
-                        class="inline-flex items-center px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                        style="pointer-events: auto !important; position: relative; z-index: 10001;">
-                    <i data-lucide="x" class="w-4 h-4 mr-2"></i>
-                    Tutup
+                <button onclick="tutupEdit()" 
+                        class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Edit Laporan -->
-<div x-show="showEditModal" 
-     x-cloak
-     x-transition
-     class="fixed inset-0 z-50 overflow-y-auto"
-     style="display: none;"
-     x-bind:style="showEditModal ? 'display: block;' : 'display: none;'">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showEditModal = false"></div>
-        
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i data-lucide="edit-2" class="w-6 h-6 text-white"></i>
-                        </div>
-                        <h3 class="ml-3 text-lg font-semibold text-white">Edit Laporan</h3>
-                    </div>
-                    <button @click="showEditModal = false" 
-                            class="text-white hover:text-gray-200 transition-colors">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
+            <form id="editForm" onsubmit="simpanEdit(event)">
+                <div id="editContent" class="space-y-4">
+                    <!-- Content will be loaded here -->
                 </div>
-            </div>
-            
-            <form @submit.prevent="updateLaporan()">
-                <div class="bg-white px-6 py-6">
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Tanggal</label>
-                            <input type="date" x-model="formLaporan.tanggal" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                   required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Hari</label>
-                            <input type="text" x-model="formLaporan.hari" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                   placeholder="Contoh: Senin">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Nama</label>
-                            <input type="text" x-model="formLaporan.nama" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                   placeholder="Masukkan nama karyawan" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Jabatan</label>
-                            <input type="text" x-model="formLaporan.jabatan" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                   placeholder="Masukkan jabatan">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Instansi</label>
-                            <input type="text" x-model="formLaporan.instansi" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                   placeholder="Masukkan nama instansi" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Alamat/Tujuan</label>
-                            <input type="text" x-model="formLaporan.alamat_tujuan" 
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                   placeholder="Masukkan alamat/tujuan" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Dokumentasi</label>
-                            <textarea x-model="formLaporan.dokumentasi" 
-                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" 
-                                      rows="3" placeholder="Masukkan dokumentasi kerja"></textarea>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                    <button type="button" @click="showEditModal = false" 
-                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                        <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+                    <button type="button" onclick="tutupEdit()" 
+                            class="px-6 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all font-medium">
                         Batal
                     </button>
                     <button type="submit" 
-                            :disabled="loading"
-                            class="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent text-sm font-medium rounded-md text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50">
-                        <i data-lucide="check" class="w-4 h-4 mr-2" x-show="!loading"></i>
-                        <span x-show="!loading">Perbarui</span>
-                        <span x-show="loading">Memproses...</span>
+                            class="px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-medium shadow-md hover:shadow-lg">
+                        Simpan Perubahan
                     </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
 
 <script>
-// Alpine.js data
-document.addEventListener('alpine:init', () => {
-    Alpine.data('pemantauanData', () => ({
-        // Filter data
-        filterTanggal: '',
-        filterHari: '',
-        filterKelompok: '',
-        
-        // Modal states
-        showDokumentasiModal: false,
-        showEditModal: false,
-        showDetailModal: false,
-        
-        // Form data
-        formLaporan: {
-            nama: '',
-            instansi: '',
-            alamat_tujuan: '',
-            dokumentasi: '',
-            tanggal: '',
-            hari: '',
-            jabatan: ''
-        },
-        
-        // Detail data
-        detailLaporan: null,
-        
-        // Pagination - initialized from server
-        currentPage: {{ $laporanKaryawans->currentPage() }},
-        totalPages: {{ $laporanKaryawans->lastPage() }},
-        totalRecords: {{ $laporanKaryawans->total() }},
-        perPage: {{ $laporanKaryawans->perPage() }},
-        
-        // Statistics - Initialize with server-side data
-        statistics: {
-            totalLaporan: {{ $statistics['totalLaporan'] ?? 0 }},
-            laporanHariIni: {{ $statistics['laporanHariIni'] ?? 0 }},
-            pendingReview: {{ $statistics['pendingReview'] ?? 0 }},
-            avgPerHari: {{ $statistics['avgPerHari'] ?? 0 }}
-        },
-        
-        // Selected data
-        selectedDokumentasi: [],
-        editingId: null,
-        
-        // UI states
-        loading: false,
-        message: '',
-        messageType: '',
-        
-        init() {
-            console.log('Alpine.js initialized!');
-            console.log('Functions available:', {
-                lihatDetail: typeof this.lihatDetail,
-                editLaporan: typeof this.editLaporan,
-                hapusLaporan: typeof this.hapusLaporan
-            });
-            
-            // Alpine.js sudah terhubung langsung dengan @click di tombol
-            
-            // Get filter values from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            this.filterTanggal = urlParams.get('tanggal') || '';
-            this.filterHari = urlParams.get('hari') || '';
-            this.filterKelompok = urlParams.get('kelompok') || '';
-            
-            console.log('Initializing with filters:', {
-                tanggal: this.filterTanggal,
-                hari: this.filterHari,
-                kelompok: this.filterKelompok,
-                url: window.location.search
-            });
-            
-            // Initialize lucide icons
-            if (typeof lucide !== 'undefined') {
-                setTimeout(() => {
-                    lucide.createIcons();
-                }, 100);
-            }
-            
-            // Load statistics immediately
-            this.loadStatistics();
-            
-            // Also load statistics after a delay to ensure everything is ready
-            setTimeout(() => {
-                console.log('Loading statistics after delay...');
-                this.loadStatistics();
-            }, 1000);
-        },
-        
-        // Computed properties - using server-side data
-        get startRecord() {
-            return {{ $laporanKaryawans->firstItem() ?? 0 }};
-        },
-        
-        get endRecord() {
-            return {{ $laporanKaryawans->lastItem() ?? 0 }};
-        },
-        
-        // Filter functions
-        async applyFilter() {
-            console.log('Apply filter:', {
-                tanggal: this.filterTanggal,
-                hari: this.filterHari,
-                kelompok: this.filterKelompok
-            });
-            
-            // Reload halaman dengan filter parameters
-            const params = new URLSearchParams();
-            if (this.filterTanggal) params.append('tanggal', this.filterTanggal);
-            if (this.filterHari) params.append('hari', this.filterHari);
-            if (this.filterKelompok) params.append('kelompok', this.filterKelompok);
-            
-            const queryString = params.toString();
-            const url = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
-            
-            window.location.href = url;
-        },
-        
-        // Data loading functions
-        async loadData() {
-            try {
-                this.loading = true;
-                const params = new URLSearchParams({
-                    page: this.currentPage,
-                    per_page: this.perPage,
-                    tanggal: this.filterTanggal,
-                    hari: this.filterHari,
-                    kelompok: this.filterKelompok
-                });
-                
-                // Build URL with filters
-                let url = `/atasan/pemantauan-laporan?${params}`;
-                
-                // Redirect to the same page with filter parameters
-                window.location.href = url;
-                
-            } catch (error) {
-                console.error('Error loading data:', error);
-                this.showMessage('Terjadi kesalahan saat memuat data', 'error');
-            }
-            this.loading = false;
-        },
-        
-        async loadStatistics() {
-            try {
-                console.log('Statistics loaded from controller:', this.statistics);
-                // Data sudah di-load dari controller, tidak perlu API call
-                // Jika ada filter, kita bisa update statistik secara manual
-                if (this.filterTanggal || this.filterHari || this.filterKelompok) {
-                    console.log('Filter applied, statistics will be updated when data is loaded');
-                    // Statistik akan di-update ketika data di-load dengan filter
-                }
-            } catch (error) {
-                console.error('Error loading statistics:', error);
-            }
-        },
-        
-        // CRUD functions
-        async lihatDokumentasi(id) {
-            try {
-                const response = await fetch(`/api/laporan-karyawan/${id}/dokumentasi`);
-                const result = await response.json();
-                
-                if (response.ok) {
-                    this.selectedDokumentasi = result.dokumentasi || [];
-                    this.showDokumentasiModal = true;
-                } else {
-                    this.showMessage('Gagal memuat dokumentasi', 'error');
-                }
-            } catch (error) {
-                console.error('Error loading dokumentasi:', error);
-                this.showMessage('Terjadi kesalahan saat memuat dokumentasi', 'error');
-            }
-        },
-        
-        async lihatDetail(id) {
-            try {
-                console.log('lihatDetail called with id:', id);
-                if (!id) {
-                    console.error('ID is missing');
-                    this.showMessage('ID laporan tidak ditemukan', 'error');
-                    return;
-                }
-                
-                // Reset state
-                this.loading = true;
-                this.detailLaporan = null;
-                
-                // Show modal first to display loading state
-                this.showDetailModal = true;
-                console.log('showDetailModal set to:', this.showDetailModal);
-                
-                // Force Alpine.js to update DOM
-                await this.$nextTick();
-                
-                // Force modal to show with inline style
-                setTimeout(() => {
-                    const modalElement = document.querySelector('[x-show="showDetailModal"]');
-                    if (modalElement) {
-                        modalElement.style.display = 'flex';
-                        modalElement.style.zIndex = '9999';
-                    }
-                }, 50);
-                
-                // Fetch data from API
-                const response = await fetch(`/api/laporan-karyawan/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    },
-                    credentials: 'same-origin'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result && result.id) {
-                    this.detailLaporan = result;
-                    console.log('Detail data loaded:', this.detailLaporan);
-                    
-                    // Reinitialize lucide icons after modal is shown
-                    setTimeout(() => {
-                        if (typeof lucide !== 'undefined') {
-                            lucide.createIcons();
-                        }
-                    }, 200);
-                } else {
-                    this.showDetailModal = false;
-                    const errorMsg = result?.message || result?.error || 'Gagal memuat detail laporan';
-                    this.showMessage(errorMsg, 'error');
-                }
-            } catch (error) {
-                console.error('Error loading detail:', error);
-                this.showDetailModal = false;
-                this.showMessage('Terjadi kesalahan saat memuat detail: ' + error.message, 'error');
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        async bukaFormEdit(id) {
-            try {
-                console.log('bukaFormEdit called with id:', id);
-                if (!id) {
-                    this.showMessage('ID laporan tidak ditemukan', 'error');
-                    return;
-                }
-                
-                this.loading = true;
-                this.editingId = id;
-                
-                // Load data dari API
-                const response = await fetch(`/api/laporan-karyawan/${id}`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result) {
-                    // Set form data dari API response
-                    this.formLaporan = {
-                        nama: result.nama || '',
-                        instansi: result.instansi || '',
-                        alamat_tujuan: result.alamat_tujuan || '',
-                        dokumentasi: result.dokumentasi || '',
-                        tanggal: result.tanggal || '',
-                        hari: result.hari || '',
-                        jabatan: result.jabatan || ''
-                    };
-                    
-                    console.log('Form data loaded:', this.formLaporan);
-                    
-                    // Show modal
-                    this.showEditModal = true;
-                    
-                    // Force Alpine.js to update
-                    await this.$nextTick();
-                    
-                    // Reinitialize lucide icons
-                    setTimeout(() => {
-                        if (typeof lucide !== 'undefined') {
-                            lucide.createIcons();
-                        }
-                    }, 100);
-                } else {
-                    const errorMsg = result?.message || result?.error || 'Gagal memuat data laporan';
-                    this.showMessage(errorMsg, 'error');
-                }
-            } catch (error) {
-                console.error('Error loading edit data:', error);
-                this.showMessage('Terjadi kesalahan saat memuat data: ' + error.message, 'error');
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        async editLaporan(id, nama, instansi, alamatTujuan, dokumentasi, tanggal, hari, jabatan) {
-            try {
-                console.log('editLaporan called');
-                console.log('Parameters:', { id, nama, instansi, alamatTujuan, dokumentasi, tanggal, hari, jabatan });
-                
-                // Convert ID to number if it's a string
-                id = typeof id === 'string' ? parseInt(id) : id;
-                
-                this.editingId = id;
-                this.formLaporan = {
-                    nama: (nama && nama !== 'null' && nama !== 'undefined') ? String(nama) : '',
-                    instansi: (instansi && instansi !== 'null' && instansi !== 'undefined') ? String(instansi) : '',
-                    alamat_tujuan: (alamatTujuan && alamatTujuan !== 'null' && alamatTujuan !== 'undefined') ? String(alamatTujuan) : '',
-                    dokumentasi: (dokumentasi && dokumentasi !== 'null' && dokumentasi !== 'undefined') ? String(dokumentasi) : '',
-                    tanggal: (tanggal && tanggal !== 'null' && tanggal !== 'undefined') ? String(tanggal) : '',
-                    hari: (hari && hari !== 'null' && hari !== 'undefined') ? String(hari) : '',
-                    jabatan: (jabatan && jabatan !== 'null' && jabatan !== 'undefined') ? String(jabatan) : ''
-                };
-                
-                console.log('Form data set:', this.formLaporan);
-                
-                // Show modal first
-                this.showEditModal = true;
-                console.log('showEditModal set to:', this.showEditModal);
-                
-                // Force Alpine.js to update the DOM
-                await this.$nextTick();
-                
-                // Double check modal is shown
-                setTimeout(() => {
-                    console.log('Modal should be visible now. showEditModal:', this.showEditModal);
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                }, 100);
-            } catch (error) {
-                console.error('Error in editLaporan:', error);
-                console.error('Error stack:', error.stack);
-                this.showMessage('Terjadi kesalahan saat membuka form edit: ' + error.message, 'error');
-            }
-        },
-        
-        async updateLaporan() {
-            try {
-                this.loading = true;
-                
-                const response = await fetch(`/api/laporan-karyawan/${this.editingId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    },
-                    body: JSON.stringify(this.formLaporan)
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    this.showMessage(result.message || 'Laporan berhasil diperbarui!', 'success');
-                    this.showEditModal = false;
-                    // Reload page to refresh data
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    const errorMessage = result.message || (result.errors ? JSON.stringify(result.errors) : 'Gagal memperbarui laporan');
-                    this.showMessage('Error: ' + errorMessage, 'error');
-                }
-            } catch (error) {
-                console.error('Update error:', error);
-                this.showMessage('Terjadi kesalahan: ' + error.message, 'error');
-            }
-            this.loading = false;
-        },
-        
-        async hapusLaporan(id) {
-            if (!confirm('Apakah Anda yakin ingin menghapus laporan ini?')) return;
-            
-            try {
-                const response = await fetch(`/api/laporan-karyawan/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    this.showMessage(result.message || 'Laporan berhasil dihapus!', 'success');
-                    // Reload page to refresh data
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    this.showMessage(result.message || 'Gagal menghapus laporan', 'error');
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                this.showMessage('Terjadi kesalahan: ' + error.message, 'error');
-            }
-        },
-        
-        // Export function
-        async exportLaporan() {
-            try {
-                const params = new URLSearchParams();
-                if (this.filterTanggal) params.append('tanggal', this.filterTanggal);
-                if (this.filterHari) params.append('hari', this.filterHari);
-                if (this.filterKelompok) params.append('kelompok', this.filterKelompok);
-                
-                const response = await fetch(`/api/export/laporan-karyawan?${params}`);
-                
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `laporan-karyawan-${new Date().toISOString().split('T')[0]}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                    
-                    this.showMessage('Export berhasil! File CSV dapat dibuka dengan Excel.', 'success');
-                } else {
-                    const errorData = await response.json();
-                    this.showMessage(errorData.error || 'Gagal export data', 'error');
-                }
-            } catch (error) {
-                console.error('Export error:', error);
-                this.showMessage('Terjadi kesalahan saat export: ' + error.message, 'error');
-            }
-        },
-        
-        // Refresh function
-        async refreshData() {
-            await this.loadData();
-            await this.loadStatistics();
-            this.showMessage('Data berhasil diperbarui!', 'success');
-        },
-        
-        // Pagination functions - using server-side pagination
-        async goToPage(page) {
-            const params = new URLSearchParams(window.location.search);
-            params.set('page', page);
-            if (this.filterTanggal) params.set('tanggal', this.filterTanggal);
-            if (this.filterHari) params.set('hari', this.filterHari);
-            if (this.filterKelompok) params.set('kelompok', this.filterKelompok);
-            window.location.href = `${window.location.pathname}?${params.toString()}`;
-        },
-        
-        async previousPage() {
-            const params = new URLSearchParams(window.location.search);
-            const currentPage = parseInt(params.get('page') || '1');
-            if (currentPage > 1) {
-                params.set('page', currentPage - 1);
-                if (this.filterTanggal) params.set('tanggal', this.filterTanggal);
-                if (this.filterHari) params.set('hari', this.filterHari);
-                if (this.filterKelompok) params.set('kelompok', this.filterKelompok);
-                window.location.href = `${window.location.pathname}?${params.toString()}`;
-            }
-        },
-        
-        async nextPage() {
-            const params = new URLSearchParams(window.location.search);
-            const currentPage = parseInt(params.get('page') || '1');
-            if (currentPage < this.totalPages) {
-                params.set('page', currentPage + 1);
-                if (this.filterTanggal) params.set('tanggal', this.filterTanggal);
-                if (this.filterHari) params.set('hari', this.filterHari);
-                if (this.filterKelompok) params.set('kelompok', this.filterKelompok);
-                window.location.href = `${window.location.pathname}?${params.toString()}`;
-            }
-        },
-        
-        // Utility functions
-        showMessage(text, type) {
-            this.message = text;
-            this.messageType = type;
-            setTimeout(() => {
-                this.message = '';
-                this.messageType = '';
-            }, 3000);
-        }
-    }));
-});
-
-// Tidak perlu fungsi global lagi karena sudah menggunakan Alpine.js langsung
-
-// Initialize icons setelah page load
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
+    setTimeout(() => {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
-    }, 200);
+    }, 100);
+});
+
+let currentLaporanId = null;
+
+async function editLaporan(id) {
+    currentLaporanId = id;
+    try {
+        const response = await fetch(`/api/pemantauan-laporan/${id}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        if (!response.ok) throw new Error('Gagal memuat data');
+        
+        const laporan = await response.json();
+        const tanggalFormatted = new Date(laporan.tanggal).toISOString().split('T')[0];
+        
+        // Format waktu
+        let waktuMulai = '';
+        let waktuSelesai = '';
+        if (laporan.waktu_mulai_kegiatan) {
+            try {
+                const waktuMulaiDate = new Date('2000-01-01 ' + laporan.waktu_mulai_kegiatan);
+                waktuMulai = waktuMulaiDate.toTimeString().slice(0, 5);
+            } catch (e) {
+                waktuMulai = laporan.waktu_mulai_kegiatan;
+            }
+        }
+        if (laporan.waktu_selesai_kegiatan) {
+            try {
+                const waktuSelesaiDate = new Date('2000-01-01 ' + laporan.waktu_selesai_kegiatan);
+                waktuSelesai = waktuSelesaiDate.toTimeString().slice(0, 5);
+            } catch (e) {
+                waktuSelesai = laporan.waktu_selesai_kegiatan;
+            }
+        }
+        
+        const durasiDisplay = laporan.durasi_waktu ? parseFloat(laporan.durasi_waktu).toFixed(2) : '0.00';
+        
+        const content = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Hari <span class="text-red-500">*</span></label>
+                    <select name="hari" id="editHari" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                        <option value="Senin" ${laporan.hari === 'Senin' ? 'selected' : ''}>Senin</option>
+                        <option value="Selasa" ${laporan.hari === 'Selasa' ? 'selected' : ''}>Selasa</option>
+                        <option value="Rabu" ${laporan.hari === 'Rabu' ? 'selected' : ''}>Rabu</option>
+                        <option value="Kamis" ${laporan.hari === 'Kamis' ? 'selected' : ''}>Kamis</option>
+                        <option value="Jumat" ${laporan.hari === 'Jumat' ? 'selected' : ''}>Jumat</option>
+                        <option value="Sabtu" ${laporan.hari === 'Sabtu' ? 'selected' : ''}>Sabtu</option>
+                        <option value="Minggu" ${laporan.hari === 'Minggu' ? 'selected' : ''}>Minggu</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal" value="${tanggalFormatted}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nama <span class="text-red-500">*</span></label>
+                    <input type="text" name="nama" value="${laporan.nama || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Instansi <span class="text-red-500">*</span></label>
+                    <input type="text" name="instansi" value="${laporan.instansi || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Tujuan <span class="text-red-500">*</span></label>
+                    <input type="text" name="alamat_tujuan" value="${laporan.alamat_tujuan || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan</label>
+                    <select name="jenis_kegiatan" id="editJenisKegiatan" onchange="toggleDeskripsiEdit()" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
+                        <option value="">Pilih Jenis Kegiatan</option>
+                        <option value="Perbaikan KWH" ${laporan.jenis_kegiatan === 'Perbaikan KWH' ? 'selected' : ''}>Perbaikan KWH</option>
+                        <option value="Pemeliharaan Pengkabelan" ${laporan.jenis_kegiatan === 'Pemeliharaan Pengkabelan' ? 'selected' : ''}>Pemeliharaan Pengkabelan</option>
+                        <option value="Pengecekan Gardu" ${laporan.jenis_kegiatan === 'Pengecekan Gardu' ? 'selected' : ''}>Pengecekan Gardu</option>
+                        <option value="Penanganan Gangguan" ${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'selected' : ''}>Penanganan Gangguan</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2" id="editDeskripsiContainer">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Deskripsi Kegiatan 
+                        <span id="editDeskripsiRequired" class="text-red-500" style="display: ${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'inline' : 'none'};">*</span>
+                    </label>
+                    <textarea name="deskripsi_kegiatan" id="editDeskripsiKegiatan" rows="4" 
+                              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500"
+                              placeholder="${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'Masukkan deskripsi detail penanganan gangguan yang dilakukan...' : 'Masukkan deskripsi detail kegiatan yang dilakukan (opsional)'}">${laporan.deskripsi_kegiatan || ''}</textarea>
+                    <p class="text-xs text-gray-500 mt-1.5" id="editDeskripsiInfo">
+                        ${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'Wajib diisi untuk jenis kegiatan Penanganan Gangguan' : 'Opsional - Anda dapat menambahkan deskripsi detail kegiatan jika diperlukan'}
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Waktu Mulai Kegiatan</label>
+                    <input type="time" name="waktu_mulai_kegiatan" id="editWaktuMulai" value="${waktuMulai}" 
+                           onchange="hitungDurasiEdit()"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Waktu Selesai Kegiatan</label>
+                    <input type="time" name="waktu_selesai_kegiatan" id="editWaktuSelesai" value="${waktuSelesai}" 
+                           onchange="hitungDurasiEdit()"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500 mt-1.5">Durasi akan dihitung otomatis</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Durasi Waktu (jam)</label>
+                    <input type="text" id="editDurasiDisplay" value="${durasiDisplay}" readonly
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 text-gray-700 cursor-not-allowed">
+                    <p class="text-xs text-gray-500 mt-1.5">Dihitung otomatis dari waktu mulai dan selesai</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Lokasi</label>
+                    <input type="text" name="lokasi" value="${laporan.lokasi || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">File Dokumentasi</label>
+                    <input type="file" name="file" accept="image/*,.pdf" 
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500 mt-1.5">Format: JPG, PNG, PDF (Maksimal: 5MB). Kosongkan jika tidak ingin mengubah file.</p>
+                    ${laporan.file_path ? `
+                    <div class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-sm text-gray-700">File saat ini: <a href="/api/pemantauan-laporan/${laporan.id}/download" target="_blank" class="text-blue-600 hover:underline">Download</a></p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('editContent').innerHTML = content;
+        document.getElementById('editModal').classList.remove('hidden');
+        
+        // Set required attribute untuk deskripsi jika Penanganan Gangguan
+        setTimeout(() => {
+            toggleDeskripsiEdit();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }, 100);
+    } catch (error) {
+        alert('Gagal memuat data untuk edit: ' + error.message);
+    }
+}
+
+function toggleDeskripsiEdit() {
+    const jenisKegiatan = document.getElementById('editJenisKegiatan');
+    const deskripsiField = document.getElementById('editDeskripsiKegiatan');
+    const requiredSpan = document.getElementById('editDeskripsiRequired');
+    const infoText = document.getElementById('editDeskripsiInfo');
+    
+    if (jenisKegiatan && deskripsiField && requiredSpan && infoText) {
+        if (jenisKegiatan.value === 'Penanganan Gangguan') {
+            deskripsiField.required = true;
+            requiredSpan.style.display = 'inline';
+            infoText.textContent = 'Wajib diisi untuk jenis kegiatan Penanganan Gangguan';
+            deskripsiField.placeholder = 'Masukkan deskripsi detail penanganan gangguan yang dilakukan...';
+        } else {
+            deskripsiField.required = false;
+            requiredSpan.style.display = 'none';
+            infoText.textContent = 'Opsional - Anda dapat menambahkan deskripsi detail kegiatan jika diperlukan';
+            deskripsiField.placeholder = 'Masukkan deskripsi detail kegiatan yang dilakukan (opsional)';
+        }
+    }
+}
+
+function hitungDurasiEdit() {
+    const waktuMulai = document.getElementById('editWaktuMulai');
+    const waktuSelesai = document.getElementById('editWaktuSelesai');
+    const durasiDisplay = document.getElementById('editDurasiDisplay');
+    
+    if (waktuMulai && waktuSelesai && durasiDisplay && waktuMulai.value && waktuSelesai.value) {
+        const [mulaiJam, mulaiMenit] = waktuMulai.value.split(':').map(Number);
+        const [selesaiJam, selesaiMenit] = waktuSelesai.value.split(':').map(Number);
+        
+        let mulaiTotal = mulaiJam * 60 + mulaiMenit;
+        let selesaiTotal = selesaiJam * 60 + selesaiMenit;
+        
+        // Jika waktu selesai lebih kecil dari waktu mulai, berarti melewati tengah malam
+        if (selesaiTotal < mulaiTotal) {
+            selesaiTotal += 24 * 60; // Tambah 24 jam
+        }
+        
+        const durasiMenit = selesaiTotal - mulaiTotal;
+        const durasiJam = durasiMenit / 60;
+        
+        durasiDisplay.value = durasiJam.toFixed(2);
+    } else {
+        if (durasiDisplay) {
+            durasiDisplay.value = '0.00';
+        }
+    }
+}
+
+function tutupEdit() {
+    document.getElementById('editModal').classList.add('hidden');
+    currentLaporanId = null;
+}
+
+async function simpanEdit(event) {
+    event.preventDefault();
+    if (!currentLaporanId) return;
+    
+    // Validasi deskripsi jika Penanganan Gangguan dipilih
+    const jenisKegiatan = document.getElementById('editJenisKegiatan');
+    const deskripsiKegiatan = document.getElementById('editDeskripsiKegiatan');
+    
+    if (jenisKegiatan && jenisKegiatan.value === 'Penanganan Gangguan' && (!deskripsiKegiatan || !deskripsiKegiatan.value.trim())) {
+        alert('Deskripsi Penanganan Gangguan wajib diisi!');
+        return;
+    }
+    
+    const formData = new FormData(event.target);
+    formData.append('_method', 'PUT');
+    
+    try {
+        const response = await fetch(`/api/pemantauan-laporan/${currentLaporanId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            if (result.errors) {
+                let errorMessage = 'Gagal memperbarui laporan:\n';
+                for (const [field, messages] of Object.entries(result.errors)) {
+                    errorMessage += `- ${messages.join(', ')}\n`;
+                }
+                alert(errorMessage);
+            } else {
+                throw new Error(result.message || 'Gagal memperbarui laporan');
+            }
+            return;
+        }
+        
+        alert('Laporan berhasil diperbarui!');
+        tutupEdit();
+        window.location.reload();
+    } catch (error) {
+        alert('Gagal memperbarui laporan: ' + error.message);
+    }
+}
+
+async function hapusLaporan(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/pemantauan-laporan/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Gagal menghapus laporan');
+        }
+        
+        alert('Laporan berhasil dihapus!');
+        window.location.reload();
+    } catch (error) {
+        alert('Gagal menghapus laporan: ' + error.message);
+    }
+}
+
+function lihatDeskripsiGangguan(deskripsi) {
+    const modal = document.getElementById('deskripsiModal');
+    const content = document.getElementById('deskripsiContent');
+    
+    if (modal && content) {
+        content.textContent = deskripsi;
+        modal.style.display = 'flex';
+        
+        setTimeout(() => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }, 100);
+    }
+}
+
+function tutupDeskripsiModal() {
+    const modal = document.getElementById('deskripsiModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        tutupDeskripsiModal();
+    }
 });
 </script>
 @endsection
+

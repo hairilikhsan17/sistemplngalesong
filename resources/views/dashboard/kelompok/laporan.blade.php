@@ -130,11 +130,15 @@
                         <i data-lucide="user" class="w-4 h-4 inline mr-1 text-blue-600"></i>
                         Nama
                     </label>
-                    <input type="text" 
-                           name="nama" 
-                           value="{{ request('nama') }}"
-                           placeholder="Cari nama..."
-                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400">
+                    <select name="nama" 
+                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400">
+                        <option value="">Semua Nama</option>
+                        @foreach($karyawans as $karyawan)
+                            <option value="{{ $karyawan->nama }}" {{ request('nama') == $karyawan->nama ? 'selected' : '' }}>
+                                {{ $karyawan->nama }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <!-- Filter Instansi -->
@@ -173,7 +177,7 @@
          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm"
          @click.self="closeForm()"
          @keydown.escape="closeForm()">
-        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all">
+        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all">
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <div class="flex items-center space-x-3">
                     <div class="p-2 bg-blue-100 rounded-lg">
@@ -197,7 +201,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="calendar-days" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Hari
+                            Hari <span class="text-red-500">*</span>
                         </label>
                         <select x-model="formData.hari" 
                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
@@ -217,7 +221,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="calendar" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Tanggal
+                            Tanggal <span class="text-red-500">*</span>
                         </label>
                         <input type="date" 
                                x-model="formData.tanggal"
@@ -229,74 +233,153 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="user" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Nama Karyawan
+                            Nama <span class="text-red-500">*</span>
                         </label>
                         <select x-model="formData.nama" 
-                                @change="onNamaChange()"
                                 class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
                                 required>
                             <option value="">Pilih Nama Karyawan</option>
-                            <template x-for="karyawan in karyawans" :key="karyawan.id">
-                                <option :value="karyawan.nama" x-text="karyawan.nama"></option>
-                            </template>
+                            @forelse($karyawans as $karyawan)
+                                <option value="{{ $karyawan->nama }}">{{ $karyawan->nama }}</option>
+                            @empty
+                                <option value="" disabled>Tidak ada karyawan terdaftar di kelompok Anda</option>
+                            @endforelse
                         </select>
-                        <p class="text-xs text-gray-500 mt-1.5 flex items-center">
-                            <i data-lucide="info" class="w-3 h-3 mr-1"></i>
+                        <p class="text-xs text-gray-500 mt-1.5">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
                             Pilih nama karyawan dari kelompok Anda
                         </p>
+                        <div x-show="errors.nama" class="mt-1 text-sm text-red-600" x-text="errors.nama"></div>
                     </div>
 
                     <!-- Instansi -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="building" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Instansi
+                            Instansi <span class="text-red-500">*</span>
                         </label>
                         <input type="text" 
                                x-model="formData.instansi"
                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
                                placeholder="Masukkan nama instansi"
                                required>
-                    </div>
-
-                    <!-- Jabatan -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i data-lucide="briefcase" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Jabatan
-                        </label>
-                        <input type="text" 
-                               x-model="formData.jabatan"
-                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
-                               placeholder="Masukkan jabatan"
-                               required>
+                        <div x-show="errors.instansi" class="mt-1 text-sm text-red-600" x-text="errors.instansi"></div>
                     </div>
 
                     <!-- Alamat Tujuan -->
                     <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Alamat/Tujuan
+                            Alamat Tujuan <span class="text-red-500">*</span>
                         </label>
                         <input type="text" 
                                x-model="formData.alamat_tujuan"
                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
-                               placeholder="Masukkan alamat atau lokasi tujuan pekerjaan"
+                               placeholder="Masukkan alamat tujuan pekerjaan"
                                required>
+                        <div x-show="errors.alamat_tujuan" class="mt-1 text-sm text-red-600" x-text="errors.alamat_tujuan"></div>
                     </div>
-                </div>
 
-                <!-- Dokumentasi -->
-                <div class="mt-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i data-lucide="file-text" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                        Dokumentasi
-                    </label>
-                    <textarea x-model="formData.dokumentasi"
-                              rows="4"
-                              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400 resize-none"
-                              placeholder="Masukkan dokumentasi kerja, catatan, atau keterangan tambahan (opsional)"></textarea>
-                    <p class="text-xs text-gray-500 mt-1.5">Jelaskan detail pekerjaan yang dilakukan</p>
+                    <!-- Jenis Kegiatan -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="activity" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Jenis Kegiatan
+                        </label>
+                        <select x-model="formData.jenis_kegiatan" 
+                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400">
+                            <option value="">Pilih Jenis Kegiatan</option>
+                            <option value="Perbaikan KWH">Perbaikan KWH</option>
+                            <option value="Pemeliharaan Pengkabelan">Pemeliharaan Pengkabelan</option>
+                            <option value="Pengecekan Gardu">Pengecekan Gardu</option>
+                            <option value="Penanganan Gangguan">Penanganan Gangguan</option>
+                        </select>
+                        <div x-show="errors.jenis_kegiatan" class="mt-1 text-sm text-red-600" x-text="errors.jenis_kegiatan"></div>
+                    </div>
+
+                    <!-- Deskripsi Kegiatan - Muncul untuk semua jenis kegiatan, wajib hanya untuk Penanganan Gangguan -->
+                    <div class="md:col-span-2" x-show="formData.jenis_kegiatan" x-transition>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="file-text" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Deskripsi Kegiatan 
+                            <span x-show="formData.jenis_kegiatan === 'Penanganan Gangguan'" class="text-red-500">*</span>
+                        </label>
+                        <textarea x-model="formData.deskripsi_kegiatan"
+                                  rows="4"
+                                  :required="formData.jenis_kegiatan === 'Penanganan Gangguan'"
+                                  class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400 resize-none"
+                                  :placeholder="formData.jenis_kegiatan === 'Penanganan Gangguan' 
+                                    ? 'Masukkan deskripsi detail penanganan gangguan yang dilakukan, contoh: Pohon tumbang mengenai kabel listrik di Jl. Poros Galesong, dilakukan perbaikan dengan mengganti kabel yang rusak...'
+                                    : 'Masukkan deskripsi detail kegiatan yang dilakukan (opsional)'"></textarea>
+                        <p class="text-xs text-gray-500 mt-1.5" x-show="formData.jenis_kegiatan === 'Penanganan Gangguan'">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                            Wajib diisi untuk jenis kegiatan Penanganan Gangguan
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1.5" x-show="formData.jenis_kegiatan && formData.jenis_kegiatan !== 'Penanganan Gangguan'">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                            Opsional - Anda dapat menambahkan deskripsi detail kegiatan jika diperlukan
+                        </p>
+                        <div x-show="errors.deskripsi_kegiatan" class="mt-1 text-sm text-red-600" x-text="errors.deskripsi_kegiatan"></div>
+                    </div>
+
+                    <!-- Waktu Mulai Kegiatan -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="clock" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Waktu Mulai Kegiatan
+                        </label>
+                        <input type="time" 
+                               x-model="formData.waktu_mulai_kegiatan"
+                               @change="calculateDuration()"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
+                               placeholder="HH:MM">
+                        <div x-show="errors.waktu_mulai_kegiatan" class="mt-1 text-sm text-red-600" x-text="errors.waktu_mulai_kegiatan"></div>
+                    </div>
+
+                    <!-- Waktu Selesai Kegiatan -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="clock" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Waktu Selesai Kegiatan
+                        </label>
+                        <input type="time" 
+                               x-model="formData.waktu_selesai_kegiatan"
+                               @change="calculateDuration()"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
+                               placeholder="HH:MM">
+                        <div x-show="errors.waktu_selesai_kegiatan" class="mt-1 text-sm text-red-600" x-text="errors.waktu_selesai_kegiatan"></div>
+                        <p class="text-xs text-gray-500 mt-1.5">
+                            <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                            Durasi akan dihitung otomatis
+                        </p>
+                    </div>
+
+                    <!-- Durasi Waktu (Read-only, dihitung otomatis) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="hourglass" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Durasi Waktu (jam)
+                        </label>
+                        <input type="text" 
+                               x-model="formData.durasi_waktu_display"
+                               readonly
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-50 text-gray-700 cursor-not-allowed"
+                               placeholder="0.00">
+                        <p class="text-xs text-gray-500 mt-1.5">Dihitung otomatis dari waktu mulai dan selesai</p>
+                    </div>
+
+                    <!-- Lokasi -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Lokasi
+                        </label>
+                        <input type="text" 
+                               x-model="formData.lokasi"
+                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
+                               placeholder="Masukkan lokasi pekerjaan">
+                        <div x-show="errors.lokasi" class="mt-1 text-sm text-red-600" x-text="errors.lokasi"></div>
+                    </div>
                 </div>
 
                 <!-- File Upload -->
@@ -312,13 +395,13 @@
                                @change="handleFileSelect($event)"
                                accept="image/*,.pdf"
                                class="hidden">
-                        <div x-show="!selectedFile && !currentFile">
+                        <div x-show="!selectedFile">
                             <div class="flex justify-center mb-3">
                                 <div class="p-3 bg-blue-100 rounded-full">
                                     <i data-lucide="upload" class="w-8 h-8 text-blue-600"></i>
                                 </div>
                             </div>
-                            <p class="text-sm font-medium text-gray-700 mb-1">Klik untuk upload foto atau file dokumentasi</p>
+                            <p class="text-sm font-medium text-gray-700 mb-1" x-text="currentFile ? 'Klik untuk upload foto/file baru (akan mengganti file lama)' : 'Klik untuk upload foto atau file dokumentasi'"></p>
                             <p class="text-xs text-gray-500">Format: JPG, PNG, PDF (Maksimal: 5MB)</p>
                         </div>
                         <div x-show="selectedFile" class="flex items-center justify-center space-x-3">
@@ -335,6 +418,12 @@
                                 <i data-lucide="x" class="w-5 h-5"></i>
                             </button>
                         </div>
+                        <!-- Preview Image -->
+                        <div x-show="selectedFile && selectedFile.type.startsWith('image/')" class="mt-4">
+                            <img :src="previewImage" 
+                                 alt="Preview" 
+                                 class="max-w-full max-h-64 mx-auto rounded-lg border border-gray-200 shadow-sm">
+                        </div>
                     </div>
                     <div x-show="currentFile && !selectedFile" class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="flex items-center justify-between">
@@ -344,7 +433,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900" x-text="currentFile"></p>
-                                    <p class="text-xs text-gray-500">File saat ini</p>
+                                    <p class="text-xs text-gray-500">File saat ini (klik area upload di atas untuk mengganti)</p>
                                 </div>
                             </div>
                             <a :href="'/api/laporan-karyawan/' + editingId + '/download'" 
@@ -355,6 +444,16 @@
                             </a>
                         </div>
                     </div>
+                    <div x-show="selectedFile && currentFile" class="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-yellow-600"></i>
+                            <p class="text-xs text-yellow-700">File baru akan mengganti file lama saat disimpan</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                        Setelah upload foto, icon download akan otomatis aktif di tabel laporan
+                    </p>
                 </div>
 
                 <!-- Form Actions -->
@@ -382,128 +481,39 @@
         </div>
     </div>
 
-    <!-- Modal Lihat Detail -->
-    <div x-show="showDetailModal" 
+    <!-- Modal Deskripsi Penanganan Gangguan -->
+    <div x-show="showDeskripsiModal" 
          x-transition
          x-cloak
          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm"
-         @click.self="closeDetailModal()"
-         @keydown.escape="closeDetailModal()">
-        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto transform transition-all">
+         @click.self="showDeskripsiModal = false"
+         @keydown.escape="showDeskripsiModal = false">
+        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-blue-100 rounded-lg">
-                        <i data-lucide="eye" class="w-5 h-5 text-blue-600"></i>
+                    <div class="p-2 bg-amber-100 rounded-lg">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg sm:text-xl font-bold text-gray-900">Detail Laporan</h3>
-                        <p class="text-sm text-gray-500">Informasi lengkap laporan kerja</p>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900">Deskripsi Penanganan Gangguan</h3>
+                        <p class="text-sm text-gray-500">Detail penanganan gangguan yang dilakukan</p>
                     </div>
                 </div>
-                <button @click="closeDetailModal()" 
+                <button @click="showDeskripsiModal = false" 
                         class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             
-            <div x-show="loadingDetail" class="flex items-center justify-center py-12">
-                <div class="text-center">
-                    <i data-lucide="loader-2" class="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3"></i>
-                    <p class="text-gray-600">Memuat data...</p>
+            <div class="mb-6">
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap" x-text="deskripsiGangguan"></p>
                 </div>
             </div>
-
-            <div x-show="!loadingDetail && detailLaporan" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Hari -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2">
-                            <i data-lucide="calendar-days" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Hari
-                        </label>
-                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.hari || '-'"></p>
-                    </div>
-
-                    <!-- Tanggal -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2">
-                            <i data-lucide="calendar" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Tanggal
-                        </label>
-                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.tanggal ? (() => { const date = new Date(detailLaporan.tanggal); return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }); })() : '-'"></p>
-                    </div>
-
-                    <!-- Nama -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2">
-                            <i data-lucide="user" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Nama Karyawan
-                        </label>
-                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.nama || '-'"></p>
-                    </div>
-
-                    <!-- Jabatan -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2">
-                            <i data-lucide="briefcase" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Jabatan
-                        </label>
-                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.jabatan || '-'"></p>
-                    </div>
-
-                    <!-- Instansi -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2">
-                            <i data-lucide="building" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Instansi
-                        </label>
-                        <p class="text-sm font-medium text-gray-900" x-text="detailLaporan?.instansi || '-'"></p>
-                    </div>
-
-                    <!-- File -->
-                    <div class="bg-gray-50 rounded-lg p-4" x-show="detailLaporan?.file_path">
-                        <label class="block text-xs font-semibold text-gray-500 mb-2">
-                            <i data-lucide="file" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            File Dokumentasi
-                        </label>
-                        <a :href="'/api/laporan-karyawan/' + detailLaporan?.id + '/download'" 
-                           target="_blank"
-                           class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
-                            <span>Download File</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Alamat Tujuan -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <label class="block text-xs font-semibold text-gray-500 mb-2">
-                        <i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                        Alamat/Tujuan
-                    </label>
-                    <p class="text-sm text-gray-900" x-text="detailLaporan?.alamat_tujuan || '-'"></p>
-                </div>
-
-                <!-- Dokumentasi -->
-                <div class="bg-gray-50 rounded-lg p-4" x-show="detailLaporan?.dokumentasi">
-                    <label class="block text-xs font-semibold text-gray-500 mb-2">
-                        <i data-lucide="file-text" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                        Dokumentasi
-                    </label>
-                    <p class="text-sm text-gray-900 whitespace-pre-wrap" x-text="detailLaporan?.dokumentasi || '-'"></p>
-                </div>
-            </div>
-
-            <div x-show="!loadingDetail && !detailLaporan" class="text-center py-12">
-                <p class="text-gray-500">Data tidak ditemukan</p>
-            </div>
-
-            <!-- Modal Actions -->
-            <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-                <button type="button" 
-                        @click="closeDetailModal()"
-                        class="px-6 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all font-medium min-h-[44px]">
-                    <i data-lucide="x" class="w-4 h-4 inline mr-2"></i>
+            
+            <div class="flex justify-end">
+                <button @click="showDeskripsiModal = false"
+                        class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all font-medium min-h-[44px]">
                     Tutup
                 </button>
             </div>
@@ -531,8 +541,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto" style="position: relative;">
-            <table class="min-w-full divide-y divide-gray-200" style="position: relative;">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No</th>
@@ -540,13 +550,18 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Instansi</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Alamat Tujuan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Mulai Kegiatan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jenis Kegiatan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Selesai Kegiatan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Durasi Waktu</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Dokumentasi</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($laporans as $index => $laporan)
-                        <tr class="hover:bg-blue-50/50 transition-colors border-b border-gray-100" style="position: relative;">
+                        <tr class="hover:bg-blue-50/50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
                                     {{ $laporans->firstItem() + $index }}
@@ -562,75 +577,88 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center space-x-2">
-                                    <i data-lucide="user" class="w-4 h-4 text-green-600"></i>
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">{{ $laporan->nama }}</div>
-                                        <div class="text-xs text-gray-500">{{ $laporan->jabatan }}</div>
-                                    </div>
-                                </div>
+                                <div class="text-sm font-medium text-gray-900">{{ $laporan->nama }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center space-x-2">
-                                    <i data-lucide="building" class="w-4 h-4 text-purple-600"></i>
-                                    <span class="text-sm font-medium text-gray-900">{{ $laporan->instansi }}</span>
-                                </div>
+                                <div class="text-sm font-medium text-gray-900">{{ $laporan->instansi }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if($laporan->waktu_mulai_kegiatan)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+                                        <span class="font-medium">{{ \Carbon\Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
                                 <div class="flex items-center space-x-2">
-                                    <i data-lucide="map-pin" class="w-4 h-4 text-orange-600 flex-shrink-0"></i>
-                                    <span class="text-sm text-gray-900 line-clamp-2">{{ Str::limit($laporan->alamat_tujuan, 50) }}</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ $laporan->jenis_kegiatan ?? '-' }}
+                                    </span>
+                                    @if($laporan->jenis_kegiatan === 'Penanganan Gangguan' && $laporan->deskripsi_kegiatan)
+                                        <button type="button"
+                                                @click="lihatDeskripsiGangguan('{{ $laporan->id }}', @js($laporan->deskripsi_kegiatan))"
+                                                class="inline-flex items-center justify-center w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-all duration-200 hover:shadow-md"
+                                                title="Lihat Deskripsi Penanganan Gangguan">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <div class="space-y-1">
-                                    @if($laporan->dokumentasi)
-                                        <div>{{ Str::limit($laporan->dokumentasi, 30) }}</div>
-                                    @endif
-                                    @if($laporan->file_path)
-                                        <div class="flex items-center space-x-2">
-                                            <i data-lucide="file" class="w-4 h-4 text-blue-600"></i>
-                                            <a href="/api/laporan-karyawan/{{ $laporan->id }}/download" 
-                                               target="_blank"
-                                               class="text-blue-600 hover:text-blue-700 text-xs">
-                                                Lihat File
-                                            </a>
-                                        </div>
-                                    @endif
-                                    @if(!$laporan->dokumentasi && !$laporan->file_path)
-                                        <div class="text-gray-400">-</div>
-                                    @endif
+                                @if($laporan->waktu_selesai_kegiatan)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="clock" class="w-4 h-4 text-green-600"></i>
+                                        <span class="font-medium">{{ \Carbon\Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="hourglass" class="w-4 h-4 text-indigo-600"></i>
+                                    <span class="font-medium">{{ number_format($laporan->durasi_waktu ?? 0, 2) }} jam</span>
                                 </div>
                             </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div class="truncate" title="{{ $laporan->lokasi }}">{{ Str::limit($laporan->lokasi ?? '-', 50) }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                @if($laporan->file_path)
+                                    <a href="/api/laporan-karyawan/{{ $laporan->id }}/download" 
+                                       target="_blank"
+                                       class="inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors">
+                                        <i data-lucide="file" class="w-4 h-4 mr-1"></i>
+                                        <span class="text-xs">Lihat File</span>
+                                    </a>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center justify-center space-x-2 relative z-10">
-                                    <!-- Lihat Detail Button -->
-                                    <button type="button"
-                                            @click.stop="lihatDetail('{{ $laporan->id }}')"
-                                            class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-blue-600 cursor-pointer pointer-events-auto"
-                                            style="pointer-events: auto !important; position: relative; z-index: 20;"
-                                            title="Lihat Detail">
-                                        <i data-lucide="eye" class="w-5 h-5 group-hover:scale-110 transition-transform pointer-events-none"></i>
-                                    </button>
-                                    
+                                <div class="flex items-center justify-center space-x-2">
                                     <!-- Edit Button -->
                                     <button type="button"
                                             @click.stop="bukaFormEdit('{{ $laporan->id }}')" 
-                                            class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-green-600 cursor-pointer pointer-events-auto"
-                                            style="pointer-events: auto !important; position: relative; z-index: 20;"
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
                                             title="Edit Laporan">
-                                        <i data-lucide="edit-2" class="w-5 h-5 group-hover:scale-110 transition-transform pointer-events-none"></i>
+                                        <i data-lucide="edit-2" class="w-5 h-5"></i>
                                     </button>
                                     
                                     <!-- Download Button -->
                                     @if($laporan->file_path)
-                                    <button type="button"
-                                            @click.stop="downloadFile('{{ $laporan->id }}')"
-                                            class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-purple-600 cursor-pointer pointer-events-auto"
-                                            style="pointer-events: auto !important; position: relative; z-index: 20;"
-                                            title="Download File">
-                                        <i data-lucide="download" class="w-5 h-5 group-hover:scale-110 transition-transform pointer-events-none"></i>
-                                    </button>
+                                    <a href="/api/laporan-karyawan/{{ $laporan->id }}/download" 
+                                       target="_blank"
+                                       class="inline-flex items-center justify-center w-10 h-10 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
+                                       title="Download File">
+                                        <i data-lucide="download" class="w-5 h-5"></i>
+                                    </a>
                                     @else
                                     <button type="button"
                                             disabled
@@ -643,17 +671,16 @@
                                     <!-- Delete Button -->
                                     <button type="button"
                                             @click.stop="deleteLaporan('{{ $laporan->id }}')" 
-                                            class="relative z-20 inline-flex items-center justify-center w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg group border-2 border-red-600 cursor-pointer pointer-events-auto"
-                                            style="pointer-events: auto !important; position: relative; z-index: 20;"
+                                            class="inline-flex items-center justify-center w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all duration-200 hover:shadow-lg"
                                             title="Hapus Laporan">
-                                        <i data-lucide="trash-2" class="w-5 h-5 group-hover:scale-110 transition-transform pointer-events-none"></i>
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-16 text-center">
+                            <td colspan="12" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="p-4 bg-gray-100 rounded-full mb-4">
                                         <i data-lucide="file-text" class="w-16 h-16 text-gray-400"></i>
@@ -681,14 +708,14 @@
                     <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
                         Sebelumnya
                     </span>
-                    @else
+                @else
                     <a href="{{ $laporans->appends(request()->except('page'))->previousPageUrl() }}" 
                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Sebelumnya
                     </a>
                 @endif
                 
-                    @if($laporans->hasMorePages())
+                @if($laporans->hasMorePages())
                     <a href="{{ $laporans->appends(request()->except('page'))->nextPageUrl() }}" 
                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Selanjutnya
@@ -784,50 +811,49 @@
         </div>
         @endif
     </div>
-
+</div>
 
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('laporanData', () => ({
         laporans: [],
-        karyawans: [],
-        kelompok: null,
         showForm: false,
-        showDetailModal: false,
         editingId: null,
         loading: false,
-        loadingDetail: false,
         message: '',
         messageType: '',
-        detailLaporan: null,
         formData: {
             hari: '',
-            tanggal: '',
+            tanggal: new Date().toISOString().split('T')[0],
             nama: '',
-            instansi: '',
-            jabatan: '',
+            instansi: 'PLN Galesong',
             alamat_tujuan: '',
-            dokumentasi: ''
+            jenis_kegiatan: '',
+            deskripsi_kegiatan: '',
+            waktu_mulai_kegiatan: '',
+            waktu_selesai_kegiatan: '',
+            durasi_waktu: 0,
+            durasi_waktu_display: '0.00',
+            lokasi: ''
         },
+        errors: {},
         selectedFile: null,
         currentFile: null,
+        previewImage: null,
         
         async init() {
-            // Don't load laporans from API - data is already loaded from server-side
-            // await this.loadLaporans();
-            await this.loadKaryawans();
-            // Reinitialize lucide icons
+            // Load laporans saat halaman pertama kali dimuat
+            await this.loadLaporans();
+            
             setTimeout(() => {
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
             }, 100);
-            
         },
         
         async loadLaporans() {
             try {
-                console.log('Loading laporans...');
                 const response = await fetch('/api/laporan-karyawan', {
                     method: 'GET',
                     headers: {
@@ -838,84 +864,85 @@ document.addEventListener('alpine:init', () => {
                     credentials: 'same-origin'
                 });
                 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const result = await response.json();
-                console.log('API Response:', result);
-                
-                // Ensure laporans is always an array
                 this.laporans = Array.isArray(result) ? result : [];
-                console.log('Laporans loaded:', this.laporans);
-                console.log('Laporans count:', this.laporans.length);
             } catch (error) {
                 console.error('Error loading laporans:', error);
                 this.showMessage('Gagal memuat data laporan: ' + error.message, 'error');
-                // Ensure laporans is always an array even on error
-                this.laporans = [];
             }
         },
         
-        async loadKaryawans() {
-            try {
-                const response = await fetch('/api/karyawan', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin'
-                });
+        calculateDuration() {
+            if (this.formData.waktu_mulai_kegiatan && this.formData.waktu_selesai_kegiatan) {
+                const [mulaiJam, mulaiMenit] = this.formData.waktu_mulai_kegiatan.split(':').map(Number);
+                const [selesaiJam, selesaiMenit] = this.formData.waktu_selesai_kegiatan.split(':').map(Number);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                let mulaiTotal = mulaiJam * 60 + mulaiMenit;
+                let selesaiTotal = selesaiJam * 60 + selesaiMenit;
+                
+                // Jika waktu selesai lebih kecil dari waktu mulai, berarti melewati tengah malam
+                if (selesaiTotal < mulaiTotal) {
+                    selesaiTotal += 24 * 60; // Tambah 24 jam
                 }
                 
-                const result = await response.json();
-                // Filter karyawan berdasarkan kelompok user yang login
-                this.karyawans = Array.isArray(result) ? result : [];
-                console.log('Karyawans loaded:', this.karyawans);
-            } catch (error) {
-                console.error('Error loading karyawans:', error);
-                this.karyawans = [];
+                const durasiMenit = selesaiTotal - mulaiTotal;
+                const durasiJam = durasiMenit / 60;
+                
+                this.formData.durasi_waktu = durasiJam;
+                this.formData.durasi_waktu_display = durasiJam.toFixed(2);
+            } else {
+                this.formData.durasi_waktu = 0;
+                this.formData.durasi_waktu_display = '0.00';
             }
         },
         
         async saveLaporan() {
             this.loading = true;
-            console.log('Saving laporan...', this.formData);
-            console.log('Editing ID:', this.editingId);
+            this.errors = {};
+            
+            // Validate required fields
+            if (!this.formData.hari || !this.formData.tanggal || !this.formData.nama || !this.formData.instansi || !this.formData.alamat_tujuan) {
+                this.showMessage('Semua field wajib harus diisi!', 'error');
+                this.loading = false;
+                return;
+            }
+            
+            // Validate deskripsi jika Penanganan Gangguan dipilih
+            if (this.formData.jenis_kegiatan === 'Penanganan Gangguan' && !this.formData.deskripsi_kegiatan) {
+                this.showMessage('Deskripsi Penanganan Gangguan wajib diisi!', 'error');
+                this.loading = false;
+                return;
+            }
             
             try {
                 const url = this.editingId ? `/api/laporan-karyawan/${this.editingId}` : '/api/laporan-karyawan';
-                const method = this.editingId ? 'PUT' : 'POST';
-                console.log('URL:', url, 'Method:', method);
-                
-                // Create FormData for file upload
                 const formData = new FormData();
+                
                 formData.append('hari', this.formData.hari);
                 formData.append('tanggal', this.formData.tanggal);
                 formData.append('nama', this.formData.nama);
                 formData.append('instansi', this.formData.instansi);
-                formData.append('jabatan', this.formData.jabatan);
                 formData.append('alamat_tujuan', this.formData.alamat_tujuan);
-                formData.append('dokumentasi', this.formData.dokumentasi);
+                formData.append('jenis_kegiatan', this.formData.jenis_kegiatan || '');
+                formData.append('deskripsi_kegiatan', this.formData.deskripsi_kegiatan || '');
+                formData.append('waktu_mulai_kegiatan', this.formData.waktu_mulai_kegiatan || '');
+                formData.append('waktu_selesai_kegiatan', this.formData.waktu_selesai_kegiatan || '');
+                formData.append('lokasi', this.formData.lokasi || '');
                 
                 if (this.selectedFile) {
                     formData.append('file', this.selectedFile);
                 }
                 
-                // Add _method for Laravel to recognize PUT request
                 if (this.editingId) {
                     formData.append('_method', 'PUT');
                 }
                 
                 const response = await fetch(url, {
-                    method: 'POST', // Always use POST for FormData
+                    method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                         'Accept': 'application/json'
@@ -924,28 +951,22 @@ document.addEventListener('alpine:init', () => {
                     body: formData
                 });
                 
-                console.log('Response status:', response.status);
+                const result = await response.json();
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error('Error response:', errorData);
-                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                    if (result.errors) {
+                        this.errors = result.errors;
+                    }
+                    const errorMessage = result.message || result.error || 'Gagal menyimpan laporan';
+                    throw new Error(errorMessage);
                 }
                 
-                const result = await response.json();
-                console.log('Save response:', result);
+                this.showMessage(this.editingId ? 'Laporan berhasil diperbarui!' : 'Laporan berhasil ditambahkan!', 'success');
+                this.closeForm();
                 
-                if (this.editingId) {
-                    this.showMessage('Laporan berhasil diperbarui!', 'success');
-                } else {
-                    this.showMessage('Laporan berhasil ditambahkan!', 'success');
-                }
-                
-                // Reload page to refresh data from server-side pagination
                 setTimeout(() => {
                     window.location.reload();
-                }, 1000);
-                this.closeForm();
+                }, 1500);
                 
             } catch (error) {
                 console.error('Error saving laporan:', error);
@@ -977,7 +998,6 @@ document.addEventListener('alpine:init', () => {
                 
                 this.showMessage('Laporan berhasil dihapus!', 'success');
                 
-                // Reload page to refresh data from server-side pagination
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
@@ -988,15 +1008,131 @@ document.addEventListener('alpine:init', () => {
             }
         },
         
+        async bukaFormEdit(id) {
+            try {
+                this.loading = true;
+                this.editingId = id;
+                
+                const response = await fetch(`/api/laporan-karyawan/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (!result || !result.id) {
+                    throw new Error('Data laporan tidak ditemukan');
+                }
+                
+                // Parse tanggal
+                let tanggalFormatted = '';
+                if (result.tanggal) {
+                    try {
+                        const date = new Date(result.tanggal);
+                        if (!isNaN(date.getTime())) {
+                            tanggalFormatted = date.toISOString().split('T')[0];
+                        } else {
+                            tanggalFormatted = result.tanggal.split(' ')[0];
+                        }
+                    } catch (e) {
+                        tanggalFormatted = result.tanggal.split(' ')[0] || '';
+                    }
+                }
+                
+                // Format waktu
+                let waktuMulai = '';
+                let waktuSelesai = '';
+                if (result.waktu_mulai_kegiatan) {
+                    try {
+                        const waktuMulaiDate = new Date('2000-01-01 ' + result.waktu_mulai_kegiatan);
+                        waktuMulai = waktuMulaiDate.toTimeString().slice(0, 5);
+                    } catch (e) {
+                        waktuMulai = result.waktu_mulai_kegiatan;
+                    }
+                }
+                if (result.waktu_selesai_kegiatan) {
+                    try {
+                        const waktuSelesaiDate = new Date('2000-01-01 ' + result.waktu_selesai_kegiatan);
+                        waktuSelesai = waktuSelesaiDate.toTimeString().slice(0, 5);
+                    } catch (e) {
+                        waktuSelesai = result.waktu_selesai_kegiatan;
+                    }
+                }
+                
+                // Set form data
+                this.formData = {
+                    hari: result.hari || '',
+                    tanggal: tanggalFormatted || new Date().toISOString().split('T')[0],
+                    nama: result.nama || '',
+                    instansi: result.instansi || 'PLN Galesong',
+                    alamat_tujuan: result.alamat_tujuan || '',
+                    jenis_kegiatan: result.jenis_kegiatan || '',
+                    deskripsi_kegiatan: result.deskripsi_kegiatan || '',
+                    waktu_mulai_kegiatan: waktuMulai,
+                    waktu_selesai_kegiatan: waktuSelesai,
+                    durasi_waktu: result.durasi_waktu !== null && result.durasi_waktu !== undefined ? Number(result.durasi_waktu) : 0,
+                    durasi_waktu_display: result.durasi_waktu !== null && result.durasi_waktu !== undefined ? Number(result.durasi_waktu).toFixed(2) : '0.00',
+                    lokasi: result.lokasi || ''
+                };
+                
+                // Hitung durasi jika ada waktu
+                if (waktuMulai && waktuSelesai) {
+                    this.calculateDuration();
+                }
+                
+                // Set current file
+                if (result.file_path) {
+                    const fileName = result.file_path.split('/').pop() || result.file_path;
+                    this.currentFile = fileName;
+                } else {
+                    this.currentFile = null;
+                }
+                
+                this.selectedFile = null;
+                this.previewImage = null;
+                
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                
+                this.showForm = true;
+                
+                await this.$nextTick();
+                
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error('Error loading laporan for edit:', error);
+                this.showMessage('Gagal memuat data laporan: ' + error.message, 'error');
+                this.editingId = null;
+                this.showForm = false;
+            } finally {
+                this.loading = false;
+            }
+        },
+        
         closeForm() {
             this.showForm = false;
             this.editingId = null;
             this.selectedFile = null;
             this.currentFile = null;
+            this.previewImage = null;
             this.resetForm();
-            console.log('Form closed and reset');
         },
-        
         
         resetForm() {
             this.formData = {
@@ -1004,30 +1140,33 @@ document.addEventListener('alpine:init', () => {
                 tanggal: new Date().toISOString().split('T')[0],
                 nama: '',
                 instansi: 'PLN Galesong',
-                jabatan: '',
                 alamat_tujuan: '',
-                dokumentasi: ''
+                jenis_kegiatan: '',
+                deskripsi_kegiatan: '',
+                waktu_mulai_kegiatan: '',
+                waktu_selesai_kegiatan: '',
+                durasi_waktu: 0,
+                durasi_waktu_display: '0.00',
+                lokasi: ''
             };
+            this.errors = {};
             this.selectedFile = null;
             this.currentFile = null;
-            // Reset file input
+            this.previewImage = null;
             const fileInput = document.getElementById('fileInput');
             if (fileInput) {
                 fileInput.value = '';
             }
-            console.log('Form reset');
         },
         
         handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
-                // Validate file size (5MB max)
                 if (file.size > 5 * 1024 * 1024) {
                     this.showMessage('File terlalu besar. Maksimal 5MB.', 'error');
                     return;
                 }
                 
-                // Validate file type
                 const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
                 if (!allowedTypes.includes(file.type)) {
                     this.showMessage('Format file tidak didukung. Gunakan JPG, PNG, atau PDF.', 'error');
@@ -1035,11 +1174,22 @@ document.addEventListener('alpine:init', () => {
                 }
                 
                 this.selectedFile = file;
+                
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.previewImage = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    this.previewImage = null;
+                }
             }
         },
         
         removeFile() {
             this.selectedFile = null;
+            this.previewImage = null;
             document.getElementById('fileInput').value = '';
         },
         
@@ -1052,180 +1202,17 @@ document.addEventListener('alpine:init', () => {
             }, 5000);
         },
         
-        onNamaChange() {
-            // Auto-fill jabatan when nama is selected
-            const selectedKaryawan = this.karyawans.find(k => k.nama === this.formData.nama);
-            if (selectedKaryawan) {
-                // Set default jabatan if not available
-                this.formData.jabatan = selectedKaryawan.jabatan || 'Karyawan';
-            }
-        },
-        
-        downloadFile(id) {
-            // Download file from server
-            const link = document.createElement('a');
-            link.href = `/api/laporan-karyawan/${id}/download`;
-            link.download = '';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        
-        async lihatDetail(id) {
-            try {
-                console.log('lihatDetail called with id:', id);
-                if (!id) {
-                    console.error('ID is missing');
-                    this.showMessage('ID laporan tidak ditemukan', 'error');
-                    return;
+        lihatDeskripsiGangguan(id, deskripsi) {
+            this.deskripsiGangguan = deskripsi;
+            this.showDeskripsiModal = true;
+            
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
                 }
-                
-                // Reset state
-                this.loadingDetail = true;
-                this.detailLaporan = null;
-                
-                // Show modal first to display loading state
-                this.showDetailModal = true;
-                
-                // Force Alpine.js to update DOM
-                await this.$nextTick();
-                
-                // Fetch data from API
-                const response = await fetch(`/api/laporan-karyawan/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    },
-                    credentials: 'same-origin'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result && result.id) {
-                    this.detailLaporan = result;
-                    console.log('Detail laporan loaded:', this.detailLaporan);
-                } else {
-                    throw new Error('Data laporan tidak ditemukan');
-                }
-                
-                // Reinitialize lucide icons
-                setTimeout(() => {
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                }, 100);
-                
-            } catch (error) {
-                console.error('Error loading detail:', error);
-                this.showMessage('Gagal memuat detail laporan: ' + error.message, 'error');
-                this.detailLaporan = null;
-            } finally {
-                this.loadingDetail = false;
-            }
-        },
-        
-        closeDetailModal() {
-            this.showDetailModal = false;
-            this.detailLaporan = null;
-            this.loadingDetail = false;
-        },
-        
-        async bukaFormEdit(id) {
-            try {
-                console.log('bukaFormEdit called with id:', id);
-                if (!id) {
-                    this.showMessage('ID laporan tidak ditemukan', 'error');
-                    return;
-                }
-                
-                this.loading = true;
-                this.editingId = id;
-                
-                // Load data dari API
-                const response = await fetch(`/api/laporan-karyawan/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    },
-                    credentials: 'same-origin'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result) {
-                    // Parse tanggal untuk input date (format: YYYY-MM-DD)
-                    let tanggalFormatted = '';
-                    if (result.tanggal) {
-                        const date = new Date(result.tanggal);
-                        if (!isNaN(date.getTime())) {
-                            tanggalFormatted = date.toISOString().split('T')[0];
-                        } else {
-                            // Fallback: try to extract date from string
-                            tanggalFormatted = result.tanggal.split(' ')[0];
-                        }
-                    }
-                    
-                    // Set form data dari API response
-                    this.formData = {
-                        hari: result.hari || '',
-                        tanggal: tanggalFormatted,
-                        nama: result.nama || '',
-                        instansi: result.instansi || '',
-                        jabatan: result.jabatan || '',
-                        alamat_tujuan: result.alamat_tujuan || '',
-                        dokumentasi: result.dokumentasi || ''
-                    };
-                    
-                    // Set current file if exists
-                    if (result.file_path) {
-                        this.currentFile = result.file_path.split('/').pop();
-                    } else {
-                        this.currentFile = null;
-                    }
-                    
-                    this.selectedFile = null;
-                    
-                    console.log('Form data loaded:', this.formData);
-                    
-                    // Show modal
-                    this.showForm = true;
-                    
-                    // Force Alpine.js to update
-                    await this.$nextTick();
-                    
-                    // Reinitialize lucide icons
-                    setTimeout(() => {
-                        if (typeof lucide !== 'undefined') {
-                            lucide.createIcons();
-                        }
-                    }, 100);
-                } else {
-                    throw new Error('Data laporan tidak ditemukan');
-                }
-                
-            } catch (error) {
-                console.error('Error loading laporan for edit:', error);
-                this.showMessage('Gagal memuat data laporan: ' + error.message, 'error');
-                this.editingId = null;
-            } finally {
-                this.loading = false;
-            }
+            }, 100);
         }
     }));
 });
-
-
 </script>
 @endsection

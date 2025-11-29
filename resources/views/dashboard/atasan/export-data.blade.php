@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">Export Data</h1>
-        <p class="text-gray-600 mt-2">Export semua data sistem atau data per kelompok ke format CSV</p>
+        <p class="text-gray-600 mt-2">Export semua data sistem atau data per kelompok ke format Excel</p>
     </div>
 
     <!-- Export Options -->
@@ -20,7 +20,7 @@
                 </div>
                 <div class="ml-4">
                     <h2 class="text-xl font-semibold text-gray-900">Export Semua Data Kelompok</h2>
-                    <p class="text-gray-600">Export semua data kelompok dengan tabel laporan dan job pekerjaan</p>
+                    <p class="text-gray-600">Export semua data kelompok dengan tabel laporan</p>
                 </div>
             </div>
             
@@ -32,7 +32,6 @@
                         <li>• Jika ada kelompok baru → otomatis ditambahkan</li>
                         <li>• Jika ada kelompok dihapus → otomatis tidak muncul</li>
                         <li>• Tabel Input Laporan untuk setiap kelompok</li>
-                        <li>• Tabel Input Job Pekerjaan untuk setiap kelompok</li>
                         <li>• Data lengkap dengan informasi kelompok</li>
                     </ul>
                 </div>
@@ -77,7 +76,6 @@
                         <li>• Info Kelompok</li>
                         <li>• Data Karyawan Kelompok</li>
                         <li>• Laporan Kelompok</li>
-                        <li>• Job Pekerjaan Kelompok</li>
                     </ul>
                 </div>
                 
@@ -268,8 +266,7 @@ document.addEventListener('alpine:init', () => {
         totalData: {
             kelompok: {{ $totalData['kelompok'] ?? 0 }},
             karyawan: {{ $totalData['karyawan'] ?? 0 }},
-            laporan: {{ $totalData['laporan'] ?? 0 }},
-            job: {{ $totalData['job'] ?? 0 }}
+            laporan: {{ $totalData['laporan'] ?? 0 }}
         },
         exportHistory: [],
         

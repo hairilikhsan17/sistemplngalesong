@@ -50,14 +50,6 @@ class Kelompok extends Model
         return $this->hasMany(LaporanKaryawan::class);
     }
 
-    /**
-     * Get the job pekerjaan for the kelompok.
-     */
-    public function jobPekerjaan(): HasMany
-    {
-        return $this->hasMany(JobPekerjaan::class);
-    }
-
 }
 
 
