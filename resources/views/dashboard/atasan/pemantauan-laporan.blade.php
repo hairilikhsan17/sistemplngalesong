@@ -274,13 +274,34 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $laporan->nama }}</div>
+                                @if($laporan->nama)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="user" class="w-4 h-4 text-blue-600"></i>
+                                        <span class="text-sm font-medium text-gray-900">{{ $laporan->nama }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $laporan->instansi }}</div>
+                                @if($laporan->instansi)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="building" class="w-4 h-4 text-blue-600"></i>
+                                        <span class="text-sm font-medium text-gray-900">{{ $laporan->instansi }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                                <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
+                                @if($laporan->alamat_tujuan)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
+                                        <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if($laporan->waktu_mulai_kegiatan)
@@ -324,7 +345,14 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                <div class="truncate" title="{{ $laporan->lokasi }}">{{ Str::limit($laporan->lokasi ?? '-', 50) }}</div>
+                                @if($laporan->lokasi)
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
+                                        <div class="truncate" title="{{ $laporan->lokasi }}">{{ Str::limit($laporan->lokasi, 50) }}</div>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 @if($laporan->file_path)

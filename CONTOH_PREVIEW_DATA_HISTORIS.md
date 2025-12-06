@@ -58,3 +58,6 @@ Berikut adalah contoh beberapa baris pertama data yang akan dihasilkan oleh seed
 **Untuk melihat semua data lengkap, jalankan seeder dan data akan langsung masuk ke database.**
 
 
+
+
+

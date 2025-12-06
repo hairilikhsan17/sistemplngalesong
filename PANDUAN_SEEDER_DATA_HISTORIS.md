@@ -114,3 +114,6 @@ php -d memory_limit=512M artisan db:seed --class=LaporanKaryawanHistorisSeeder
 - Total ~694 hari dengan estimasi ribuan laporan
 
 
+
+
+

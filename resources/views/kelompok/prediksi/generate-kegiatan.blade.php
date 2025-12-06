@@ -25,33 +25,52 @@
     </div>
 
     <!-- Form Generate Prediksi -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Form Generate Prediksi</h2>
-        <form @submit.prevent="generatePrediksi()" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+    <div class="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-xl p-6 mb-6 border border-blue-100">
+        <div class="flex items-center mb-6">
+            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md mr-4">
+                <i data-lucide="file-text" class="w-6 h-6 text-white"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">Form Generate Prediksi</h2>
+        </div>
+        <form @submit.prevent="generatePrediksi()" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="users" class="w-4 h-4 mr-2 text-blue-600"></i>
                         Kelompok
                     </label>
-                    <input type="text" 
-                           value="{{ $kelompok->nama_kelompok }} ({{ $kelompok->shift }})" 
-                           disabled
-                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed">
-                    <p class="text-xs text-gray-500 mt-1">Prediksi menggunakan data historis dari kelompok Anda</p>
+                    <div class="relative">
+                        <input type="text" 
+                               value="{{ $kelompok->nama_kelompok }} ({{ $kelompok->shift }})" 
+                               disabled
+                               class="w-full px-4 py-3 pl-10 rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed shadow-sm">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 flex items-center">
+                        <i data-lucide="info" class="w-3 h-3 mr-1"></i>
+                        Prediksi menggunakan data historis dari kelompok Anda
+                    </p>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Jenis Kegiatan <span class="text-gray-500">(Opsional)</span>
+                <div class="space-y-2">
+                    <label class="flex items-center text-sm font-semibold text-gray-700 mb-2">
+                        <i data-lucide="activity" class="w-4 h-4 mr-2 text-blue-600"></i>
+                        Jenis Kegiatan <span class="text-gray-500 font-normal ml-1">(Opsional)</span>
                     </label>
-                    <select x-model="form.jenis_kegiatan"
-                            class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="all">Semua Kegiatan</option>
-                        @foreach($jenisKegiatan as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">Kosongkan atau pilih "Semua Kegiatan" untuk prediksi semua jenis</p>
+                    <div class="relative">
+                        <select x-model="form.jenis_kegiatan"
+                                class="w-full px-4 py-3 pl-10 rounded-lg border-2 border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:border-blue-400">
+                            <option value="all">Semua Kegiatan</option>
+                            @foreach($jenisKegiatan as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"></i>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 flex items-center">
+                        <i data-lucide="info" class="w-3 h-3 mr-1"></i>
+                        Kosongkan atau pilih "Semua Kegiatan" untuk prediksi semua jenis
+                    </p>
                 </div>
             </div>
 
@@ -99,25 +118,33 @@
     <div x-show="tableData && tableData.length > 0 && showResults" 
          x-transition
          id="result-section-table"
-         class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
+         class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200"
          style="display: none;">
-        <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+        <div class="px-6 py-5 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 border-b border-blue-700">
             <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">📋 Hasil Prediksi Kegiatan - <span id="kelompok-label" x-text="kelompokName || '{{ $kelompok->nama_kelompok }}'"></span></h2>
+                <div class="flex items-center">
+                    <div class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                        <i data-lucide="clipboard-list" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Hasil Prediksi Kegiatan</h2>
+                        <p class="text-sm text-blue-100 mt-0.5">
+                            Kelompok: <span id="kelompok-label" x-text="kelompokName || '{{ $kelompok->nama_kelompok }}'" class="font-semibold"></span>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="p-6">
-            <div class="overflow-x-auto">
-                <table id="prediksiTable" class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+        <div class="p-6 bg-gradient-to-br from-gray-50 to-white">
+            <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                <table id="prediksiTable" class="min-w-full divide-y divide-gray-200 bg-white">
+                    <thead class="bg-gradient-to-r from-gray-100 to-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Kegiatan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediksi (Jam)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Prediksi (Besok)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MAPE</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu Generate</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Jenis Kegiatan</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Prediksi (Jam)</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Tanggal Prediksi (Besok)</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">MAPE</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Generate</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200" id="prediksiTableBody">
@@ -133,14 +160,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- DataTables -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 
 <script>
 document.addEventListener('alpine:init', () => {
@@ -349,34 +370,22 @@ document.addEventListener('alpine:init', () => {
                 const mapeValue = row.mape !== undefined && row.mape !== null ? parseFloat(row.mape) : 0;
                 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${row.jenis_kegiatan}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${parseFloat(row.prediksi_jam || 0).toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.tanggal_prediksi}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm ${mapeValue < 20 ? 'text-green-600 font-semibold' : mapeValue < 40 ? 'text-yellow-600 font-semibold' : 'text-red-600 font-semibold'}">${mapeValue.toFixed(2)}%</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.waktu_generate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${row.jenis_kegiatan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${parseFloat(row.prediksi_jam || 0).toFixed(2)} jam</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${row.tanggal_prediksi}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${mapeValue < 20 ? 'bg-green-100 text-green-800' : mapeValue < 40 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                            ${mapeValue.toFixed(2)}%
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">${row.waktu_generate}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Initialize DataTable with export buttons
+            // Initialize DataTable without export buttons
             this.dataTable = $('#prediksiTable').DataTable({
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Export Excel',
-                        className: 'bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg',
-                        title: 'Hasil Prediksi Kegiatan - ' + this.kelompokName
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        text: 'Export PDF',
-                        className: 'bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg',
-                        title: 'Hasil Prediksi Kegiatan - ' + this.kelompokName,
-                        orientation: 'landscape',
-                        pageSize: 'A4'
-                    }
-                ],
+                dom: 'frtip',
                 order: [[0, 'asc']],
                 pageLength: 10,
                 language: {

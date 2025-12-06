@@ -194,3 +194,6 @@ class LaporanKaryawanSeeder extends Seeder
     }
 }
 
+
+
+

@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            Materi Perhitungan Triple Exponential Smoothing - PLN Galesong
+        </title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.8;
+                color: #333;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+                min-height: 100vh;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                padding: 40px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            }
+
+            h1 {
+                color: #667eea;
+                text-align: center;
+                margin-bottom: 10px;
+                font-size: 2.5em;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 15px;
+            }
+
+            .subtitle {
+                text-align: center;
+                color: #666;
+                margin-bottom: 30px;
+                font-size: 1.1em;
+            }
+
+            h2 {
+                color: #667eea;
+                margin-top: 30px;
+                margin-bottom: 15px;
+                font-size: 1.8em;
+                border-left: 5px solid #667eea;
+                padding-left: 15px;
+            }
+
+            h3 {
+                color: #764ba2;
+                margin-top: 25px;
+                margin-bottom: 12px;
+                font-size: 1.4em;
+            }
+
+            h4 {
+                color: #555;
+                margin-top: 20px;
+                margin-bottom: 10px;
+                font-size: 1.2em;
+            }
+
+            .formula-box {
+                background: #f8f9fa;
+                border-left: 4px solid #667eea;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                font-family: "Courier New", monospace;
+            }
+
+            .formula {
+                font-size: 1.3em;
+                text-align: center;
+                padding: 15px;
+                background: white;
+                border-radius: 5px;
+                margin: 10px 0;
+                font-weight: bold;
+            }
+
+            .parameter-box {
+                background: #e8f4f8;
+                border: 2px solid #4a90e2;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 8px;
+            }
+
+            .parameter-box h4 {
+                color: #2e5c8a;
+                margin-top: 0;
+            }
+
+            .calculation-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                background: white;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .calculation-table th {
+                background: #667eea;
+                color: white;
+                padding: 12px;
+                text-align: center;
+                font-weight: bold;
+            }
+
+            .calculation-table td {
+                padding: 10px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }
+
+            .calculation-table tr:nth-child(even) {
+                background: #f8f9fa;
+            }
+
+            .calculation-table tr:hover {
+                background: #e8f4f8;
+            }
+
+            .step-box {
+                background: #fff4e6;
+                border-left: 4px solid #ff9800;
+                padding: 15px;
+                margin: 15px 0;
+                border-radius: 5px;
+            }
+
+            .step-box h4 {
+                color: #e65100;
+                margin-top: 0;
+            }
+
+            .example-box {
+                background: #e8f5e9;
+                border: 2px solid #4caf50;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 8px;
+            }
+
+            .example-box h3 {
+                color: #2e7d32;
+                margin-top: 0;
+            }
+
+            .highlight {
+                background: #fff9c4;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-weight: bold;
+            }
+
+            .note-box {
+                background: #fff3e0;
+                border-left: 4px solid #ff6f00;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+
+            .result-box {
+                background: #e3f2fd;
+                border: 2px solid #2196f3;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            .result-box h3 {
+                color: #1565c0;
+                margin-top: 0;
+            }
+
+            .result-value {
+                font-size: 2em;
+                color: #1976d2;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+
+            ul,
+            ol {
+                margin-left: 30px;
+                margin-top: 10px;
+            }
+
+            li {
+                margin-bottom: 8px;
+            }
+
+            code {
+                background: #f5f5f5;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: "Courier New", monospace;
+            }
+
+            .mape-box {
+                background: #fce4ec;
+                border: 2px solid #e91e63;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 8px;
+            }
+
+            .mape-box h4 {
+                color: #c2185b;
+                margin-top: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📊 Materi Perhitungan Triple Exponential Smoothing</h1>
+            <p class="subtitle">
+                Sistem Prediksi Waktu Penyelesaian Kegiatan - PLN Galesong
+            </p>
+
+            <div class="example-box">
+                <h3>📌 Contoh Kasus: Pemeliharaan Pengkabelan</h3>
+                <p>
+                    Pada materi ini, kita akan mempelajari perhitungan prediksi
+                    waktu penyelesaian kegiatan
+                    <strong>"Pemeliharaan Pengkabelan"</strong> menggunakan
+                    metode Triple Exponential Smoothing (Holt's Method - Double
+                    Exponential Smoothing).
+                </p>
+            </div>
+
+            <h2>1. Konsep Dasar Triple Exponential Smoothing</h2>
+            <p>
+                Triple Exponential Smoothing (juga dikenal sebagai Holt-Winters
+                Method) adalah metode peramalan yang digunakan untuk data time
+                series yang memiliki trend dan seasonality. Namun, dalam
+                aplikasi ini, karena data tidak memiliki seasonality yang jelas,
+                kita menggunakan
+                <strong>Double Exponential Smoothing (Holt's Method)</strong>
+                yang hanya mempertimbangkan level dan trend.
+            </p>
+
+            <div class="parameter-box">
+                <h4>Parameter yang Digunakan dalam Aplikasi</h4>
+                <ul>
+                    <li>
+                        <strong>α (alpha) = 0.4</strong> - Smoothing constant
+                        untuk level (memberikan bobot 40% pada data terbaru)
+                    </li>
+                    <li>
+                        <strong>β (beta) = 0.3</strong> - Smoothing constant
+                        untuk trend (memberikan bobot 30% pada perubahan trend
+                        terbaru)
+                    </li>
+                </ul>
+            </div>
+
+            <h2>2. Rumus-Rumus Dasar</h2>
+
+            <h3>2.1. Rumus Level (Sₜ)</h3>
+            <div class="formula-box">
+                <div class="formula">Sₜ = α × Yₜ + (1 - α) × (Sₜ₋₁ + bₜ₋₁)</div>
+                <p><strong>Keterangan:</strong></p>
+                <ul>
+                    <li><strong>Sₜ</strong> = Level pada periode t</li>
+                    <li>
+                        <strong>Yₜ</strong> = Data aktual pada periode t (waktu
+                        penyelesaian dalam jam)
+                    </li>
+                    <li>
+                        <strong>Sₜ₋₁</strong> = Level pada periode sebelumnya
+                    </li>
+                    <li>
+                        <strong>bₜ₋₁</strong> = Trend pada periode sebelumnya
+                    </li>
+                    <li>
+                        <strong>α</strong> = Smoothing constant untuk level
+                        (0.4)
+                    </li>
+                </ul>
+            </div>
+
+            <h3>2.2. Rumus Trend (bₜ)</h3>
+            <div class="formula-box">
+                <div class="formula">bₜ = β × (Sₜ - Sₜ₋₁) + (1 - β) × bₜ₋₁</div>
+                <p><strong>Keterangan:</strong></p>
+                <ul>
+                    <li><strong>bₜ</strong> = Trend pada periode t</li>
+                    <li><strong>Sₜ</strong> = Level pada periode t</li>
+                    <li>
+                        <strong>Sₜ₋₁</strong> = Level pada periode sebelumnya
+                    </li>
+                    <li>
+                        <strong>bₜ₋₁</strong> = Trend pada periode sebelumnya
+                    </li>
+                    <li>
+                        <strong>β</strong> = Smoothing constant untuk trend
+                        (0.3)
+                    </li>
+                </ul>
+            </div>
+
+            <h3>2.3. Rumus Forecast (Fₜ₊₁)</h3>
+            <div class="formula-box">
+                <div class="formula">Fₜ₊₁ = Sₜ + bₜ</div>
+                <p><strong>Keterangan:</strong></p>
+                <ul>
+                    <li>
+                        <strong>Fₜ₊₁</strong> = Prediksi untuk periode
+                        berikutnya
+                    </li>
+                    <li><strong>Sₜ</strong> = Level pada periode t</li>
+                    <li><strong>bₜ</strong> = Trend pada periode t</li>
+                </ul>
+            </div>
+
+            <h2>3. Langkah-Langkah Perhitungan</h2>
+
+            <h3>3.1. Inisialisasi</h3>
+            <div class="step-box">
+                <h4>Langkah 1: Hitung Level Awal (S₀)</h4>
+                <p>Level awal dihitung dari rata-rata 3-4 data pertama:</p>
+                <div class="formula">S₀ = (Y₁ + Y₂ + Y₃ + Y₄) / 4</div>
+            </div>
+
+            <div class="step-box">
+                <h4>Langkah 2: Hitung Trend Awal (b₀)</h4>
+                <p>
+                    Trend awal dihitung dari selisih rata-rata data akhir dan
+                    data awal:
+                </p>
+                <div class="formula">
+                    b₀ = (Rata-rata Data Akhir - Rata-rata Data Awal) / Jumlah
+                    Periode Tengah
+                </div>
+            </div>
+
+            <h3>3.2. Perhitungan Iteratif</h3>
+            <p>
+                Untuk setiap periode t (dimulai dari t = 1), lakukan perhitungan
+                berikut:
+            </p>
+
+            <div class="step-box">
+                <h4>Langkah 3: Hitung Level Baru (Sₜ)</h4>
+                <p>
+                    Gunakan rumus:
+                    <code>Sₜ = α × Yₜ + (1 - α) × (Sₜ₋₁ + bₜ₋₁)</code>
+                </p>
+            </div>
+
+            <div class="step-box">
+                <h4>Langkah 4: Hitung Trend Baru (bₜ)</h4>
+                <p>
+                    Gunakan rumus:
+                    <code>bₜ = β × (Sₜ - Sₜ₋₁) + (1 - β) × bₜ₋₁</code>
+                </p>
+            </div>
+
+            <div class="step-box">
+                <h4>Langkah 5: Hitung Forecast (Fₜ₊₁)</h4>
+                <p>Gunakan rumus: <code>Fₜ₊₁ = Sₜ + bₜ</code></p>
+            </div>
+
+            <h3>3.3. Prediksi Periode Mendatang</h3>
+            <div class="step-box">
+                <h4>Langkah 6: Hitung Prediksi untuk Besok</h4>
+                <p>
+                    Setelah semua data historis diproses, gunakan level dan
+                    trend terakhir:
+                </p>
+                <div class="formula">Fₜ₊₁ = Sₙ + bₙ</div>
+                <p>Dimana n adalah periode terakhir dari data historis.</p>
+            </div>
+
+            <h2>4. Contoh Perhitungan: Pemeliharaan Pengkabelan</h2>
+
+            <div class="example-box">
+                <h3>Data Historis (Rata-rata Waktu Penyelesaian per Bulan)</h3>
+                <p>
+                    Misalkan kita memiliki data historis waktu penyelesaian
+                    kegiatan "Pemeliharaan Pengkabelan" selama 6 bulan terakhir
+                    (dalam jam):
+                </p>
+
+                <table class="calculation-table">
+                    <thead>
+                        <tr>
+                            <th>Periode (t)</th>
+                            <th>Bulan</th>
+                            <th>Data Aktual (Yₜ) - Jam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Bulan 1</td>
+                            <td>2.5</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Bulan 2</td>
+                            <td>2.8</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Bulan 3</td>
+                            <td>3.0</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Bulan 4</td>
+                            <td>2.7</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Bulan 5</td>
+                            <td>2.9</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Bulan 6</td>
+                            <td>3.1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>4.1. Inisialisasi</h3>
+
+            <div class="step-box">
+                <h4>Menghitung Level Awal (S₀)</h4>
+                <p>Level awal = rata-rata dari 4 data pertama:</p>
+                <div class="formula">
+                    S₀ = (2.5 + 2.8 + 3.0 + 2.7) / 4 = 11.0 / 4 = 2.75 jam
+                </div>
+            </div>
+
+            <div class="step-box">
+                <h4>Menghitung Trend Awal (b₀)</h4>
+                <p>Rata-rata 2 data pertama = (2.5 + 2.8) / 2 = 2.65</p>
+                <p>Rata-rata 2 data terakhir = (2.9 + 3.1) / 2 = 3.0</p>
+                <p>Jumlah periode tengah = 6 - 2 = 4</p>
+                <div class="formula">
+                    b₀ = (3.0 - 2.65) / 4 = 0.35 / 4 = 0.0875 jam
+                </div>
+            </div>
+
+            <h3>4.2. Perhitungan Iteratif</h3>
+            <p>
+                Berikut adalah perhitungan iteratif dari t=1 sampai t=6 dengan
+                akurasi tinggi:
+            </p>
+
+            <table class="calculation-table">
+                <thead>
+                    <tr>
+                        <th>t</th>
+                        <th>Yₜ (Jam)</th>
+                        <th>Sₜ (Jam)</th>
+                        <th>bₜ (Jam)</th>
+                        <th>Fₜ₊₁ (Jam)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0</td>
+                        <td>-</td>
+                        <td>2.75</td>
+                        <td>0.0875</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>2.5</td>
+                        <td>2.70</td>
+                        <td>0.05</td>
+                        <td>2.75</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>2.8</td>
+                        <td>2.77</td>
+                        <td>0.05</td>
+                        <td>2.82</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>3.0</td>
+                        <td>2.89</td>
+                        <td>0.07</td>
+                        <td>2.97</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>2.7</td>
+                        <td>2.86</td>
+                        <td>0.04</td>
+                        <td>2.90</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>2.9</td>
+                        <td>2.90</td>
+                        <td>0.04</td>
+                        <td>2.94</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>3.1</td>
+                        <td>3.01</td>
+                        <td>0.06</td>
+                        <td>3.07</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Penjelasan Perhitungan Detail untuk Setiap Periode:</h4>
+
+            <div class="step-box">
+                <p><strong>Periode t = 1:</strong></p>
+                <p><strong>1. Hitung Level (S₁):</strong></p>
+                <div class="formula">S₁ = α × Y₁ + (1 - α) × (S₀ + b₀)</div>
+                <div class="formula">
+                    S₁ = 0.4 × 2.5 + 0.6 × (2.75 + 0.0875)
+                </div>
+                <div class="formula">
+                    S₁ = 1.0 + 0.6 × 2.8375 = 1.0 + 1.7025 = 2.7025 jam
+                </div>
+                <p><strong>2. Hitung Trend (b₁):</strong></p>
+                <div class="formula">b₁ = β × (S₁ - S₀) + (1 - β) × b₀</div>
+                <div class="formula">
+                    b₁ = 0.3 × (2.7025 - 2.75) + 0.7 × 0.0875
+                </div>
+                <div class="formula">
+                    b₁ = 0.3 × (-0.0475) + 0.06125 = -0.01425 + 0.06125 = 0.047
+                    jam
+                </div>
+                <p><strong>3. Hitung Forecast (F₂):</strong></p>
+                <div class="formula">
+                    F₂ = S₁ + b₁ = 2.7025 + 0.047 = 2.7495 jam
+                </div>
+            </div>
+
+            <div class="step-box">
+                <p><strong>Periode t = 2:</strong></p>
+                <p><strong>1. Hitung Level (S₂):</strong></p>
+                <div class="formula">
+                    S₂ = 0.4 × 2.8 + 0.6 × (2.7025 + 0.047)
+                </div>
+                <div class="formula">
+                    S₂ = 1.12 + 0.6 × 2.7495 = 1.12 + 1.6497 = 2.7697 jam
+                </div>
+                <p><strong>2. Hitung Trend (b₂):</strong></p>
+                <div class="formula">
+                    b₂ = 0.3 × (2.7697 - 2.7025) + 0.7 × 0.047
+                </div>
+                <div class="formula">
+                    b₂ = 0.3 × 0.0672 + 0.0329 = 0.02016 + 0.0329 = 0.05306 jam
+                </div>
+                <p><strong>3. Hitung Forecast (F₃):</strong></p>
+                <div class="formula">
+                    F₃ = S₂ + b₂ = 2.7697 + 0.05306 = 2.82276 jam
+                </div>
+            </div>
+
+            <div class="step-box">
+                <p><strong>Periode t = 3:</strong></p>
+                <p><strong>1. Hitung Level (S₃):</strong></p>
+                <div class="formula">
+                    S₃ = 0.4 × 3.0 + 0.6 × (2.7697 + 0.05306)
+                </div>
+                <div class="formula">
+                    S₃ = 1.2 + 0.6 × 2.82276 = 1.2 + 1.693656 = 2.893656 jam
+                </div>
+                <p><strong>2. Hitung Trend (b₃):</strong></p>
+                <div class="formula">
+                    b₃ = 0.3 × (2.893656 - 2.7697) + 0.7 × 0.05306
+                </div>
+                <div class="formula">
+                    b₃ = 0.3 × 0.123956 + 0.037142 = 0.0371868 + 0.037142 =
+                    0.0743288 jam
+                </div>
+                <p><strong>3. Hitung Forecast (F₄):</strong></p>
+                <div class="formula">
+                    F₄ = S₃ + b₃ = 2.893656 + 0.0743288 = 2.9679848 jam
+                </div>
+            </div>
+
+            <div class="step-box">
+                <p><strong>Periode t = 4:</strong></p>
+                <p><strong>1. Hitung Level (S₄):</strong></p>
+                <div class="formula">
+                    S₄ = 0.4 × 2.7 + 0.6 × (2.893656 + 0.0743288)
+                </div>
+                <div class="formula">
+                    S₄ = 1.08 + 0.6 × 2.9679848 = 1.08 + 1.78079088 = 2.86079088
+                    jam
+                </div>
+                <p><strong>2. Hitung Trend (b₄):</strong></p>
+                <div class="formula">
+                    b₄ = 0.3 × (2.86079088 - 2.893656) + 0.7 × 0.0743288
+                </div>
+                <div class="formula">
+                    b₄ = 0.3 × (-0.03286512) + 0.05203016 = -0.009859536 +
+                    0.05203016 = 0.042170624 jam
+                </div>
+                <p><strong>3. Hitung Forecast (F₅):</strong></p>
+                <div class="formula">
+                    F₅ = S₄ + b₄ = 2.86079088 + 0.042170624 = 2.902961504 jam
+                </div>
+            </div>
+
+            <div class="step-box">
+                <p><strong>Periode t = 5:</strong></p>
+                <p><strong>1. Hitung Level (S₅):</strong></p>
+                <div class="formula">
+                    S₅ = 0.4 × 2.9 + 0.6 × (2.86079088 + 0.042170624)
+                </div>
+                <div class="formula">
+                    S₅ = 1.16 + 0.6 × 2.902961504 = 1.16 + 1.7417769024 =
+                    2.9017769024 jam
+                </div>
+                <p><strong>2. Hitung Trend (b₅):</strong></p>
+                <div class="formula">
+                    b₅ = 0.3 × (2.9017769024 - 2.86079088) + 0.7 × 0.042170624
+                </div>
+                <div class="formula">
+                    b₅ = 0.3 × 0.0409860224 + 0.0295194368 = 0.01229580672 +
+                    0.0295194368 = 0.04181524352 jam
+                </div>
+                <p><strong>3. Hitung Forecast (F₆):</strong></p>
+                <div class="formula">
+                    F₆ = S₅ + b₅ = 2.9017769024 + 0.04181524352 = 2.94359214592
+                    jam
+                </div>
+            </div>
+
+            <div class="step-box">
+                <p><strong>Periode t = 6:</strong></p>
+                <p><strong>1. Hitung Level (S₆):</strong></p>
+                <div class="formula">
+                    S₆ = 0.4 × 3.1 + 0.6 × (2.9017769024 + 0.04181524352)
+                </div>
+                <div class="formula">
+                    S₆ = 1.24 + 0.6 × 2.94359214592 = 1.24 + 1.766155287552 =
+                    3.006155287552 jam
+                </div>
+                <p><strong>2. Hitung Trend (b₆):</strong></p>
+                <div class="formula">
+                    b₆ = 0.3 × (3.006155287552 - 2.9017769024) + 0.7 ×
+                    0.04181524352
+                </div>
+                <div class="formula">
+                    b₆ = 0.3 × 0.104378385152 + 0.029270670464 = 0.0313135155456
+                    + 0.029270670464 = 0.0605841860096 jam
+                </div>
+                <p><strong>3. Hitung Forecast (F₇):</strong></p>
+                <div class="formula">
+                    F₇ = S₆ + b₆ = 3.006155287552 + 0.0605841860096 =
+                    3.0667394735616 jam
+                </div>
+            </div>
+
+            <h3>4.3. Prediksi untuk Besok (Periode 7)</h3>
+            <div class="result-box">
+                <h3>Hasil Prediksi</h3>
+                <p>Berdasarkan perhitungan iteratif di atas:</p>
+                <ul
+                    style="
+                        text-align: left;
+                        display: inline-block;
+                        margin: 15px 0;
+                    "
+                >
+                    <li>Level terakhir (S₆) = 3.006155287552 jam</li>
+                    <li>Trend terakhir (b₆) = 0.0605841860096 jam</li>
+                </ul>
+                <div class="formula">
+                    F₇ = S₆ + b₆ = 3.006155287552 + 0.0605841860096 =
+                    3.0667394735616 jam
+                </div>
+                <div class="result-value">
+                    Prediksi Waktu Penyelesaian = 3.07 jam
+                </div>
+                <p>
+                    Jadi, waktu penyelesaian kegiatan "Pemeliharaan Pengkabelan"
+                    untuk besok diprediksi sebesar
+                    <span class="highlight">3.07 jam</span> (sekitar 3 jam 4
+                    menit).
+                </p>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666">
+                    <strong>Catatan:</strong> Nilai dibulatkan ke 2 desimal
+                    sesuai dengan format tampilan jam dalam sistem.
+                </p>
+            </div>
+
+            <h2>5. Perhitungan MAPE (Mean Absolute Percentage Error)</h2>
+            <p>
+                MAPE digunakan untuk mengukur akurasi prediksi. Rumus MAPE
+                adalah:
+            </p>
+
+            <div class="formula-box">
+                <div class="formula">
+                    MAPE = (1/n) × Σ |(Yₜ - Fₜ) / Yₜ| × 100%
+                </div>
+                <p><strong>Keterangan:</strong></p>
+                <ul>
+                    <li><strong>Yₜ</strong> = Data aktual pada periode t</li>
+                    <li><strong>Fₜ</strong> = Forecast pada periode t</li>
+                    <li>
+                        <strong>n</strong> = Jumlah periode yang dibandingkan
+                    </li>
+                </ul>
+            </div>
+
+            <h3>5.1. Contoh Perhitungan MAPE</h3>
+            <div class="mape-box">
+                <h4>Contoh Perhitungan MAPE untuk Pemeliharaan Pengkabelan</h4>
+                <p>
+                    Berikut contoh perhitungan MAPE menggunakan data aktual dan
+                    hasil forecast dari tabel sebelumnya:
+                </p>
+                <table class="calculation-table">
+                    <thead>
+                        <tr>
+                            <th>t</th>
+                            <th>Yₜ (Aktual)</th>
+                            <th>Fₜ (Forecast)</th>
+                            <th>|Yₜ - Fₜ|</th>
+                            <th>|(Yₜ - Fₜ) / Yₜ| × 100%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2</td>
+                            <td>2.8</td>
+                            <td>2.75</td>
+                            <td>0.05</td>
+                            <td>1.79%</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>3.0</td>
+                            <td>2.82</td>
+                            <td>0.18</td>
+                            <td>6.00%</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>2.7</td>
+                            <td>2.97</td>
+                            <td>0.27</td>
+                            <td>10.00%</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>2.9</td>
+                            <td>2.90</td>
+                            <td>0.00</td>
+                            <td>0.00%</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>3.1</td>
+                            <td>2.94</td>
+                            <td>0.16</td>
+                            <td>5.16%</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Contoh Proses Perhitungan MAPE (Periode t = 2)</h4>
+                <div class="formula-box">
+                    <p style="margin-bottom: 8px; font-weight: bold">
+                        Rumus untuk periode t = 2:
+                    </p>
+                    <div class="formula">
+                        MAPE₂ = &#124;(Y₂ - F₂) / Y₂&#124; × 100%
+                    </div>
+
+                    <p style="margin-top: 15px; margin-bottom: 8px">
+                        Dengan data:
+                    </p>
+                    <ul style="margin-left: 40px">
+                        <li>Y₂ = 2.8</li>
+                        <li>F₂ = 2.75</li>
+                    </ul>
+
+                    <p style="margin-top: 15px; margin-bottom: 8px">
+                        Langkah perhitungan:
+                    </p>
+                    <div class="formula">
+                        &#124;Y₂ - F₂&#124; = &#124;2.8 - 2.75&#124; = 0.05
+                    </div>
+                    <div class="formula">0.05 / 2.8 = 0.017857142857</div>
+                    <div class="formula">0.017857142857 × 100% = 1.79%</div>
+
+                    <p style="margin-top: 10px">
+                        Sehingga nilai MAPE untuk periode t = 2 adalah
+                        <strong>1.79%</strong>.
+                    </p>
+                </div>
+
+                <p>
+                    <strong>Penjelasan:</strong> Perhitungan MAPE tidak dimulai
+                    dari periode t = 1 karena nilai forecast pada baris t = 1
+                    (yaitu F₂ = 2.75) bukan merupakan ramalan untuk periode 1,
+                    melainkan ramalan untuk periode berikutnya yaitu periode 2.
+                    Pada metode Double Exponential Smoothing, nilai forecast
+                    Fₜ₊₁ selalu memprediksi periode setelahnya, sehingga periode
+                    1 belum memiliki nilai forecast untuk periode 1 itu sendiri.
+                    Selain itu, periode t = 0 juga tidak memiliki data aktual
+                    maupun forecast sehingga tidak dapat digunakan untuk
+                    evaluasi kesalahan peramalan. Dengan demikian, perhitungan
+                    MAPE secara metodologis harus dimulai pada t = 2, yaitu
+                    periode pertama yang memiliki pasangan data aktual Y₂ dan
+                    forecast F₂ yang dapat dibandingkan.
+                </p>
+
+                <h4>Perhitungan Hasil MAPE</h4>
+                <div class="formula">
+                    MAPE = (1.79 + 6.00 + 10.00 + 0.00 + 5.16) / 5 = 4.59%
+                </div>
+
+                <h4>Interpretasi Hasil MAPE</h4>
+                <p>
+                    MAPE 4.59% termasuk kategori
+                    <strong>Prediksi Sangat Akurat</strong> (MAPE &lt; 10%).
+                    Artinya prediksi <strong>3.07 jam</strong> dapat diandalkan.
+                </p>
+            </div>
+
+            <h3>5.2. Tabel Kategori Akurasi MAPE</h3>
+            <div class="parameter-box">
+                <h4>Kategori Akurasi MAPE</h4>
+                <table class="calculation-table">
+                    <thead>
+                        <tr>
+                            <th>Nilai MAPE</th>
+                            <th>Kategori Akurasi</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #e8f5e9">
+                            <td><strong>&lt; 10%</strong></td>
+                            <td><strong>Sangat Akurat</strong></td>
+                            <td>
+                                Prediksi sangat dapat diandalkan, hasil
+                                peramalan sangat dekat dengan kondisi aktual.
+                            </td>
+                        </tr>
+                        <tr style="background: #fff9c4">
+                            <td><strong>10% - 20%</strong></td>
+                            <td><strong>Akurasi Baik</strong></td>
+                            <td>
+                                Prediksi masih dapat diandalkan dan dapat
+                                digunakan untuk perencanaan.
+                            </td>
+                        </tr>
+                        <tr style="background: #ffe0b2">
+                            <td><strong>20% - 50%</strong></td>
+                            <td><strong>Akurasi Cukup</strong></td>
+                            <td>
+                                Prediksi masih bisa digunakan namun perlu
+                                kehati-hatian karena selisih dengan data aktual
+                                cukup besar.
+                            </td>
+                        </tr>
+                        <tr style="background: #ffcdd2">
+                            <td><strong>&gt; 50%</strong></td>
+                            <td><strong>Prediksi Kurang Bagus</strong></td>
+                            <td>
+                                Prediksi kurang dapat diandalkan karena
+                                kesalahan relatifnya sangat besar.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>6. Kesimpulan</h2>
+            <div class="note-box">
+                <h4>Ringkasan Proses Perhitungan:</h4>
+                <ol>
+                    <li>
+                        <strong>Inisialisasi:</strong> Hitung level awal (S₀)
+                        dan trend awal (b₀) dari data historis
+                    </li>
+                    <li>
+                        <strong>Perhitungan Iteratif:</strong> Untuk setiap
+                        periode, hitung level baru (Sₜ), trend baru (bₜ), dan
+                        forecast (Fₜ₊₁)
+                    </li>
+                    <li>
+                        <strong>Prediksi:</strong> Gunakan level dan trend
+                        terakhir untuk memprediksi periode mendatang
+                    </li>
+                    <li>
+                        <strong>Evaluasi:</strong> Hitung MAPE untuk mengukur
+                        akurasi prediksi
+                    </li>
+                </ol>
+            </div>
+
+            <div class="result-box">
+                <h3>Hasil Akhir untuk Pemeliharaan Pengkabelan</h3>
+                <p><strong>Jenis Kegiatan:</strong> Pemeliharaan Pengkabelan</p>
+                <p>
+                    <strong>Prediksi (Jam):</strong>
+                    <span class="result-value">3.07 jam</span>
+                </p>
+                <p>
+                    <strong>Tanggal Prediksi (Besok):</strong> [Tanggal besok
+                    dari hari ini]
+                </p>
+                <p><strong>MAPE:</strong> 4.59%</p>
+                <p>
+                    <strong>Waktu Generate:</strong> [Waktu saat prediksi
+                    dihasilkan]
+                </p>
+            </div>
+
+            <div class="note-box">
+                <h4>Catatan Penting:</h4>
+                <ul>
+                    <li>
+                        Semakin banyak data historis, semakin akurat prediksi
+                        yang dihasilkan
+                    </li>
+                    <li>
+                        Minimal diperlukan 3 data historis untuk melakukan
+                        prediksi
+                    </li>
+                    <li>
+                        Parameter α dan β dapat disesuaikan untuk meningkatkan
+                        akurasi
+                    </li>
+                    <li>
+                        <strong>Interpretasi MAPE:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px">
+                            <li>
+                                MAPE < 10% → Prediksi sangat akurat (sangat
+                                dapat diandalkan)
+                            </li>
+                            <li>
+                                MAPE 10-20% → Akurasi baik (cukup dapat
+                                diandalkan)
+                            </li>
+                            <li>
+                                MAPE 20-50% → Akurasi cukup (perlu hati-hati
+                                dalam penggunaan)
+                            </li>
+                            <li>
+                                MAPE > 50% → Prediksi kurang bagus (tidak dapat
+                                diandalkan, estimasi di lapangan belum tentu
+                                sesuai)
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        Prediksi dihasilkan untuk periode berikutnya (besok)
+                        berdasarkan pola data historis
+                    </li>
+                    <li>
+                        Jika MAPE tinggi (>50%), pertimbangkan untuk tidak
+                        mengandalkan prediksi dan gunakan estimasi manual
+                        berdasarkan pengalaman tim
+                    </li>
+                </ul>
+            </div>
+
+            <h2 style="margin-top: 40px">
+                Lampiran: Contoh Kasus Tambahan MAPE Tinggi
+            </h2>
+            <h3>Contoh Kasus Tambahan (MAPE Tinggi)</h3>
+            <div
+                class="example-box"
+                style="background: #ffebee; border-color: #e91e63"
+            >
+                <h3 style="color: #c2185b">
+                    Contoh Kasus Tambahan: Prediksi dengan MAPE Tinggi
+                </h3>
+                <p>
+                    <strong>Skenario:</strong> Sistem menghasilkan prediksi
+                    waktu penyelesaian kegiatan sebesar
+                    <span class="highlight">9.4 jam</span> dengan nilai MAPE
+                    sebesar <span class="highlight">97.3%</span>.
+                </p>
+
+                <div
+                    class="step-box"
+                    style="background: #fff3e0; border-left-color: #ff6f00"
+                >
+                    <h4>Analisis:</h4>
+                    <p>
+                        Dengan MAPE sebesar <strong>97.3%</strong>, prediksi ini
+                        masuk dalam kategori
+                        <strong>"Prediksi Kurang Bagus"</strong> (MAPE &gt;
+                        50%).
+                    </p>
+
+                    <p><strong>Implikasi:</strong></p>
+                    <ul>
+                        <li>
+                            Nilai MAPE yang sangat tinggi (97.3%) menunjukkan
+                            bahwa
+                            <strong
+                                >prediksi memiliki tingkat kesalahan yang sangat
+                                besar</strong
+                            >.
+                        </li>
+                        <li>
+                            Artinya,
+                            <strong
+                                >estimasi pekerjaan di lapangan belum tentu bisa
+                                diselesaikan dalam waktu prediksi 9.4
+                                jam</strong
+                            >.
+                        </li>
+                        <li>
+                            Kemungkinan besar, waktu penyelesaian aktual di
+                            lapangan akan <strong>jauh berbeda</strong> dari
+                            prediksi 9.4 jam.
+                        </li>
+                        <li>
+                            Prediksi ini
+                            <strong>tidak dapat diandalkan</strong> untuk
+                            perencanaan kerja yang akurat.
+                        </li>
+                    </ul>
+                </div>
+
+                <div
+                    class="step-box"
+                    style="background: #e3f2fd; border-left-color: #2196f3"
+                >
+                    <h4>Kemungkinan Penyebab MAPE Tinggi:</h4>
+                    <ol>
+                        <li>
+                            <strong>Data historis tidak konsisten</strong> -
+                            Variasi waktu penyelesaian sangat besar antar
+                            periode
+                        </li>
+                        <li>
+                            <strong>Data historis terlalu sedikit</strong> -
+                            Kurang dari 3 data atau data tidak representatif
+                        </li>
+                        <li>
+                            <strong>Faktor eksternal tidak terprediksi</strong>
+                            - Kondisi lapangan, cuaca, atau faktor lain yang
+                            tidak tercermin dalam data historis
+                        </li>
+                        <li>
+                            <strong>Perubahan pola kerja</strong> - Metode atau
+                            kondisi kerja yang berubah drastis
+                        </li>
+                        <li>
+                            <strong>Outlier dalam data</strong> - Data historis
+                            mengandung nilai ekstrem yang mempengaruhi
+                            perhitungan
+                        </li>
+                    </ol>
+                </div>
+
+                <div
+                    class="step-box"
+                    style="background: #f3e5f5; border-left-color: #9c27b0"
+                >
+                    <h4>Rekomendasi:</h4>
+                    <ul>
+                        <li>
+                            <strong>Jangan mengandalkan prediksi ini</strong>
+                            untuk perencanaan kerja yang ketat
+                        </li>
+                        <li>
+                            <strong
+                                >Gunakan buffer time yang lebih besar</strong
+                            >
+                            - Tambahkan waktu cadangan minimal 50-100% dari
+                            prediksi
+                        </li>
+                        <li>
+                            <strong>Periksa kualitas data historis</strong> -
+                            Pastikan data yang digunakan akurat dan konsisten
+                        </li>
+                        <li>
+                            <strong>Kumpulkan lebih banyak data</strong> -
+                            Semakin banyak data historis, semakin akurat
+                            prediksi
+                        </li>
+                        <li>
+                            <strong>Pertimbangkan faktor eksternal</strong> -
+                            Sertakan informasi tambahan seperti kondisi cuaca,
+                            kompleksitas pekerjaan, dll.
+                        </li>
+                        <li>
+                            <strong>Gunakan estimasi manual</strong> - Untuk
+                            kasus dengan MAPE tinggi, pertimbangkan menggunakan
+                            estimasi berdasarkan pengalaman tim di lapangan
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="note-box" style="background: #fff3e0">
+                    <h4>Kesimpulan untuk Contoh Kasus:</h4>
+                    <p>
+                        Dengan prediksi <strong>9.4 jam</strong> dan MAPE
+                        <strong>97.3%</strong>, tim di lapangan
+                        <strong>tidak dapat mengandalkan</strong> bahwa
+                        pekerjaan akan selesai dalam 9.4 jam. Waktu penyelesaian
+                        aktual kemungkinan akan
+                        <strong>sangat berbeda</strong> dari prediksi ini. Oleh
+                        karena itu, perlu dilakukan
+                        <strong>perencanaan yang lebih fleksibel</strong> dengan
+                        mempertimbangkan kemungkinan waktu penyelesaian yang
+                        lebih lama atau lebih cepat dari prediksi.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

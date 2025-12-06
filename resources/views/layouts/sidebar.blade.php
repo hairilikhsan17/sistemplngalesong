@@ -94,6 +94,13 @@
                     </div>
                 </div>
 
+                <!-- Pemantauan Laporan -->
+                <a href="{{ route('atasan.pemantauan-laporan') }}" 
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.pemantauan-laporan') ? 'bg-amber-100 text-amber-700' : '' }}">
+                    <i data-lucide="eye" class="w-5 h-5 mr-3"></i>
+                    Monitoring Laporan
+                </a>   
+              
                 <!-- Statistik & Prediksi -->
                 <div x-data="{ open: {{ request()->routeIs('admin.statistik.index') || request()->routeIs('admin.prediksi.index') || request()->routeIs('admin.prediksi.*') || request()->routeIs('admin.statistik.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open" 
@@ -118,18 +125,11 @@
                     </div>
                 </div>
 
-                <!-- Export Data -->
-                <a href="{{ route('atasan.export-data') }}" 
+                 <!-- Export Data -->
+                 <a href="{{ route('atasan.export-data') }}" 
                    class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.export-data') ? 'bg-amber-100 text-amber-700' : '' }}">
                     <i data-lucide="download" class="w-5 h-5 mr-3"></i>
                     Export Data
-                </a>
-
-                <!-- Pemantauan Laporan -->
-                <a href="{{ route('atasan.pemantauan-laporan') }}" 
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->routeIs('atasan.pemantauan-laporan') ? 'bg-amber-100 text-amber-700' : '' }}">
-                    <i data-lucide="eye" class="w-5 h-5 mr-3"></i>
-                    Pemantauan Laporan
                 </a>
 
                 <!-- Upload Excel -->
