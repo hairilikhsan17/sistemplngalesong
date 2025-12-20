@@ -14,10 +14,10 @@ class PrediksiController extends Controller
 {
     // Jenis kegiatan yang tersedia
     private $jenisKegiatan = [
-        'Perbaikan KWH' => 'Perbaikan KWH',
-        'Pemeliharaan Pengkabelan' => 'Pemeliharaan Pengkabelan',
-        'Pengecekan Gardu' => 'Pengecekan Gardu',
-        'Penanganan Gangguan' => 'Penanganan Gangguan'
+        'Perbaikan Meteran' => 'Perbaikan Meteran',
+        'Perbaikan Sambungan Rumah' => 'Perbaikan Sambungan Rumah',
+        'Pemeriksaan Gardu' => 'Pemeriksaan Gardu',
+        'Jenis Kegiatan' => 'Jenis Kegiatan'
     ];
 
     // Parameter Triple Exponential Smoothing
@@ -30,20 +30,34 @@ class PrediksiController extends Controller
      */
     private function normalizeJenisKegiatan($jenisKegiatan)
     {
-        // Mapping untuk format yang berbeda
+        // Mapping untuk format yang berbeda (termasuk format lama untuk backward compatibility)
         $mapping = [
-            'perbaikan_kwh' => 'Perbaikan KWH',
-            'perbaikan kwh' => 'Perbaikan KWH',
-            'Perbaikan KWH' => 'Perbaikan KWH',
-            'pemeliharaan_pengkabelan' => 'Pemeliharaan Pengkabelan',
-            'pemeliharaan pengkabelan' => 'Pemeliharaan Pengkabelan',
-            'Pemeliharaan Pengkabelan' => 'Pemeliharaan Pengkabelan',
-            'pengecekan_gardu' => 'Pengecekan Gardu',
-            'pengecekan gardu' => 'Pengecekan Gardu',
-            'Pengecekan Gardu' => 'Pengecekan Gardu',
-            'penanganan_gangguan' => 'Penanganan Gangguan',
-            'penanganan gangguan' => 'Penanganan Gangguan',
-            'Penanganan Gangguan' => 'Penanganan Gangguan',
+            // Format baru
+            'perbaikan_meteran' => 'Perbaikan Meteran',
+            'perbaikan meteran' => 'Perbaikan Meteran',
+            'Perbaikan Meteran' => 'Perbaikan Meteran',
+            'perbaikan_sambungan_rumah' => 'Perbaikan Sambungan Rumah',
+            'perbaikan sambungan rumah' => 'Perbaikan Sambungan Rumah',
+            'Perbaikan Sambungan Rumah' => 'Perbaikan Sambungan Rumah',
+            'pemeriksaan_gardu' => 'Pemeriksaan Gardu',
+            'pemeriksaan gardu' => 'Pemeriksaan Gardu',
+            'Pemeriksaan Gardu' => 'Pemeriksaan Gardu',
+            'jenis_kegiatan' => 'Jenis Kegiatan',
+            'jenis kegiatan' => 'Jenis Kegiatan',
+            'Jenis Kegiatan' => 'Jenis Kegiatan',
+            // Format lama (untuk backward compatibility)
+            'perbaikan_kwh' => 'Perbaikan Meteran',
+            'perbaikan kwh' => 'Perbaikan Meteran',
+            'Perbaikan KWH' => 'Perbaikan Meteran',
+            'pemeliharaan_pengkabelan' => 'Perbaikan Sambungan Rumah',
+            'pemeliharaan pengkabelan' => 'Perbaikan Sambungan Rumah',
+            'Pemeliharaan Pengkabelan' => 'Perbaikan Sambungan Rumah',
+            'pengecekan_gardu' => 'Pemeriksaan Gardu',
+            'pengecekan gardu' => 'Pemeriksaan Gardu',
+            'Pengecekan Gardu' => 'Pemeriksaan Gardu',
+            'penanganan_gangguan' => 'Jenis Kegiatan',
+            'penanganan gangguan' => 'Jenis Kegiatan',
+            'Penanganan Gangguan' => 'Jenis Kegiatan',
         ];
 
         $normalized = trim($jenisKegiatan);
@@ -114,7 +128,7 @@ class PrediksiController extends Controller
 
         $request->validate([
             'kelompok_id' => 'required|exists:kelompok,id',
-            'jenis_kegiatan' => 'nullable|in:all,Perbaikan KWH,Pemeliharaan Pengkabelan,Pengecekan Gardu,Penanganan Gangguan'
+            'jenis_kegiatan' => 'nullable|in:all,Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan'
         ]);
 
         $kelompokId = $request->kelompok_id;
@@ -504,7 +518,7 @@ class PrediksiController extends Controller
         }
 
         $request->validate([
-            'jenis_kegiatan' => 'nullable|in:all,Perbaikan KWH,Pemeliharaan Pengkabelan,Pengecekan Gardu,Penanganan Gangguan'
+            'jenis_kegiatan' => 'nullable|in:all,Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan'
         ]);
 
         // Use kelompok_id from logged in user

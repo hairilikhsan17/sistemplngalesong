@@ -192,7 +192,7 @@
             </div>
         </div>
 
-        <!-- Modal Deskripsi Penanganan Gangguan -->
+        <!-- Modal Deskripsi Jenis Kegiatan -->
         <div id="deskripsiModal" style="display: none;" 
              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm">
             <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all">
@@ -202,8 +202,8 @@
                             <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Deskripsi Penanganan Gangguan</h3>
-                            <p class="text-sm text-gray-500">Detail penanganan gangguan yang dilakukan</p>
+                            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Deskripsi Jenis Kegiatan</h3>
+                            <p class="text-sm text-gray-500">Detail kegiatan yang dilakukan</p>
                         </div>
                     </div>
                     <button onclick="tutupDeskripsiModal()" 
@@ -318,11 +318,11 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         {{ $laporan->jenis_kegiatan ?? '-' }}
                                     </span>
-                                    @if($laporan->jenis_kegiatan === 'Penanganan Gangguan' && $laporan->deskripsi_kegiatan)
+                                    @if($laporan->jenis_kegiatan === 'Jenis Kegiatan' && $laporan->deskripsi_kegiatan)
                                         <button type="button"
                                                 onclick="lihatDeskripsiGangguan(@js($laporan->deskripsi_kegiatan))"
                                                 class="inline-flex items-center justify-center w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-all duration-200 hover:shadow-md"
-                                                title="Lihat Deskripsi Penanganan Gangguan">
+                                                title="Lihat Deskripsi Jenis Kegiatan">
                                             <i data-lucide="eye" class="w-4 h-4"></i>
                                         </button>
                                     @endif
@@ -651,22 +651,22 @@ async function editLaporan(id) {
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan</label>
                     <select name="jenis_kegiatan" id="editJenisKegiatan" onchange="toggleDeskripsiEdit()" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
                         <option value="">Pilih Jenis Kegiatan</option>
-                        <option value="Perbaikan KWH" ${laporan.jenis_kegiatan === 'Perbaikan KWH' ? 'selected' : ''}>Perbaikan KWH</option>
-                        <option value="Pemeliharaan Pengkabelan" ${laporan.jenis_kegiatan === 'Pemeliharaan Pengkabelan' ? 'selected' : ''}>Pemeliharaan Pengkabelan</option>
-                        <option value="Pengecekan Gardu" ${laporan.jenis_kegiatan === 'Pengecekan Gardu' ? 'selected' : ''}>Pengecekan Gardu</option>
-                        <option value="Penanganan Gangguan" ${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'selected' : ''}>Penanganan Gangguan</option>
+                        <option value="Perbaikan Meteran" ${laporan.jenis_kegiatan === 'Perbaikan Meteran' ? 'selected' : ''}>Perbaikan Meteran</option>
+                        <option value="Perbaikan Sambungan Rumah" ${laporan.jenis_kegiatan === 'Perbaikan Sambungan Rumah' ? 'selected' : ''}>Perbaikan Sambungan Rumah</option>
+                        <option value="Pemeriksaan Gardu" ${laporan.jenis_kegiatan === 'Pemeriksaan Gardu' ? 'selected' : ''}>Pemeriksaan Gardu</option>
+                        <option value="Jenis Kegiatan" ${laporan.jenis_kegiatan === 'Jenis Kegiatan' ? 'selected' : ''}>Jenis Kegiatan</option>
                     </select>
                 </div>
                 <div class="md:col-span-2" id="editDeskripsiContainer">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
                         Deskripsi Kegiatan 
-                        <span id="editDeskripsiRequired" class="text-red-500" style="display: ${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'inline' : 'none'};">*</span>
+                        <span id="editDeskripsiRequired" class="text-red-500" style="display: ${laporan.jenis_kegiatan === 'Jenis Kegiatan' ? 'inline' : 'none'};">*</span>
                     </label>
                     <textarea name="deskripsi_kegiatan" id="editDeskripsiKegiatan" rows="4" 
                               class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500"
-                              placeholder="${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'Masukkan deskripsi detail penanganan gangguan yang dilakukan...' : 'Masukkan deskripsi detail kegiatan yang dilakukan (opsional)'}">${laporan.deskripsi_kegiatan || ''}</textarea>
+                              placeholder="${laporan.jenis_kegiatan === 'Jenis Kegiatan' ? 'Masukkan deskripsi detail penanganan gangguan yang dilakukan...' : 'Masukkan deskripsi detail kegiatan yang dilakukan (opsional)'}">${laporan.deskripsi_kegiatan || ''}</textarea>
                     <p class="text-xs text-gray-500 mt-1.5" id="editDeskripsiInfo">
-                        ${laporan.jenis_kegiatan === 'Penanganan Gangguan' ? 'Wajib diisi untuk jenis kegiatan Penanganan Gangguan' : 'Opsional - Anda dapat menambahkan deskripsi detail kegiatan jika diperlukan'}
+                        ${laporan.jenis_kegiatan === 'Jenis Kegiatan' ? 'Wajib diisi untuk jenis kegiatan Jenis Kegiatan' : 'Opsional - Anda dapat menambahkan deskripsi detail kegiatan jika diperlukan'}
                     </p>
                 </div>
                 <div>
@@ -709,7 +709,7 @@ async function editLaporan(id) {
         document.getElementById('editContent').innerHTML = content;
         document.getElementById('editModal').classList.remove('hidden');
         
-        // Set required attribute untuk deskripsi jika Penanganan Gangguan
+        // Set required attribute untuk deskripsi jika Jenis Kegiatan
         setTimeout(() => {
             toggleDeskripsiEdit();
             if (typeof lucide !== 'undefined') {
@@ -728,10 +728,10 @@ function toggleDeskripsiEdit() {
     const infoText = document.getElementById('editDeskripsiInfo');
     
     if (jenisKegiatan && deskripsiField && requiredSpan && infoText) {
-        if (jenisKegiatan.value === 'Penanganan Gangguan') {
+        if (jenisKegiatan.value === 'Jenis Kegiatan') {
             deskripsiField.required = true;
             requiredSpan.style.display = 'inline';
-            infoText.textContent = 'Wajib diisi untuk jenis kegiatan Penanganan Gangguan';
+            infoText.textContent = 'Wajib diisi untuk jenis kegiatan Jenis Kegiatan';
             deskripsiField.placeholder = 'Masukkan deskripsi detail penanganan gangguan yang dilakukan...';
         } else {
             deskripsiField.required = false;
@@ -779,12 +779,12 @@ async function simpanEdit(event) {
     event.preventDefault();
     if (!currentLaporanId) return;
     
-    // Validasi deskripsi jika Penanganan Gangguan dipilih
+    // Validasi deskripsi jika Jenis Kegiatan dipilih
     const jenisKegiatan = document.getElementById('editJenisKegiatan');
     const deskripsiKegiatan = document.getElementById('editDeskripsiKegiatan');
     
-    if (jenisKegiatan && jenisKegiatan.value === 'Penanganan Gangguan' && (!deskripsiKegiatan || !deskripsiKegiatan.value.trim())) {
-        alert('Deskripsi Penanganan Gangguan wajib diisi!');
+    if (jenisKegiatan && jenisKegiatan.value === 'Jenis Kegiatan' && (!deskripsiKegiatan || !deskripsiKegiatan.value.trim())) {
+        alert('Deskripsi Jenis Kegiatan wajib diisi!');
         return;
     }
     

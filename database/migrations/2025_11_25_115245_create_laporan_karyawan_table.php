@@ -18,12 +18,7 @@ return new class extends Migration
             $table->string('nama');
             $table->string('instansi');
             $table->string('alamat_tujuan');
-            $table->enum('jenis_kegiatan', [
-                'Perbaikan KWH',
-                'Pemeliharaan Pengkabelan',
-                'Pengecekan Gardu',
-                'Penanganan Gangguan'
-            ])->nullable();
+            $table->string('jenis_kegiatan')->nullable();
             $table->text('deskripsi_kegiatan')->nullable();
             $table->time('waktu_mulai_kegiatan')->nullable();
             $table->time('waktu_selesai_kegiatan')->nullable();
