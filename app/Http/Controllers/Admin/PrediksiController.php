@@ -17,7 +17,7 @@ class PrediksiController extends Controller
         'Perbaikan Meteran' => 'Perbaikan Meteran',
         'Perbaikan Sambungan Rumah' => 'Perbaikan Sambungan Rumah',
         'Pemeriksaan Gardu' => 'Pemeriksaan Gardu',
-        'Jenis Kegiatan' => 'Jenis Kegiatan'
+        'Jenis Kegiatan lainnya' => 'Jenis Kegiatan lainnya'
     ];
 
     // Parameter Triple Exponential Smoothing
@@ -42,9 +42,10 @@ class PrediksiController extends Controller
             'pemeriksaan_gardu' => 'Pemeriksaan Gardu',
             'pemeriksaan gardu' => 'Pemeriksaan Gardu',
             'Pemeriksaan Gardu' => 'Pemeriksaan Gardu',
-            'jenis_kegiatan' => 'Jenis Kegiatan',
-            'jenis kegiatan' => 'Jenis Kegiatan',
-            'Jenis Kegiatan' => 'Jenis Kegiatan',
+            'jenis_kegiatan' => 'Jenis Kegiatan lainnya',
+            'jenis kegiatan' => 'Jenis Kegiatan lainnya',
+            'Jenis Kegiatan' => 'Jenis Kegiatan lainnya',
+            'Jenis Kegiatan lainnya' => 'Jenis Kegiatan lainnya',
             // Format lama (untuk backward compatibility)
             'perbaikan_kwh' => 'Perbaikan Meteran',
             'perbaikan kwh' => 'Perbaikan Meteran',
@@ -55,9 +56,9 @@ class PrediksiController extends Controller
             'pengecekan_gardu' => 'Pemeriksaan Gardu',
             'pengecekan gardu' => 'Pemeriksaan Gardu',
             'Pengecekan Gardu' => 'Pemeriksaan Gardu',
-            'penanganan_gangguan' => 'Jenis Kegiatan',
-            'penanganan gangguan' => 'Jenis Kegiatan',
-            'Penanganan Gangguan' => 'Jenis Kegiatan',
+            'penanganan_gangguan' => 'Jenis Kegiatan lainnya',
+            'penanganan gangguan' => 'Jenis Kegiatan lainnya',
+            'Penanganan Gangguan' => 'Jenis Kegiatan lainnya',
         ];
 
         $normalized = trim($jenisKegiatan);
@@ -128,7 +129,7 @@ class PrediksiController extends Controller
 
         $request->validate([
             'kelompok_id' => 'required|exists:kelompok,id',
-            'jenis_kegiatan' => 'nullable|in:all,Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan'
+            'jenis_kegiatan' => 'nullable|in:all,Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan lainnya'
         ]);
 
         $kelompokId = $request->kelompok_id;
@@ -155,8 +156,8 @@ class PrediksiController extends Controller
             // Get historical data for this jenis kegiatan
             $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan);
 
-            if (count($historicalData) < 3) {
-                continue; // Skip if not enough data
+            if (count($historicalData) < 1) {
+                continue; // Skip if no data
             }
 
             // Calculate prediction using Triple Exponential Smoothing
@@ -206,7 +207,7 @@ class PrediksiController extends Controller
         if (empty($results)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada data historis yang cukup untuk melakukan prediksi. Minimal diperlukan 3 data historis.'
+                'message' => 'Tidak ada data historis yang cukup untuk melakukan prediksi. Minimal diperlukan 1 bulan data historis.'
             ]);
         }
 
@@ -224,33 +225,65 @@ class PrediksiController extends Controller
 
     /**
      * Get historical data for prediction
+     * Adaptive: Groups by WEEK if data span <= 90 days, otherwise by MONTH
      */
     private function getHistoricalData($kelompokId, $jenisKegiatan)
     {
         // Normalize jenis kegiatan
         $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
         
-        // Get data from last 12 months, grouped by month
-        $startDate = Carbon::now()->subMonths(12)->startOfMonth();
-        
-        // Get data with normalized jenis_kegiatan and also check for variations
-        $data = LaporanKaryawan::where('kelompok_id', $kelompokId)
+        // Cek rentang data yang tersedia
+        $firstData = LaporanKaryawan::where('kelompok_id', $kelompokId)
             ->where(function($query) use ($normalizedJenisKegiatan) {
                 $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
                       ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
                       ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
             })
-            ->where('tanggal', '>=', $startDate)
+            ->orderBy('tanggal', 'asc')
+            ->first();
+
+        if (!$firstData) {
+            return [];
+        }
+
+        $daysDiff = Carbon::parse($firstData->tanggal)->diffInDays(Carbon::now());
+        
+        // Jika data kurang dari 90 hari (3 bulan), gunakan grouping MINGGUAN
+        // Jika lebih, gunakan grouping BULANAN
+        $useWeekly = $daysDiff <= 90;
+
+        $query = LaporanKaryawan::where('kelompok_id', $kelompokId)
+            ->where(function($query) use ($normalizedJenisKegiatan) {
+                $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
+                      ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
+                      ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
+            })
             ->whereNotNull('durasi_waktu')
-            ->where('durasi_waktu', '>', 0)
-            ->select(
-                DB::raw('YEAR(tanggal) as year'),
-                DB::raw('MONTH(tanggal) as month'),
-                DB::raw('AVG(durasi_waktu) as avg_durasi')
-            )
-            ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-            ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-            ->get();
+            ->where('durasi_waktu', '>', 0);
+
+        if ($useWeekly) {
+            // Group by Year-Week
+            $data = $query->select(
+                    DB::raw('YEAR(tanggal) as year'),
+                    DB::raw('WEEK(tanggal) as period'),
+                    DB::raw('AVG(durasi_waktu) as avg_durasi')
+                )
+                ->groupBy(DB::raw('YEAR(tanggal), WEEK(tanggal)'))
+                ->orderBy(DB::raw('YEAR(tanggal), WEEK(tanggal)'))
+                ->get();
+        } else {
+            // Group by Year-Month (Logic Lama)
+            $startDate = Carbon::now()->subMonths(12)->startOfMonth();
+            $data = $query->where('tanggal', '>=', $startDate)
+                ->select(
+                    DB::raw('YEAR(tanggal) as year'),
+                    DB::raw('MONTH(tanggal) as period'),
+                    DB::raw('AVG(durasi_waktu) as avg_durasi')
+                )
+                ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
+                ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
+                ->get();
+        }
 
         // Convert to simple array of values
         return $data->pluck('avg_durasi')->toArray();
@@ -264,12 +297,40 @@ class PrediksiController extends Controller
     {
         $n = count($data);
         
-        if ($n < 3) {
-            throw new \Exception('Minimal 3 data diperlukan untuk prediksi');
+        if ($n < 1) {
+            throw new \Exception('Data tidak cukup untuk prediksi');
+        }
+
+        // Jika hanya ada 1 data, gunakan itu sebagai prediksi
+        if ($n == 1) {
+            return [
+                'levels' => [$data[0]],
+                'trends' => [0],
+                'forecasts' => [],
+                'lastLevel' => $data[0],
+                'lastTrend' => 0,
+                'nextForecast' => $data[0]
+            ];
+        }
+
+        // Jika hanya ada 2 data, gunakan rata-rata atau trend sederhana
+        if ($n == 2) {
+            $lastLevel = $data[1];
+            $lastTrend = $data[1] - $data[0];
+            $nextForecast = $lastLevel + $lastTrend;
+            
+            return [
+                'levels' => [$data[0], $data[1]],
+                'trends' => [0, $lastTrend],
+                'forecasts' => [$data[0]], // Forecast untuk data ke-2 adalah data ke-1 (naive)
+                'lastLevel' => $lastLevel,
+                'lastTrend' => $lastTrend,
+                'nextForecast' => $nextForecast
+            ];
         }
 
         // Initialize level and trend
-        // Level awal = rata-rata dari 3-4 data pertama
+        // Level awal = rata-rata dari 3-4 data pertama (atau semua jika < 4)
         $initialLevel = array_sum(array_slice($data, 0, min(4, $n))) / min(4, $n);
         
         // Trend awal = (rata-rata 2 data terakhir - rata-rata 2 data pertama) / jumlah periode tengah
@@ -518,7 +579,7 @@ class PrediksiController extends Controller
         }
 
         $request->validate([
-            'jenis_kegiatan' => 'nullable|in:all,Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan'
+            'jenis_kegiatan' => 'nullable|in:all,Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan lainnya'
         ]);
 
         // Use kelompok_id from logged in user
@@ -546,8 +607,8 @@ class PrediksiController extends Controller
             // Get historical data for this jenis kegiatan
             $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan);
 
-            if (count($historicalData) < 3) {
-                continue; // Skip if not enough data
+            if (count($historicalData) < 1) {
+                continue; // Skip if no data
             }
 
             // Calculate prediction using Triple Exponential Smoothing
@@ -597,7 +658,7 @@ class PrediksiController extends Controller
         if (empty($results)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada data historis yang cukup untuk melakukan prediksi. Minimal diperlukan 3 data historis.'
+                'message' => 'Tidak ada data historis yang cukup untuk melakukan prediksi. Minimal diperlukan 1 bulan data historis.'
             ]);
         }
 

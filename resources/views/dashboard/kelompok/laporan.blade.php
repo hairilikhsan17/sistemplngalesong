@@ -292,30 +292,30 @@
                             <option value="Perbaikan Meteran">Perbaikan Meteran</option>
                             <option value="Perbaikan Sambungan Rumah">Perbaikan Sambungan Rumah</option>
                             <option value="Pemeriksaan Gardu">Pemeriksaan Gardu</option>
-                            <option value="Jenis Kegiatan">Jenis Kegiatan</option>
+                            <option value="Jenis Kegiatan lainnya">Jenis Kegiatan lainnya</option>
                         </select>
                         <div x-show="errors.jenis_kegiatan" class="mt-1 text-sm text-red-600" x-text="errors.jenis_kegiatan"></div>
                     </div>
 
-                    <!-- Deskripsi Kegiatan - Muncul untuk semua jenis kegiatan, wajib hanya untuk Jenis Kegiatan -->
+                    <!-- Deskripsi Kegiatan - Muncul untuk semua jenis kegiatan, wajib hanya untuk Jenis Kegiatan lainnya -->
                     <div class="md:col-span-2" x-show="formData.jenis_kegiatan" x-transition>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="file-text" class="w-4 h-4 inline mr-1 text-blue-600"></i>
                             Deskripsi Kegiatan 
-                            <span x-show="formData.jenis_kegiatan === 'Jenis Kegiatan'" class="text-red-500">*</span>
+                            <span x-show="formData.jenis_kegiatan === 'Jenis Kegiatan lainnya'" class="text-red-500">*</span>
                         </label>
                         <textarea x-model="formData.deskripsi_kegiatan"
                                   rows="4"
-                                  :required="formData.jenis_kegiatan === 'Jenis Kegiatan'"
+                                  :required="formData.jenis_kegiatan === 'Jenis Kegiatan lainnya'"
                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400 resize-none"
-                                  :placeholder="formData.jenis_kegiatan === 'Jenis Kegiatan' 
+                                  :placeholder="formData.jenis_kegiatan === 'Jenis Kegiatan lainnya' 
                                     ? 'Masukkan deskripsi detail penanganan gangguan yang dilakukan, contoh: Pohon tumbang mengenai kabel listrik di Jl. Poros Galesong, dilakukan perbaikan dengan mengganti kabel yang rusak...'
                                     : 'Masukkan deskripsi detail kegiatan yang dilakukan (opsional)'"></textarea>
-                        <p class="text-xs text-gray-500 mt-1.5" x-show="formData.jenis_kegiatan === 'Jenis Kegiatan'">
+                        <p class="text-xs text-gray-500 mt-1.5" x-show="formData.jenis_kegiatan === 'Jenis Kegiatan lainnya'">
                             <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
-                            Wajib diisi untuk jenis kegiatan Jenis Kegiatan
+                            Wajib diisi untuk jenis kegiatan Jenis Kegiatan lainnya
                         </p>
-                        <p class="text-xs text-gray-500 mt-1.5" x-show="formData.jenis_kegiatan && formData.jenis_kegiatan !== 'Jenis Kegiatan'">
+                        <p class="text-xs text-gray-500 mt-1.5" x-show="formData.jenis_kegiatan && formData.jenis_kegiatan !== 'Jenis Kegiatan lainnya'">
                             <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
                             Opsional - Anda dapat menambahkan deskripsi detail kegiatan jika diperlukan
                         </p>
@@ -621,7 +621,7 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         {{ $laporan->jenis_kegiatan ?? '-' }}
                                     </span>
-                                    @if($laporan->jenis_kegiatan === 'Jenis Kegiatan' && $laporan->deskripsi_kegiatan)
+                                    @if($laporan->jenis_kegiatan === 'Jenis Kegiatan lainnya' && $laporan->deskripsi_kegiatan)
                                         <button type="button"
                                                 @click="lihatDeskripsiGangguan('{{ $laporan->id }}', @js($laporan->deskripsi_kegiatan))"
                                                 class="inline-flex items-center justify-center w-8 h-8 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-all duration-200 hover:shadow-md"
@@ -939,9 +939,9 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             
-            // Validate deskripsi jika Jenis Kegiatan dipilih
-            if (this.formData.jenis_kegiatan === 'Jenis Kegiatan' && !this.formData.deskripsi_kegiatan) {
-                this.showMessage('Deskripsi Jenis Kegiatan wajib diisi!', 'error');
+            // Validate deskripsi jika Jenis Kegiatan lainnya dipilih
+            if (this.formData.jenis_kegiatan === 'Jenis Kegiatan lainnya' && !this.formData.deskripsi_kegiatan) {
+                this.showMessage('Deskripsi Jenis Kegiatan lainnya wajib diisi!', 'error');
                 this.loading = false;
                 return;
             }

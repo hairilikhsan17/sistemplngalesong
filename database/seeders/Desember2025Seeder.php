@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class SetupKelompokDanDataSeeder extends Seeder
+class Desember2025Seeder extends Seeder
 {
-    // Data kelompok dengan anggota
+    // Data kelompok dengan anggota (untuk backup jika belum ada)
     private $kelompokData = [
         [
             'nama_kelompok' => 'Kelompok 1',
@@ -93,7 +93,7 @@ class SetupKelompokDanDataSeeder extends Seeder
         'Lokasi J - Gardu Trafo Distribusi'
     ];
 
-    // Jenis kegiatan dengan nama baru
+    // Jenis kegiatan
     private $jenisKegiatanList = [
         'Perbaikan Meteran',
         'Perbaikan Sambungan Rumah',
@@ -154,91 +154,64 @@ class SetupKelompokDanDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('=== Memulai Setup Kelompok dan Data ===');
+        $this->command->info('=== Memulai Seeder Data Desember 2025 ===');
         
-        // Hapus data lama jika ada (urutan penting karena foreign key)
-        $this->command->info('Menghapus data lama...');
-        LaporanKaryawan::truncate();
-        Karyawan::truncate();
-        // Hapus user karyawan saja, biarkan admin tetap ada
-        User::where('role', 'karyawan')->delete();
-        // Hapus kelompok setelah semua data yang mereferensikannya dihapus
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        Kelompok::truncate();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        
-        // Buat user admin terlebih dahulu
-        $this->command->info('Membuat user admin...');
-        
-        // Cek apakah admin sudah ada, jika ada update passwordnya
-        $admin = User::where('username', 'admin')->where('role', 'atasan')->first();
-        if ($admin) {
-            $admin->password = Hash::make('admin123');
-            $admin->save();
-            $this->command->info('✓ User admin sudah ada, password diupdate');
-        } else {
-            User::create([
-                'id' => Str::uuid(),
-                'username' => 'admin',
-                'password' => Hash::make('admin123'),
-                'role' => 'atasan',
-                'kelompok_id' => null,
-            ]);
-            $this->command->info('✓ User admin berhasil dibuat');
-        }
-        
-        $kelompoks = [];
-        
-        // Buat kelompok, user, dan karyawan
+        // Pastikan kelompok ada
         foreach ($this->kelompokData as $data) {
-            $this->command->info("Membuat {$data['nama_kelompok']}...");
+            $kelompok = Kelompok::where('nama_kelompok', $data['nama_kelompok'])->first();
             
-            // Buat kelompok
-            $kelompok = Kelompok::create([
-                'id' => Str::uuid(),
-                'nama_kelompok' => $data['nama_kelompok'],
-                'shift' => $data['shift'],
-            ]);
-            
-            // Buat user login
-            User::create([
-                'id' => Str::uuid(),
-                'username' => $data['username'],
-                'password' => Hash::make($data['password']),
-                'role' => 'karyawan',
-                'kelompok_id' => $kelompok->id,
-            ]);
-            
-            // Buat karyawan
-            $karyawans = [];
-            foreach ($data['anggota'] as $anggota) {
-                $karyawan = Karyawan::create([
+            if (!$kelompok) {
+                $this->command->info("Membuat {$data['nama_kelompok']} (belum ada)...");
+                
+                // Buat kelompok
+                $kelompok = Kelompok::create([
                     'id' => Str::uuid(),
-                    'nama' => $anggota['nama'],
+                    'nama_kelompok' => $data['nama_kelompok'],
+                    'shift' => $data['shift'],
+                ]);
+                
+                // Buat user login
+                User::create([
+                    'id' => Str::uuid(),
+                    'username' => $data['username'],
+                    'password' => Hash::make($data['password']),
+                    'role' => 'karyawan',
                     'kelompok_id' => $kelompok->id,
                 ]);
-                $karyawans[] = $karyawan;
+                
+                // Buat karyawan
+                foreach ($data['anggota'] as $anggota) {
+                    Karyawan::create([
+                        'id' => Str::uuid(),
+                        'nama' => $anggota['nama'],
+                        'kelompok_id' => $kelompok->id,
+                    ]);
+                }
             }
-            
-            $kelompoks[] = [
-                'kelompok' => $kelompok,
-                'karyawans' => $karyawans
-            ];
-            
-            $this->command->info("✓ {$data['nama_kelompok']} berhasil dibuat dengan " . count($karyawans) . " anggota");
         }
+
+        $kelompoks = Kelompok::with('karyawan')->get();
         
-        // Generate data laporan dari Januari 2025 sampai Desember 2025 (sampai hari ini)
-        $this->command->info('Membuat data laporan dari Januari 2025 sampai sekarang...');
+        // Generate data laporan untuk Desember 2025
+        $this->command->info('Membuat data laporan untuk Desember 2025...');
         
-        $startDate = Carbon::create(2025, 1, 1);
-        $endDate = Carbon::now(); // Sampai hari ini
+        $startDate = Carbon::create(2025, 12, 1);
+        $endDate = Carbon::create(2025, 12, 31);
         
         $totalLaporan = 0;
         
-        foreach ($kelompoks as $kelompokInfo) {
-            $kelompok = $kelompokInfo['kelompok'];
-            $karyawans = $kelompokInfo['karyawans'];
+        foreach ($kelompoks as $kelompok) {
+            $karyawans = $kelompok->karyawan;
+            
+            if ($karyawans->isEmpty()) {
+                $this->command->warn("Kelompok {$kelompok->nama_kelompok} tidak memiliki karyawan. Skip.");
+                continue;
+            }
+
+            // Hapus data lama di bulan Desember 2025 untuk kelompok ini agar tidak duplikat
+            LaporanKaryawan::where('kelompok_id', $kelompok->id)
+                ->whereBetween('tanggal', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->delete();
             
             $currentDate = $startDate->copy();
             
@@ -256,14 +229,14 @@ class SetupKelompokDanDataSeeder extends Seeder
                 
                 for ($i = 0; $i < $jumlahLaporan; $i++) {
                     // Pilih karyawan secara acak
-                    $karyawan = $karyawans[array_rand($karyawans)];
+                    $karyawan = $karyawans->random();
                     
                     // Pilih jenis kegiatan
                     $jenisKegiatan = $this->jenisKegiatanList[array_rand($this->jenisKegiatanList)];
                     
                     // Generate waktu mulai dan selesai
                     $waktuMulai = Carbon::createFromTime(rand(7, 9), rand(0, 59), 0);
-                    $waktuSelesai = $waktuMulai->copy()->addHours(rand(2, 6))->addMinutes(rand(0, 59));
+                    $waktuSelesai = $waktuMulai->copy()->addMinutes(rand(1, 100) <= 20 ? rand(300, 600) : rand(30, 240));
                     
                     // Hitung durasi
                     $durasi = $waktuMulai->diffInMinutes($waktuSelesai) / 60;
@@ -300,26 +273,10 @@ class SetupKelompokDanDataSeeder extends Seeder
                 $currentDate->addDay();
             }
             
-            $this->command->info("✓ Data laporan untuk {$kelompok->nama_kelompok} selesai");
+            $this->command->info("✓ Data laporan Desember 2025 untuk {$kelompok->nama_kelompok} selesai");
         }
         
-        $this->command->info("=== Setup Selesai ===");
-        $this->command->info("Total Kelompok: " . count($kelompoks));
-        $this->command->info("Total Karyawan: " . Karyawan::count());
-        $this->command->info("Total Laporan: {$totalLaporan}");
-        $this->command->info("");
-        $this->command->info("=== Informasi Login ===");
-        $this->command->info("");
-        $this->command->info("=== Admin ===");
-        $this->command->info("Username: admin");
-        $this->command->info("Password: admin123");
-        $this->command->info("");
-        $this->command->info("=== Kelompok ===");
-        foreach ($this->kelompokData as $data) {
-            $this->command->info("Username: {$data['username']}");
-            $this->command->info("Password: {$data['password']}");
-            $this->command->info("");
-        }
+        $this->command->info("=== Seeder Selesai ===");
+        $this->command->info("Total Laporan dibuat: {$totalLaporan}");
     }
 }
-// class Desember2025Seeder extends Seeder

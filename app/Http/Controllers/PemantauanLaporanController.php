@@ -92,7 +92,7 @@ class PemantauanLaporanController extends Controller
             'nama' => 'required|string|max:255',
             'instansi' => 'required|string|max:255',
             'alamat_tujuan' => 'required|string|max:255',
-            'jenis_kegiatan' => 'nullable|in:Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan',
+            'jenis_kegiatan' => 'nullable|in:Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan lainnya',
             'deskripsi_kegiatan' => 'nullable|string',
             'waktu_mulai_kegiatan' => 'nullable|date_format:H:i',
             'waktu_selesai_kegiatan' => 'nullable|date_format:H:i',
@@ -100,13 +100,13 @@ class PemantauanLaporanController extends Controller
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
         
-        // Validasi khusus: deskripsi wajib jika jenis kegiatan adalah Jenis Kegiatan
-        if ($request->jenis_kegiatan === 'Jenis Kegiatan' && empty($request->deskripsi_kegiatan)) {
+        // Validasi khusus: deskripsi wajib jika jenis kegiatan adalah Jenis Kegiatan lainnya
+        if ($request->jenis_kegiatan === 'Jenis Kegiatan lainnya' && empty($request->deskripsi_kegiatan)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Deskripsi Jenis Kegiatan wajib diisi ketika jenis kegiatan adalah Jenis Kegiatan.',
+                'message' => 'Deskripsi Jenis Kegiatan lainnya wajib diisi ketika jenis kegiatan adalah Jenis Kegiatan lainnya.',
                 'errors' => [
-                    'deskripsi_kegiatan' => ['Deskripsi Jenis Kegiatan wajib diisi.']
+                    'deskripsi_kegiatan' => ['Deskripsi Jenis Kegiatan lainnya wajib diisi.']
                 ]
             ], 422);
         }

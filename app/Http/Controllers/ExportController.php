@@ -87,9 +87,13 @@ class ExportController extends Controller
 
             $kelompok = $user->kelompok;
             
-            // Get data for this kelompok
+            // Get data for this kelompok - Pastikan mengambil data terbaru dengan orderBy
+            // Query langsung dari database tanpa cache untuk memastikan data terbaru
             $karyawans = \App\Models\Karyawan::where('kelompok_id', $kelompok->id)->get();
-            $laporanKaryawans = LaporanKaryawan::where('kelompok_id', $kelompok->id)->get();
+            $laporanKaryawans = LaporanKaryawan::where('kelompok_id', $kelompok->id)
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
             $jobPekerjaans = collect(); // Empty collection (tidak digunakan)
             
             $spreadsheet = new Spreadsheet();
