@@ -160,31 +160,40 @@ class SetupKelompokDanDataSeeder extends Seeder
         $this->command->info('Menghapus data lama...');
         LaporanKaryawan::truncate();
         Karyawan::truncate();
-        // Hapus user karyawan saja, biarkan admin tetap ada
+        // Hapus user karyawan saja, biarkan atasan tetap ada
         User::where('role', 'karyawan')->delete();
         // Hapus kelompok setelah semua data yang mereferensikannya dihapus
         \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Kelompok::truncate();
         \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         
-        // Buat user admin terlebih dahulu
-        $this->command->info('Membuat user admin...');
+        // Buat user atasan terlebih dahulu
+        $this->command->info('Membuat user atasan...');
         
-        // Cek apakah admin sudah ada, jika ada update passwordnya
-        $admin = User::where('username', 'admin')->where('role', 'atasan')->first();
-        if ($admin) {
-            $admin->password = Hash::make('admin123');
-            $admin->save();
-            $this->command->info('✓ User admin sudah ada, password diupdate');
+        // Cek apakah atasan sudah ada, jika ada update passwordnya
+        $atasan = User::where('username', 'atasan')->where('role', 'atasan')->first();
+        if ($atasan) {
+            $atasan->password = Hash::make('atasan123');
+            $atasan->save();
+            $this->command->info('✓ User atasan sudah ada, password diupdate');
         } else {
-            User::create([
-                'id' => Str::uuid(),
-                'username' => 'admin',
-                'password' => Hash::make('admin123'),
-                'role' => 'atasan',
-                'kelompok_id' => null,
-            ]);
-            $this->command->info('✓ User admin berhasil dibuat');
+            // Cek jika ada user admin lama, ubah jadi atasan
+            $oldAdmin = User::where('username', 'admin')->where('role', 'atasan')->first();
+            if ($oldAdmin) {
+                $oldAdmin->username = 'atasan';
+                $oldAdmin->password = Hash::make('atasan123');
+                $oldAdmin->save();
+                $this->command->info('✓ User admin lama diubah menjadi atasan');
+            } else {
+                User::create([
+                    'id' => Str::uuid(),
+                    'username' => 'atasan',
+                    'password' => Hash::make('atasan123'),
+                    'role' => 'atasan',
+                    'kelompok_id' => null,
+                ]);
+                $this->command->info('✓ User atasan berhasil dibuat');
+            }
         }
         
         $kelompoks = [];
@@ -310,9 +319,9 @@ class SetupKelompokDanDataSeeder extends Seeder
         $this->command->info("");
         $this->command->info("=== Informasi Login ===");
         $this->command->info("");
-        $this->command->info("=== Admin ===");
-        $this->command->info("Username: admin");
-        $this->command->info("Password: admin123");
+        $this->command->info("=== Atasan ===");
+        $this->command->info("Username: atasan");
+        $this->command->info("Password: atasan123");
         $this->command->info("");
         $this->command->info("=== Kelompok ===");
         foreach ($this->kelompokData as $data) {
