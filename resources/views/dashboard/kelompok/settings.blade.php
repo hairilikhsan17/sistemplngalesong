@@ -476,9 +476,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         async deleteKelompokAvatar() {
-            if (!confirm('Apakah Anda yakin ingin menghapus foto profil kelompok?')) {
-                return;
-            }
+            const result = await SwalHelper.confirmDelete('⚠️ Konfirmasi Penghapusan', 'Apakah Anda yakin ingin menghapus foto profil kelompok?');
+            if (!result.isConfirmed) return;
             
             try {
                 const response = await fetch('/api/kelompok/profile/avatar', {
@@ -538,16 +537,17 @@ document.addEventListener('alpine:init', () => {
         },
         
         showMessage(text, type) {
-            this.message = text;
-            this.messageType = type;
-            
-            // Pesan sukses ditampilkan lebih lama (7 detik)
-            const duration = type === 'success' ? 7000 : 5000;
-            
-            setTimeout(() => {
-                this.message = '';
-                this.messageType = '';
-            }, duration);
+            if (type === 'success') {
+                SwalHelper.success('Berhasil 🎉', text);
+            } else if (type === 'error') {
+                SwalHelper.error('Gagal ❌', text);
+            } else {
+                Swal.fire({
+                    text: text,
+                    icon: type,
+                    confirmButtonColor: '#f59e0b'
+                });
+            }
         }
     }));
 });

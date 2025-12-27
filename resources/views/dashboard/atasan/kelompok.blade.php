@@ -126,17 +126,17 @@ function kelompokManager() {
             try {
                 // Validasi form
                 if (!this.formData.nama_kelompok.trim()) {
-                    alert('Nama kelompok harus diisi');
+                    SwalHelper.error('Gagal ❌', 'Nama kelompok harus diisi');
                     return;
                 }
                 
                 if (!this.formData.shift) {
-                    alert('Shift harus dipilih');
+                    SwalHelper.error('Gagal ❌', 'Shift harus dipilih');
                     return;
                 }
                 
                 if (!this.editingKelompok && !this.formData.password.trim()) {
-                    alert('Password harus diisi untuk kelompok baru');
+                    SwalHelper.error('Gagal ❌', 'Password harus diisi untuk kelompok baru');
                     return;
                 }
                 
@@ -173,7 +173,13 @@ function kelompokManager() {
                 console.log('Response:', result);
 
                 if (response.ok && result.success) {
-                    alert(result.message || 'Kelompok berhasil disimpan');
+                    const title = this.editingKelompok ? 'Perubahan Disimpan ✔️' : 'Berhasil 🎉';
+                    const message = this.editingKelompok 
+                        ? 'Data kelompok berhasil diperbarui.' 
+                        : 'Kelompok berhasil dibuat dan siap digunakan.';
+                    
+                    await (this.editingKelompok ? SwalHelper.update(title, message) : SwalHelper.success(title, message));
+                    
                     this.showKelompokModal = false;
                     this.formData = { nama_kelompok: '', shift: 'Shift 1', password: '' };
                     this.editingKelompok = null;
@@ -186,7 +192,7 @@ function kelompokManager() {
                         const errorList = Object.values(result.errors).flat().join(', ');
                         errorMessage = errorList || errorMessage;
                     }
-                    alert('Error: ' + errorMessage);
+                    SwalHelper.error('Gagal ❌', errorMessage);
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -195,7 +201,8 @@ function kelompokManager() {
         },
 
         async deleteKelompok(id) {
-            if (!confirm('Yakin ingin menghapus kelompok ini?')) return;
+            const result = await SwalHelper.confirmDelete('⚠️ Konfirmasi Penghapusan', 'Yakin mau hapus kelompok ini? Data yang sudah dihapus nggak bisa dikembalikan.');
+            if (!result.isConfirmed) return;
 
             try {
                 const response = await fetch(`/api/kelompok/${id}`, {
@@ -208,24 +215,23 @@ function kelompokManager() {
 
                 // Check if response is JSON
                 const contentType = response.headers.get('content-type');
-                let result;
+                let resultData;
                 
                 if (contentType && contentType.includes('application/json')) {
-                    result = await response.json();
+                    resultData = await response.json();
                 } else {
-                    const text = await response.text();
                     throw new Error('Server mengembalikan respons yang tidak valid.');
                 }
 
-                if (response.ok && result.success) {
-                    alert(result.message || 'Kelompok berhasil dihapus');
+                if (response.ok && resultData.success) {
+                    await SwalHelper.success('Berhasil 🎉', resultData.message || 'Kelompok berhasil dihapus');
                     location.reload();
                 } else {
-                    alert(result.message || 'Gagal menghapus kelompok');
+                    SwalHelper.error('Gagal ❌', resultData.message || 'Gagal menghapus kelompok');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan: ' + error.message);
+                SwalHelper.error('Gagal ❌', 'Terjadi kesalahan: ' + error.message);
             }
         },
 
@@ -241,18 +247,19 @@ function kelompokManager() {
                 });
 
                 if (response.ok) {
-                    alert('Karyawan berhasil ditambahkan');
+                    await SwalHelper.success('Berhasil 🎉', 'Data karyawan berhasil ditambahkan.');
                     location.reload();
                 } else {
-                    alert('Gagal menambahkan karyawan');
+                    SwalHelper.error('Gagal ❌', 'Gagal menambahkan karyawan');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan');
+                SwalHelper.error('Gagal ❌', 'Terjadi kesalahan');
             }
         },
 
         async deleteKaryawan(id) {
-            if (!confirm('Yakin ingin menghapus karyawan ini?')) return;
+            const result = await SwalHelper.confirmDelete('⚠️ Konfirmasi Penghapusan', 'Yakin mau hapus karyawan ini? Data yang sudah dihapus nggak bisa dikembalikan.');
+            if (!result.isConfirmed) return;
 
             try {
                 const response = await fetch(`/api/karyawan/${id}`, {
@@ -263,13 +270,13 @@ function kelompokManager() {
                 });
 
                 if (response.ok) {
-                    alert('Karyawan berhasil dihapus');
+                    await SwalHelper.success('Berhasil 🎉', 'Karyawan berhasil dihapus');
                     location.reload();
                 } else {
-                    alert('Gagal menghapus karyawan');
+                    SwalHelper.error('Gagal ❌', 'Gagal menghapus karyawan');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan');
+                SwalHelper.error('Gagal ❌', 'Terjadi kesalahan');
             }
         }
     };

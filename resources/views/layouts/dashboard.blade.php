@@ -44,8 +44,68 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* SweetAlert2 Custom Styling */
+        .swal2-backdrop-show {
+            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        .swal2-popup {
+            border-radius: 1rem !important;
+            padding: 2rem !important;
+        }
+        
+        .swal2-title {
+            font-weight: 700 !important;
+            color: #1f2937 !important;
+        }
+        
+        .swal2-html-container {
+            color: #4b5563 !important;
+        }
+        
+        .swal2-confirm {
+            background-color: #f59e0b !important; /* amber-500 */
+            border-radius: 0.5rem !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 1.5rem !important;
+        }
+        
+        .swal2-cancel {
+            background-color: #ef4444 !important; /* red-500 */
+            border-radius: 0.5rem !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 1.5rem !important;
+        }
+
+        .swal2-deny {
+            background-color: #6b7280 !important; /* gray-500 */
+            border-radius: 0.5rem !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 1.5rem !important;
+        }
+        
+        /* Custom Animations */
+        .swal2-show {
+            animation: swal2-show 0.3s ease-out !important;
+        }
+        
+        @keyframes swal2-show {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50" 
@@ -218,26 +278,94 @@
             }, 100);
         });
         
-        // Utility functions
+        // SweetAlert2 Helper
+        const SwalHelper = {
+            success: (title, text) => {
+                return Swal.fire({
+                    title: title || 'Berhasil 🎉',
+                    text: text,
+                    icon: 'success',
+                    iconColor: '#10b981',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#f59e0b',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            },
+            error: (title, text) => {
+                return Swal.fire({
+                    title: title || 'Gagal ❌',
+                    text: text || 'Terjadi kesalahan. Silakan coba lagi.',
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: 'Tutup',
+                    confirmButtonColor: '#6b7280'
+                });
+            },
+            confirmDelete: (title, text) => {
+                return Swal.fire({
+                    title: title || '⚠️ Konfirmasi Penghapusan',
+                    text: text || 'Yakin mau hapus data ini? Data yang sudah dihapus nggak bisa dikembalikan.',
+                    icon: 'warning',
+                    iconColor: '#f59e0b',
+                    showCancelButton: true,
+                    confirmButtonText: '🗑️ Hapus',
+                    cancelButtonText: '❌ Batal',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true
+                });
+            },
+            update: (title, text) => {
+                return Swal.fire({
+                    title: title || 'Perubahan Disimpan ✔️',
+                    text: text || 'Data berhasil diperbarui.',
+                    icon: 'success',
+                    iconColor: '#10b981',
+                    confirmButtonText: 'Oke',
+                    confirmButtonColor: '#f59e0b',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
+        };
+
+        // Utility functions (Legacy support & Global access)
         function showAlert(message, type = 'success') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-50 p-3 sm:p-4 rounded-lg shadow-lg ${
-                type === 'success' ? 'bg-green-500 text-white' : 
-                type === 'error' ? 'bg-red-500 text-white' :
-                type === 'info' ? 'bg-blue-500 text-white' :
-                'bg-gray-500 text-white'
-            }`;
-            alertDiv.textContent = message;
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
+            if (type === 'success') {
+                SwalHelper.success('Berhasil 🎉', message);
+            } else if (type === 'error') {
+                SwalHelper.error('Gagal ❌', message);
+            } else {
+                Swal.fire({
+                    text: message,
+                    icon: type,
+                    confirmButtonColor: '#f59e0b'
+                });
+            }
         }
         
         function confirmDelete(message = 'Yakin ingin menghapus?') {
+            // Note: This legacy function returns a boolean for synchronous confirm()
+            // For SweetAlert2, we should use SwalHelper.confirmDelete().then(...)
+            console.warn('confirmDelete() is deprecated. Use SwalHelper.confirmDelete() instead.');
             return confirm(message);
         }
+
+        // Auto-show session messages
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                SwalHelper.success('Berhasil 🎉', "{{ session('success') }}");
+            @endif
+
+            @if(session('error'))
+                SwalHelper.error('Gagal ❌', "{{ session('error') }}");
+            @endif
+
+            @if(session('status'))
+                SwalHelper.update('Perubahan Disimpan ✔️', "{{ session('status') }}");
+            @endif
+        });
     </script>
     
     @stack('scripts')

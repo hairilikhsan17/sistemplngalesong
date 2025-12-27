@@ -1005,9 +1005,8 @@ document.addEventListener('alpine:init', () => {
         },
         
         async deleteLaporan(id) {
-            if (!confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
-                return;
-            }
+            const result = await SwalHelper.confirmDelete('⚠️ Konfirmasi Penghapusan', 'Apakah Anda yakin ingin menghapus laporan ini?');
+            if (!result.isConfirmed) return;
             
             try {
                 const response = await fetch(`/api/laporan-karyawan/${id}`, {
@@ -1222,12 +1221,17 @@ document.addEventListener('alpine:init', () => {
         },
         
         showMessage(text, type) {
-            this.message = text;
-            this.messageType = type;
-            setTimeout(() => {
-                this.message = '';
-                this.messageType = '';
-            }, 5000);
+            if (type === 'success') {
+                SwalHelper.success('Berhasil 🎉', text);
+            } else if (type === 'error') {
+                SwalHelper.error('Gagal ❌', text);
+            } else {
+                Swal.fire({
+                    text: text,
+                    icon: type,
+                    confirmButtonColor: '#f59e0b'
+                });
+            }
         },
         
         lihatDeskripsiGangguan(id, deskripsi) {

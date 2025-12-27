@@ -122,12 +122,12 @@ function karyawanManager() {
             try {
                 // Validasi form
                 if (!this.karyawanForm.nama.trim()) {
-                    alert('Nama karyawan harus diisi');
+                    SwalHelper.error('Gagal ❌', 'Nama karyawan harus diisi');
                     return;
                 }
                 
                 if (!this.karyawanForm.kelompok_id) {
-                    alert('Kelompok harus dipilih');
+                    SwalHelper.error('Gagal ❌', 'Kelompok harus dipilih');
                     return;
                 }
                 
@@ -152,12 +152,18 @@ function karyawanManager() {
                 console.log('Response:', result);
 
                 if (response.ok) {
-                    alert(result.message || 'Karyawan berhasil disimpan');
+                    const title = this.editingKaryawan ? 'Perubahan Disimpan ✔️' : 'Berhasil 🎉';
+                    const message = this.editingKaryawan 
+                        ? 'Data karyawan berhasil diperbarui.' 
+                        : 'Data karyawan berhasil ditambahkan.';
+                    
+                    await (this.editingKaryawan ? SwalHelper.update(title, message) : SwalHelper.success(title, message));
+                    
                     this.showKaryawanModal = false;
                     location.reload();
                 } else {
-                    const errorMessage = result.message || result.errors ? JSON.stringify(result.errors) : 'Gagal menyimpan karyawan';
-                    alert('Error: ' + errorMessage);
+                    const errorMessage = result.message || (result.errors ? JSON.stringify(result.errors) : 'Gagal menyimpan karyawan');
+                    SwalHelper.error('Gagal ❌', errorMessage);
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -166,7 +172,8 @@ function karyawanManager() {
         },
 
         async deleteKaryawan(id) {
-            if (!confirm('Yakin ingin menghapus karyawan ini?')) return;
+            const result = await SwalHelper.confirmDelete('⚠️ Konfirmasi Penghapusan', 'Yakin mau hapus karyawan ini? Data yang sudah dihapus nggak bisa dikembalikan.');
+            if (!result.isConfirmed) return;
 
             try {
                 const response = await fetch(`/api/karyawan/${id}`, {
@@ -176,18 +183,18 @@ function karyawanManager() {
                     }
                 });
 
-                const result = await response.json();
-                console.log('Response:', result);
+                const resultData = await response.json();
+                console.log('Response:', resultData);
 
                 if (response.ok) {
-                    alert(result.message || 'Karyawan berhasil dihapus');
+                    await SwalHelper.success('Berhasil 🎉', resultData.message || 'Karyawan berhasil dihapus');
                     location.reload();
                 } else {
-                    alert('Gagal menghapus karyawan');
+                    SwalHelper.error('Gagal ❌', 'Gagal menghapus karyawan');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Terjadi kesalahan: ' + error.message);
+                SwalHelper.error('Gagal ❌', 'Terjadi kesalahan: ' + error.message);
             }
         }
     };
