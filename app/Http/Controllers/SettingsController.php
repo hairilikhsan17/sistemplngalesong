@@ -133,15 +133,25 @@ class SettingsController extends Controller
 
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
+                $user = auth()->user();
                 // Delete old avatar if exists
-                if ($kelompok->avatar) {
-                    Storage::disk('public')->delete('avatars/' . $kelompok->avatar);
+                if ($user->avatar) {
+                    $oldPath = public_path($user->avatar);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
                 
                 $avatar = $request->file('avatar');
-                $fileName = 'kelompok_avatar_' . $kelompok->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
-                $avatar->storeAs('avatars', $fileName, 'public');
-                $updateData['avatar'] = $fileName;
+                $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
+                $destination = public_path('avatars');
+                
+                if (!file_exists($destination)) {
+                    mkdir($destination, 0755, true);
+                }
+                
+                $avatar->move($destination, $fileName);
+                $user->update(['avatar' => 'avatars/' . $fileName]);
             }
 
             // Update kelompok data
@@ -172,7 +182,8 @@ class SettingsController extends Controller
                     'id' => $kelompok->id,
                     'nama_kelompok' => $kelompok->nama_kelompok,
                     'shift' => $kelompok->shift,
-                    'avatar' => $kelompok->avatar
+                    'avatar' => auth()->user()->avatar,
+                    'avatar_url' => auth()->user()->avatar ? asset(auth()->user()->avatar) : null
                 ]
             ]);
 
@@ -200,12 +211,17 @@ class SettingsController extends Controller
                 ], 404);
             }
             
-            if ($kelompok->avatar) {
-                // Delete file from storage
-                Storage::disk('public')->delete('avatars/' . $kelompok->avatar);
+            $user = auth()->user();
+            
+            if ($user->avatar) {
+                // Delete file from public directory
+                $oldPath = public_path($user->avatar);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
                 
                 // Update database
-                $kelompok->update(['avatar' => null]);
+                $user->update(['avatar' => null]);
                 
                 return response()->json([
                     'success' => true,
@@ -247,7 +263,8 @@ class SettingsController extends Controller
                     'id' => $kelompok->id,
                     'nama_kelompok' => $kelompok->nama_kelompok,
                     'shift' => $kelompok->shift,
-                    'avatar' => $kelompok->avatar,
+                    'avatar' => auth()->user()->avatar,
+                    'avatar_url' => auth()->user()->avatar ? asset(auth()->user()->avatar) : null,
                     'deskripsi' => $kelompok->deskripsi,
                     'lokasi' => $kelompok->lokasi,
                     'telepon' => $kelompok->telepon,
@@ -584,13 +601,22 @@ class SettingsController extends Controller
             if ($request->hasFile('avatar')) {
                 // Delete old avatar if exists
                 if ($user->avatar) {
-                    Storage::disk('public')->delete('avatars/' . $user->avatar);
+                    $oldPath = public_path($user->avatar);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
                 
                 $avatar = $request->file('avatar');
                 $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
-                $avatar->storeAs('avatars', $fileName, 'public');
-                $updateData['avatar'] = $fileName;
+                $destination = public_path('avatars');
+                
+                if (!file_exists($destination)) {
+                    mkdir($destination, 0755, true);
+                }
+                
+                $avatar->move($destination, $fileName);
+                $updateData['avatar'] = 'avatars/' . $fileName;
             }
 
             $user->update($updateData);
@@ -599,9 +625,11 @@ class SettingsController extends Controller
                 'success' => true,
                 'message' => 'Profil berhasil diperbarui!',
                 'user' => [
+                    'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'avatar' => $user->avatar
+                    'avatar' => $user->avatar,
+                    'avatar_url' => $user->avatar ? asset($user->avatar) : null
                 ]
             ]);
 
@@ -622,8 +650,11 @@ class SettingsController extends Controller
             $user = auth()->user();
             
             if ($user->avatar) {
-                // Delete file from storage
-                Storage::disk('public')->delete('avatars/' . $user->avatar);
+                // Delete file from public directory
+                $oldPath = public_path($user->avatar);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
                 
                 // Update database
                 $user->update(['avatar' => null]);
@@ -663,6 +694,7 @@ class SettingsController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'avatar' => $user->avatar,
+                    'avatar_url' => $user->avatar ? asset($user->avatar) : null,
                     'role' => $user->role,
                     'created_at' => $user->created_at->format('Y-m-d H:i:s')
                 ]

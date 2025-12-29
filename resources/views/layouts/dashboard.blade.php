@@ -169,21 +169,15 @@
                                 @click.away="open = false"
                                 class="flex items-center space-x-1 sm:space-x-2 p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[44px]">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                                @if(Auth::user()->role === 'atasan')
-                                    @if(Auth::user()->avatar)
-                                        <img src="{{ asset('storage/avatars/' . Auth::user()->avatar) }}" 
-                                             alt="{{ Auth::user()->name ?? Auth::user()->username }}" 
-                                             class="w-full h-full object-cover">
-                                    @else
+                                @if(Auth::user()->avatar)
+                                    <img src="{{ asset(Auth::user()->avatar) }}" 
+                                         alt="{{ Auth::user()->name ?? Auth::user()->username }}" 
+                                         class="w-full h-full object-cover">
+                                @else
+                                    @if(Auth::user()->role === 'atasan')
                                         <div class="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
                                             <i data-lucide="user" class="w-4 h-4 text-white"></i>
                                         </div>
-                                    @endif
-                                @else
-                                    @if(Auth::user()->kelompok && Auth::user()->kelompok->avatar)
-                                        <img src="{{ asset('storage/avatars/' . Auth::user()->kelompok->avatar) }}" 
-                                             alt="{{ Auth::user()->kelompok->nama_kelompok }}" 
-                                             class="w-full h-full object-cover">
                                     @else
                                         <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                                             <i data-lucide="users" class="w-4 h-4 text-white"></i>

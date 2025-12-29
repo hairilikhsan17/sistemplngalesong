@@ -69,7 +69,7 @@
         </form>
 
         <div class="mt-6 text-center text-sm text-gray-600">
-            <p>PLN Unit Induk Distribusi Sulselrabar</p>
+            <p>Sistem Informasi Distribusi dan Prediksi Waktu PLN</p>
         </div>
     </div>
 </div>

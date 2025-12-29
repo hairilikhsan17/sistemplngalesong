@@ -25,21 +25,15 @@
         <div class="flex items-center">
             <div class="flex-shrink-0">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
-                    @if(Auth::user()->role === 'atasan')
-                        @if(Auth::user()->avatar)
-                            <img src="{{ asset('storage/avatars/' . Auth::user()->avatar) }}" 
-                                 alt="{{ Auth::user()->name ?? Auth::user()->username }}" 
-                                 class="w-full h-full object-cover">
-                        @else
+                    @if(Auth::user()->avatar)
+                        <img src="{{ asset(Auth::user()->avatar) }}" 
+                             alt="{{ Auth::user()->name ?? Auth::user()->username }}" 
+                             class="w-full h-full object-cover">
+                    @else
+                        @if(Auth::user()->role === 'atasan')
                             <div class="w-full h-full bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
                                 <i data-lucide="user" class="w-5 h-5 text-white"></i>
                             </div>
-                        @endif
-                    @else
-                        @if(Auth::user()->kelompok && Auth::user()->kelompok->avatar)
-                            <img src="{{ asset('storage/avatars/' . Auth::user()->kelompok->avatar) }}" 
-                                 alt="{{ Auth::user()->kelompok->nama_kelompok }}" 
-                                 class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                                 <i data-lucide="users" class="w-5 h-5 text-white"></i>
@@ -217,8 +211,7 @@
     <!-- Sidebar Footer -->
     <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t">
         <div class="text-xs text-gray-500 text-center">
-            <p>PLN Unit Induk Distribusi</p>
-            <p>Sulselrabar</p>
+            <p>Sistem Informasi Distribusi dan Prediksi Waktu PLN</p>
         </div>
     </div>
 </div>

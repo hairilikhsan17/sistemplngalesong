@@ -253,7 +253,7 @@ document.addEventListener('alpine:init', () => {
             name: '{{ auth()->user()->name ?? "" }}',
             email: '{{ auth()->user()->email ?? "" }}',
             avatar: '{{ auth()->user()->avatar ?? "" }}',
-            avatar_url: '{{ auth()->user()->avatar ? asset("storage/avatars/" . auth()->user()->avatar) : "" }}',
+            avatar_url: '{{ auth()->user()->avatar ? asset(auth()->user()->avatar) : "" }}',
             current_password: '',
             new_password: '',
             new_password_confirmation: '',
@@ -317,7 +317,7 @@ document.addEventListener('alpine:init', () => {
                     this.profileData = {
                         ...this.profileData,
                         ...result.user,
-                        avatar_url: result.user.avatar ? `/storage/avatars/${result.user.avatar}` : '',
+                        avatar_url: result.user.avatar_url,
                         current_password: '',
                         new_password: '',
                         new_password_confirmation: '',
@@ -362,7 +362,7 @@ document.addEventListener('alpine:init', () => {
                     this.profileData = {
                         ...this.profileData,
                         ...result.user,
-                        avatar_url: result.user.avatar ? `/storage/avatars/${result.user.avatar}` : '',
+                        avatar_url: result.user.avatar_url,
                         current_password: '',
                         new_password: '',
                         new_password_confirmation: '',

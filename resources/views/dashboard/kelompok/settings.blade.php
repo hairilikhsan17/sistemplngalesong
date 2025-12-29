@@ -284,8 +284,8 @@ document.addEventListener('alpine:init', () => {
             lokasi: '{{ $kelompok?->lokasi ?? "" }}',
             telepon: '{{ $kelompok?->telepon ?? "" }}',
             email: '{{ $kelompok?->email ?? "" }}',
-            avatar: '{{ $kelompok?->avatar ?? "" }}',
-            avatar_url: '{{ ($kelompok?->avatar) ? asset("storage/avatars/" . $kelompok?->avatar) : "" }}',
+            avatar: '{{ auth()->user()->avatar ?? "" }}',
+            avatar_url: '{{ (auth()->user()->avatar) ? asset(auth()->user()->avatar) : "" }}',
             avatar_file: null
         },
         
@@ -354,7 +354,7 @@ document.addEventListener('alpine:init', () => {
                     this.groupSettings = {
                         ...this.groupSettings,
                         ...result.kelompok,
-                        avatar_url: result.kelompok.avatar ? `/storage/avatars/${result.kelompok.avatar}` : '',
+                        avatar_url: result.kelompok.avatar_url,
                         avatar_file: null
                     };
                     
@@ -440,7 +440,7 @@ document.addEventListener('alpine:init', () => {
                     this.groupSettings = {
                         ...this.groupSettings,
                         ...result.kelompok,
-                        avatar_url: result.kelompok.avatar ? `/storage/avatars/${result.kelompok.avatar}` : '',
+                        avatar_url: result.kelompok.avatar_url,
                         avatar_file: null
                     };
                 }
