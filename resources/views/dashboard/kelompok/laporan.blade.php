@@ -266,16 +266,15 @@
                         <div x-show="errors.instansi" class="mt-1 text-sm text-red-600" x-text="errors.instansi"></div>
                     </div>
 
-                    <!-- Alamat Tujuan -->
+                    <!-- Jam Masuk -->
                     <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Alamat Tujuan <span class="text-red-500">*</span>
+                            <i data-lucide="clock" class="w-4 h-4 inline mr-1 text-blue-600"></i>
+                            Jam Masuk <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" 
+                        <input type="time" 
                                x-model="formData.alamat_tujuan"
                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
-                               placeholder="Masukkan alamat tujuan pekerjaan"
                                required>
                         <div x-show="errors.alamat_tujuan" class="mt-1 text-sm text-red-600" x-text="errors.alamat_tujuan"></div>
                     </div>
@@ -368,16 +367,16 @@
                         <p class="text-xs text-gray-500 mt-1.5">Dihitung otomatis dari waktu mulai dan selesai</p>
                     </div>
 
-                    <!-- Lokasi -->
+                    <!-- Alamat Tujuan -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             <i data-lucide="map-pin" class="w-4 h-4 inline mr-1 text-blue-600"></i>
-                            Lokasi
+                            Alamat Tujuan
                         </label>
                         <input type="text" 
                                x-model="formData.lokasi"
                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
-                               placeholder="Masukkan lokasi pekerjaan">
+                               placeholder="Masukkan alamat tujuan pekerjaan">
                         <div x-show="errors.lokasi" class="mt-1 text-sm text-red-600" x-text="errors.lokasi"></div>
                     </div>
                 </div>
@@ -549,12 +548,12 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Hari/Tanggal</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Instansi</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Alamat Tujuan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Masuk</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Mulai Kegiatan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jenis Kegiatan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Selesai Kegiatan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Durasi Waktu</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Alamat Tujuan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Dokumentasi</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                     </tr>
@@ -599,7 +598,7 @@
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
                                 @if($laporan->alamat_tujuan)
                                     <div class="flex items-center space-x-2">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
+                                        <i data-lucide="clock" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
                                         <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
                                     </div>
                                 @else

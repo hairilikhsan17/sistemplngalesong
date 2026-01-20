@@ -272,7 +272,7 @@ class ExportDataController extends Controller
             ->getStartColor()->setRGB('3B82F6');
         
         // Headers
-        $headers = ['No', 'ID Laporan', 'Hari', 'Tanggal', 'Nama', 'Kelompok', 'Instansi', 'Jabatan', 'Alamat Tujuan', 'Dokumentasi', 'Created At'];
+        $headers = ['No', 'ID Laporan', 'Hari', 'Tanggal', 'Nama', 'Kelompok', 'Instansi', 'Jabatan', 'Jam Masuk', 'Dokumentasi', 'Created At'];
         $col = 'A';
         $row = 3;
         foreach ($headers as $header) {
@@ -394,7 +394,7 @@ class ExportDataController extends Controller
         
         // Header tabel laporan - sesuai dengan field yang ada di database
         // Untuk export per kelompok, tidak perlu kolom Kelompok karena sudah jelas dari header
-        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Lokasi', 'Dokumentasi'];
+        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Jam Masuk', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Alamat Tujuan', 'Dokumentasi'];
         $col = 'A';
         $headerRow = $startRowLaporan + 1;
         foreach ($laporanHeaders as $header) {
@@ -513,7 +513,7 @@ class ExportDataController extends Controller
             
             // Header tabel laporan - sesuai dengan field yang ada di database
             // Tambahkan kolom Kelompok untuk penamaan yang jelas
-            $laporanHeaders = ['No', 'Kelompok', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Lokasi', 'Dokumentasi'];
+            $laporanHeaders = ['No', 'Kelompok', 'Hari/Tanggal', 'Nama', 'Instansi', 'Jam Masuk', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Alamat Tujuan', 'Dokumentasi'];
             $col = 'A';
             $headerRow = $currentRow;
             foreach ($laporanHeaders as $header) {

@@ -236,12 +236,12 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">KELOMPOK</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nama</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Instansi</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Alamat Tujuan</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jam Masuk</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Mulai Kegiatan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Jenis Kegiatan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Selesai Kegiatan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Durasi Waktu</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Lokasi</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Alamat Tujuan</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Dokumentasi</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Aksi</th>
                     </tr>
@@ -296,7 +296,7 @@
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
                                 @if($laporan->alamat_tujuan)
                                     <div class="flex items-center space-x-2">
-                                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
+                                        <i data-lucide="clock" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
                                         <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
                                     </div>
                                 @else
@@ -644,8 +644,8 @@ async function editLaporan(id) {
                     <input type="text" name="instansi" value="${laporan.instansi || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Tujuan <span class="text-red-500">*</span></label>
-                    <input type="text" name="alamat_tujuan" value="${laporan.alamat_tujuan || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Masuk <span class="text-red-500">*</span></label>
+                    <input type="time" name="alamat_tujuan" value="${laporan.alamat_tujuan || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan</label>
@@ -689,7 +689,7 @@ async function editLaporan(id) {
                     <p class="text-xs text-gray-500 mt-1.5">Dihitung otomatis dari waktu mulai dan selesai</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Lokasi</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Tujuan</label>
                     <input type="text" name="lokasi" value="${laporan.lokasi || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
                 </div>
                 <div class="md:col-span-2">
@@ -717,7 +717,7 @@ async function editLaporan(id) {
             }
         }, 100);
     } catch (error) {
-        alert('Gagal memuat data untuk edit: ' + error.message);
+        SwalHelper.error('Gagal ❌', 'Gagal memuat data untuk edit: ' + error.message);
     }
 }
 
@@ -784,7 +784,7 @@ async function simpanEdit(event) {
     const deskripsiKegiatan = document.getElementById('editDeskripsiKegiatan');
     
     if (jenisKegiatan && jenisKegiatan.value === 'Jenis Kegiatan lainnya' && (!deskripsiKegiatan || !deskripsiKegiatan.value.trim())) {
-        alert('Deskripsi Jenis Kegiatan lainnya wajib diisi!');
+        SwalHelper.error('Gagal ❌', 'Deskripsi Jenis Kegiatan lainnya wajib diisi!');
         return;
     }
     
@@ -805,47 +805,47 @@ async function simpanEdit(event) {
         
         if (!response.ok) {
             if (result.errors) {
-                let errorMessage = 'Gagal memperbarui laporan:\n';
+                let errorMessage = 'Gagal memperbarui laporan:<br>';
                 for (const [field, messages] of Object.entries(result.errors)) {
-                    errorMessage += `- ${messages.join(', ')}\n`;
+                    errorMessage += `- ${messages.join(', ')}<br>`;
                 }
-                alert(errorMessage);
+                SwalHelper.error('Gagal ❌', errorMessage);
             } else {
                 throw new Error(result.message || 'Gagal memperbarui laporan');
             }
             return;
         }
         
-        alert('Laporan berhasil diperbarui!');
+        await SwalHelper.update('Berhasil 🎉', 'Laporan berhasil diperbarui!');
         tutupEdit();
         window.location.reload();
     } catch (error) {
-        alert('Gagal memperbarui laporan: ' + error.message);
+        SwalHelper.error('Gagal ❌', 'Gagal memperbarui laporan: ' + error.message);
     }
 }
 
 async function hapusLaporan(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus laporan ini?')) {
-        return;
-    }
+    const result = await SwalHelper.confirmDelete('⚠️ Konfirmasi Penghapusan', 'Apakah Anda yakin ingin menghapus laporan ini?');
     
-    try {
-        const response = await fetch(`/api/pemantauan-laporan/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/api/pemantauan-laporan/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Gagal menghapus laporan');
             }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Gagal menghapus laporan');
+            
+            await SwalHelper.success('Berhasil 🎉', 'Laporan berhasil dihapus!');
+            window.location.reload();
+        } catch (error) {
+            SwalHelper.error('Gagal ❌', 'Gagal menghapus laporan: ' + error.message);
         }
-        
-        alert('Laporan berhasil dihapus!');
-        window.location.reload();
-    } catch (error) {
-        alert('Gagal menghapus laporan: ' + error.message);
     }
 }
 

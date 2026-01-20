@@ -141,7 +141,7 @@
                     <thead class="bg-gradient-to-r from-gray-100 to-gray-50">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Jenis Kegiatan</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Prediksi (Jam)</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Prediksi (Jam/Menit)</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Tanggal Prediksi (Besok)</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">MAPE</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Waktu Generate</th>
@@ -178,6 +178,22 @@ document.addEventListener('alpine:init', () => {
         chart: null,
         dataTable: null,
         showResults: false,
+
+        formatJamMenit(decimalHours) {
+            if (decimalHours === undefined || decimalHours === null || decimalHours === 0) return '0 menit';
+            const hours = Math.floor(decimalHours);
+            const minutes = Math.round((decimalHours - hours) * 60);
+            
+            if (hours < 1) {
+                return `${minutes} menit`;
+            } else {
+                if (minutes === 0) {
+                    return `${hours} jam`;
+                } else {
+                    return `${hours} jam ${minutes} menit`;
+                }
+            }
+        },
 
         async generatePrediksi() {
             this.loading = true;
@@ -320,8 +336,8 @@ document.addEventListener('alpine:init', () => {
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
-                                    return 'Prediksi: ' + context.parsed.y + ' jam';
+                                label: (context) => {
+                                    return 'Prediksi: ' + this.formatJamMenit(context.parsed.y);
                                 }
                             }
                         }
@@ -334,7 +350,7 @@ document.addEventListener('alpine:init', () => {
                                 text: 'Waktu (Jam)'
                             },
                             ticks: {
-                                callback: function(value) {
+                                callback: (value) => {
                                     return value + ' jam';
                                 }
                             }
@@ -371,7 +387,7 @@ document.addEventListener('alpine:init', () => {
                 
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${row.jenis_kegiatan}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${parseFloat(row.prediksi_jam || 0).toFixed(2)} jam</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">${this.formatJamMenit(row.prediksi_jam || 0)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${row.tanggal_prediksi}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${mapeValue < 20 ? 'bg-green-100 text-green-800' : mapeValue < 40 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">

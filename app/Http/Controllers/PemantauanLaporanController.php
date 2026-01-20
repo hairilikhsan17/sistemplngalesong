@@ -250,9 +250,9 @@ class PemantauanLaporanController extends Controller
         
         // Headers
         $headers = [
-            'No', 'Hari/Tanggal', 'KELOMPOK', 'Nama', 'Instansi', 'Alamat Tujuan',
+            'No', 'Hari/Tanggal', 'KELOMPOK', 'Nama', 'Instansi', 'Jam Masuk',
             'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan',
-            'Durasi Waktu', 'Lokasi', 'Dokumentasi'
+            'Durasi Waktu', 'Alamat Tujuan', 'Dokumentasi'
         ];
         $col = 'A';
         $row = 3;

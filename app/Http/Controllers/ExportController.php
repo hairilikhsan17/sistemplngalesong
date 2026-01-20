@@ -153,7 +153,7 @@ class ExportController extends Controller
         $sheet->setTitle('Laporan Karyawan');
         
         // Headers
-        $headers = ['ID', 'Hari', 'Tanggal', 'Nama', 'Instansi', 'Jabatan', 'Alamat Tujuan', 'Dokumentasi', 'Kelompok', 'Created At'];
+        $headers = ['ID', 'Hari', 'Tanggal', 'Nama', 'Instansi', 'Jabatan', 'Jam Masuk', 'Dokumentasi', 'Kelompok', 'Created At'];
         $col = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($col . '1', $header);
@@ -260,7 +260,7 @@ class ExportController extends Controller
             ->getStartColor()->setRGB('3B82F6');
         
         // Header tabel laporan - sesuai dengan field yang ada di database
-        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Alamat Tujuan', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Lokasi', 'Dokumentasi'];
+        $laporanHeaders = ['No', 'Hari/Tanggal', 'Nama', 'Instansi', 'Jam Masuk', 'Waktu Mulai Kegiatan', 'Jenis Kegiatan', 'Deskripsi Kegiatan', 'Waktu Selesai Kegiatan', 'Durasi Waktu', 'Alamat Tujuan', 'Dokumentasi'];
         $col = 'A';
         $headerRow = $startRowLaporan + 1;
         foreach ($laporanHeaders as $header) {
