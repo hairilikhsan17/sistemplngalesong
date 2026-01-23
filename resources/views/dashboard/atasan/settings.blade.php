@@ -11,7 +11,7 @@
     </div>
 
     <!-- System Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-blue-100 rounded-lg">
@@ -48,17 +48,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center">
-                <div class="p-3 bg-orange-100 rounded-lg">
-                    <i data-lucide="hard-drive" class="w-6 h-6 text-orange-600"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Disk Usage</p>
-                    <p class="text-2xl font-bold text-gray-900" x-text="systemStats.disk_usage?.percentage + '%'"></p>
-                </div>
-            </div>
-        </div>
+
     </div>
 
    
@@ -194,10 +184,7 @@
                         <span class="text-gray-600">Server:</span>
                         <span class="font-medium">{{ $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown' }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Disk Usage:</span>
-                        <span class="font-medium" x-text="systemStats.disk_usage?.used + ' / ' + systemStats.disk_usage?.total"></span>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -226,12 +213,6 @@ document.addEventListener('alpine:init', () => {
             total_kelompok: {{ $systemStats['total_kelompok'] ?? 0 }},
             total_karyawan: {{ $systemStats['total_karyawan'] ?? 0 }},
             total_laporan: {{ $systemStats['total_laporan'] ?? 0 }},
-            total_job: {{ $systemStats['total_job'] ?? 0 }},
-            disk_usage: {
-                percentage: {{ $systemStats['disk_usage']['percentage'] ?? 0 }},
-                used: '{{ $systemStats['disk_usage']['used'] ?? '0 B' }}',
-                total: '{{ $systemStats['disk_usage']['total'] ?? '0 B' }}'
-            },
             last_backup: '{{ $systemStats['last_backup'] ?? 'Belum pernah' }}',
             system_uptime: '{{ $systemStats['system_uptime'] ?? '0 hari' }}'
         },

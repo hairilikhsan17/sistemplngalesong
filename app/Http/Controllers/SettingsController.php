@@ -331,9 +331,7 @@ class SettingsController extends Controller
                 'total_kelompok' => Kelompok::count(),
                 'total_karyawan' => DB::table('karyawan')->count(),
                 'total_laporan' => DB::table('laporan_karyawan')->count(),
-                'total_job' => DB::table('job_pekerjaan')->count(),
                 'active_users' => User::where('role', 'kelompok')->count(),
-                'disk_usage' => $this->getDiskUsage(),
                 'last_backup' => $this->getLastBackupDate(),
                 'system_uptime' => $this->getSystemUptime()
             ];
@@ -355,9 +353,7 @@ class SettingsController extends Controller
                 'total_kelompok' => Kelompok::count(),
                 'total_karyawan' => DB::table('karyawan')->count(),
                 'total_laporan' => DB::table('laporan_karyawan')->count(),
-                'total_job' => DB::table('job_pekerjaan')->count(),
                 'active_users' => User::where('role', 'kelompok')->count(),
-                'disk_usage' => $this->getDiskUsage(),
                 'last_backup' => $this->getLastBackupDate(),
                 'system_uptime' => $this->getSystemUptime()
             ];
@@ -367,9 +363,7 @@ class SettingsController extends Controller
                 'total_kelompok' => 0,
                 'total_karyawan' => 0,
                 'total_laporan' => 0,
-                'total_job' => 0,
                 'active_users' => 0,
-                'disk_usage' => ['percentage' => 0, 'used' => '0 B', 'total' => '0 B'],
                 'last_backup' => 'Belum pernah',
                 'system_uptime' => '0 hari'
             ];
@@ -738,22 +732,7 @@ class SettingsController extends Controller
         return [];
     }
 
-    /**
-     * Get disk usage statistics
-     */
-    private function getDiskUsage()
-    {
-        $totalBytes = disk_total_space(storage_path());
-        $freeBytes = disk_free_space(storage_path());
-        $usedBytes = $totalBytes - $freeBytes;
-        
-        return [
-            'total' => $this->formatBytes($totalBytes),
-            'used' => $this->formatBytes($usedBytes),
-            'free' => $this->formatBytes($freeBytes),
-            'percentage' => round(($usedBytes / $totalBytes) * 100, 2)
-        ];
-    }
+
 
     /**
      * Get last backup date

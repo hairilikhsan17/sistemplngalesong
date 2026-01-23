@@ -187,10 +187,6 @@
                                         class="text-green-600 hover:text-green-900 mr-3">
                                     <i data-lucide="download" class="w-4 h-4"></i>
                                 </button>
-                                <button @click="viewKelompokDetails(kelompok.id)" 
-                                        class="text-blue-600 hover:text-blue-900">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                </button>
                             </td>
                         </tr>
                     </template>
@@ -205,43 +201,7 @@
         </div>
     </div>
 
-    <!-- Export History -->
-    <div class="mt-8 bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Riwayat Export</h2>
-        </div>
-        
-        <div class="p-6">
-            <div class="space-y-3">
-                <template x-for="export in exportHistory" :key="export.id">
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div class="flex items-center">
-                            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-green-600 mr-3"></i>
-                            <div>
-                                <p class="text-sm font-medium text-gray-900" x-text="export.filename"></p>
-                                <p class="text-xs text-gray-600" x-text="export.created_at"></p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span :class="export.type === 'all' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'"
-                                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                                  x-text="export.type === 'all' ? 'Semua Data' : 'Per Kelompok'">
-                            </span>
-                            <button @click="downloadExport(export.filename)" 
-                                    class="text-blue-600 hover:text-blue-900">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                </template>
-                
-                <div x-show="exportHistory.length === 0" class="text-center py-8">
-                    <i data-lucide="file-spreadsheet" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
-                    <p class="text-gray-500">Belum ada riwayat export</p>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Notification -->
     <div x-show="message" 
@@ -268,10 +228,8 @@ document.addEventListener('alpine:init', () => {
             karyawan: {{ $totalData['karyawan'] ?? 0 }},
             laporan: {{ $totalData['laporan'] ?? 0 }}
         },
-        exportHistory: [],
         
         async init() {
-            await this.loadExportHistory();
             await this.loadKelompokList();
         },
         
@@ -322,7 +280,6 @@ document.addEventListener('alpine:init', () => {
                     document.body.removeChild(a);
                     
                     this.showMessage('Export semua data kelompok berhasil!', 'success');
-                    await this.loadExportHistory();
                 } else {
                     this.showMessage('Gagal export semua data kelompok', 'error');
                 }
@@ -363,7 +320,6 @@ document.addEventListener('alpine:init', () => {
                     document.body.removeChild(a);
                     
                     this.showMessage('Export data kelompok berhasil!', 'success');
-                    await this.loadExportHistory();
                 } else {
                     this.showMessage('Gagal export data kelompok', 'error');
                 }
@@ -400,7 +356,6 @@ document.addEventListener('alpine:init', () => {
                     document.body.removeChild(a);
                     
                     this.showMessage('Export data kelompok berhasil!', 'success');
-                    await this.loadExportHistory();
                 } else {
                     this.showMessage('Gagal export data kelompok', 'error');
                 }
@@ -412,35 +367,13 @@ document.addEventListener('alpine:init', () => {
             this.loading = false;
         },
         
-        async loadExportHistory() {
-            try {
-                // Simulate loading export history
-                // In real implementation, this would fetch from API
-                this.exportHistory = [
-                    {
-                        id: 1,
-                        filename: 'PLN_Galesong_All_Data_2025-01-12.csv',
-                        type: 'all',
-                        created_at: '2025-01-12 10:30:00'
-                    },
-                    {
-                        id: 2,
-                        filename: 'PLN_Galesong_Kelompok_1_2025-01-12.csv',
-                        type: 'kelompok',
-                        created_at: '2025-01-12 09:15:00'
-                    }
-                ];
-            } catch (error) {
-                console.error('Error loading export history:', error);
-            }
-        },
+
         
         async refreshData() {
             try {
                 const response = await fetch('/api/kelompok');
                 const result = await response.json();
                 this.kelompokList = result.kelompok || [];
-                await this.loadExportHistory();
                 this.showMessage('Data berhasil diperbarui', 'success');
             } catch (error) {
                 console.error('Error refreshing data:', error);
@@ -467,15 +400,7 @@ document.addEventListener('alpine:init', () => {
             return (kelompok.karyawan_count || 0) + (kelompok.laporan_count || 0);
         },
         
-        viewKelompokDetails(kelompokId) {
-            // Navigate to kelompok details page
-            window.location.href = `/atasan/kelompok/${kelompokId}`;
-        },
-        
-        downloadExport(filename) {
-            // Download export file
-            window.open(`/downloads/exports/${filename}`, '_blank');
-        },
+
         
         showMessage(text, type) {
             this.message = text;

@@ -59,7 +59,7 @@
     </div>
 
     <!-- Info Alert (jika belum ada data) -->
-    <div x-show="!loading && rekapTabel.length === 0 && !dataLoaded" 
+    <div x-show="!loading && !dataLoaded" 
          class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
         <div class="flex items-start">
             <i data-lucide="alert-circle" class="w-6 h-6 text-yellow-600 mr-3 mt-1"></i>
@@ -88,7 +88,7 @@
     </div>
 
     <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6" x-show="dataLoaded || rekapTabel.length > 0">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6" x-show="dataLoaded">
         <!-- Jumlah Kegiatan per Bulan -->
         <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4" x-text="tipe === 'laporan' ? 'Jumlah Laporan per Bulan' : 'Jumlah Job Pekerjaan per Bulan'"></h2>
@@ -119,40 +119,7 @@
         </div>
     </div>
 
-    <!-- Rekap Tabel -->
-    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Rekap Kegiatan</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelompok</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Mulai</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Selesai</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durasi (Hari)</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200" x-show="!loading">
-                    <template x-for="(item, index) in rekapTabel" :key="index">
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900" x-text="item.kelompok"></td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500" x-text="item.tanggal_mulai"></td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500" x-text="item.tanggal_selesai"></td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium" x-text="item.durasi"></td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-            <div x-show="loading" class="text-center py-8">
-                <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-gray-400"></i>
-                <p class="mt-2 text-sm text-gray-500">Memuat data...</p>
-            </div>
-            <div x-show="!loading && rekapTabel.length === 0 && dataLoaded" class="text-center py-8">
-                <p class="text-sm text-gray-500">Tidak ada data untuk filter yang dipilih</p>
-                <p class="text-xs text-gray-400 mt-2">Coba ubah filter atau pilih periode lain</p>
-            </div>
-        </div>
-    </div>
+
 </div>
 
 <script>
@@ -165,7 +132,6 @@ function statistikPage() {
         },
         tipe: '{{ $tipe }}',
         kelompokList: @json($kelompokList ?? []),
-        rekapTabel: [],
         loading: false,
         dataLoaded: false,
         chartJumlahKegiatan: null,
@@ -193,7 +159,6 @@ function statistikPage() {
                 if (result.success) {
                     const data = result.data;
                     this.tipe = data.tipe || this.filters.tipe;
-                    this.rekapTabel = data.rekap_tabel;
                     this.dataLoaded = true;
                     
                     // Update charts only if there's data
