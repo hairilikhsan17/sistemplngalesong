@@ -83,6 +83,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('prediksi/generate', [App\Http\Controllers\Admin\PrediksiController::class, 'generate'])->name('admin.prediksi.generate');
         Route::post('prediksi/reset', [App\Http\Controllers\Admin\PrediksiController::class, 'reset'])->name('admin.prediksi.reset');
         Route::get('prediksi/export/{format}', [App\Http\Controllers\Admin\PrediksiController::class, 'export'])->name('admin.prediksi.export');
+        Route::get('prediksi/export-langkah', [App\Http\Controllers\Admin\ExportLangkahPerhitunganController::class, 'export'])->name('admin.prediksi.export-langkah');
         Route::get('prediksi/{id}', [App\Http\Controllers\Admin\PrediksiController::class, 'show'])->name('admin.prediksi.show');
         Route::delete('prediksi/{id}', [App\Http\Controllers\Admin\PrediksiController::class, 'destroy'])->name('admin.prediksi.destroy');
     });
@@ -95,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('prediksi/generate-kegiatan', [App\Http\Controllers\Admin\PrediksiController::class, 'generateKegiatanKaryawan'])->name('kelompok.prediksi.generate-kegiatan');
         Route::post('prediksi/generate-kegiatan', [App\Http\Controllers\Admin\PrediksiController::class, 'generatePrediksiKegiatanKaryawan'])->name('kelompok.prediksi.generate-kegiatan.post');
         Route::get('prediksi/kegiatan/get-by-kelompok', [App\Http\Controllers\Admin\PrediksiController::class, 'getPrediksiKegiatanByKelompokKaryawan'])->name('kelompok.prediksi.getPrediksiKegiatanByKelompok');
+        Route::get('prediksi/export-langkah', [App\Http\Controllers\Admin\ExportLangkahPerhitunganController::class, 'export'])->name('kelompok.prediksi.export-langkah');
     });
     
     // Dashboard Routes (duplicate removed - already defined above)
@@ -128,6 +130,8 @@ Route::get('/test-simple', function () {
         // Laporan Karyawan Routes
         Route::get('/laporan-karyawan', [LaporanKaryawanController::class, 'getLaporans']);
         Route::post('/laporan-karyawan', [LaporanKaryawanController::class, 'store']);
+        Route::post('/laporan-karyawan/import', [LaporanKaryawanController::class, 'import']);
+        Route::get('/laporan-karyawan/template', [LaporanKaryawanController::class, 'downloadTemplate']);
         Route::get('/laporan-karyawan/{id}', [LaporanKaryawanController::class, 'show']);
         Route::match(['put', 'post'], '/laporan-karyawan/{id}', [LaporanKaryawanController::class, 'update']);
         Route::delete('/laporan-karyawan/{id}', [LaporanKaryawanController::class, 'destroy']);

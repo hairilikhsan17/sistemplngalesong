@@ -17,13 +17,13 @@ return new class extends Migration
             $table->date('tanggal');
             $table->string('nama');
             $table->string('instansi');
-            $table->string('alamat_tujuan');
+            $table->string('jam_masuk');
             $table->string('jenis_kegiatan')->nullable();
             $table->text('deskripsi_kegiatan')->nullable();
             $table->time('waktu_mulai_kegiatan')->nullable();
             $table->time('waktu_selesai_kegiatan')->nullable();
             $table->decimal('durasi_waktu', 5, 2)->default(0)->comment('Durasi dalam jam, dihitung otomatis');
-            $table->string('lokasi')->nullable();
+            $table->string('alamat_tujuan')->nullable();
             $table->string('file_path')->nullable()->comment('Path untuk foto/file dokumentasi');
             $table->uuid('kelompok_id')->nullable();
             $table->timestamps();

@@ -91,12 +91,12 @@ class PemantauanLaporanController extends Controller
             'tanggal' => 'required|date',
             'nama' => 'required|string|max:255',
             'instansi' => 'required|string|max:255',
-            'alamat_tujuan' => 'required|string|max:255',
+            'jam_masuk' => 'required|string|max:255',
             'jenis_kegiatan' => 'nullable|in:Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan lainnya',
             'deskripsi_kegiatan' => 'nullable|string',
             'waktu_mulai_kegiatan' => 'nullable|date_format:H:i',
             'waktu_selesai_kegiatan' => 'nullable|date_format:H:i',
-            'lokasi' => 'nullable|string|max:255',
+            'alamat_tujuan' => 'nullable|string|max:255',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
         
@@ -137,13 +137,13 @@ class PemantauanLaporanController extends Controller
             'tanggal' => $request->tanggal,
             'nama' => $request->nama,
             'instansi' => $request->instansi,
-            'alamat_tujuan' => $request->alamat_tujuan,
+            'jam_masuk' => $request->jam_masuk,
             'jenis_kegiatan' => $request->jenis_kegiatan,
             'deskripsi_kegiatan' => $request->deskripsi_kegiatan,
             'waktu_mulai_kegiatan' => $request->waktu_mulai_kegiatan,
             'waktu_selesai_kegiatan' => $request->waktu_selesai_kegiatan,
             'durasi_waktu' => $durasiWaktu,
-            'lokasi' => $request->lokasi,
+            'alamat_tujuan' => $request->alamat_tujuan,
         ];
         
         // Handle file upload
@@ -234,7 +234,7 @@ class PemantauanLaporanController extends Controller
         
         // Header Title
         $sheet->setCellValue('A1', 'DATA LAPORAN KARYAWAN');
-        $sheet->mergeCells('A1:N1');
+        $sheet->mergeCells('A1:M1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('A1')->getFill()
@@ -244,7 +244,7 @@ class PemantauanLaporanController extends Controller
         
         // Info Row
         $sheet->setCellValue('A2', 'Tanggal Export: ' . now()->format('d-m-Y H:i:s'));
-        $sheet->mergeCells('A2:N2');
+        $sheet->mergeCells('A2:M2');
         $sheet->getStyle('A2')->getFont()->setSize(10);
         $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
@@ -262,12 +262,12 @@ class PemantauanLaporanController extends Controller
         }
         
         // Style headers
-        $sheet->getStyle('A3:N3')->getFont()->setBold(true);
-        $sheet->getStyle('A3:N3')->getFill()
+        $sheet->getStyle('A3:M3')->getFont()->setBold(true);
+        $sheet->getStyle('A3:M3')->getFill()
             ->setFillType(Fill::FILL_SOLID)
             ->getStartColor()->setRGB('FCD34D');
-        $sheet->getStyle('A3:N3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A3:N3')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('A3:M3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A3:M3')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getRowDimension('3')->setRowHeight(20);
         
         // Data
@@ -279,26 +279,26 @@ class PemantauanLaporanController extends Controller
             $sheet->setCellValue('C' . $row, $laporan->kelompok->nama_kelompok ?? '-');
             $sheet->setCellValue('D' . $row, $laporan->nama);
             $sheet->setCellValue('E' . $row, $laporan->instansi);
-            $sheet->setCellValue('F' . $row, $laporan->alamat_tujuan);
-            $sheet->setCellValue('G' . $row, $laporan->waktu_mulai_kegiatan ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('F' . $row, $laporan->jam_masuk);
+            $sheet->setCellValue('G' . $row, !empty($laporan->waktu_mulai_kegiatan) ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
             $sheet->setCellValue('H' . $row, $laporan->jenis_kegiatan ?? '-');
             $sheet->setCellValue('I' . $row, $laporan->deskripsi_kegiatan ?? '-');
-            $sheet->setCellValue('J' . $row, $laporan->waktu_selesai_kegiatan ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
-            $sheet->setCellValue('K' . $row, $laporan->durasi_waktu ? number_format($laporan->durasi_waktu, 2) . ' jam' : '0 jam');
-            $sheet->setCellValue('L' . $row, $laporan->lokasi ?? '-');
+            $sheet->setCellValue('J' . $row, !empty($laporan->waktu_selesai_kegiatan) ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('K' . $row, number_format((float)($laporan->durasi_waktu ?? 0), 2) . ' jam');
+            $sheet->setCellValue('L' . $row, $laporan->alamat_tujuan ?? '-');
             $sheet->setCellValue('M' . $row, $laporan->file_path ? 'Ada File' : '-');
             $row++;
             $no++;
         }
         
         // Auto size columns
-        foreach (range('A', 'N') as $col) {
+        foreach (range('A', 'M') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
         // Set borders
         $lastRow = $row - 1;
-        $sheet->getStyle('A3:N' . $lastRow)->applyFromArray([
+        $sheet->getStyle('A3:M' . $lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,

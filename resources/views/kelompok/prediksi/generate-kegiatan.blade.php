@@ -133,6 +133,14 @@
                         </p>
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <button @click="exportLangkah()" 
+                            x-show="tableData && tableData.length > 0"
+                            class="inline-flex items-center px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-bold transition-all shadow-sm border border-transparent hover:border-white/50">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-2"></i>
+                        Export Langkah Perhitungan
+                    </button>
+                </div>
             </div>
         </div>
         <div class="p-6 bg-gradient-to-br from-gray-50 to-white">
@@ -305,6 +313,11 @@ document.addEventListener('alpine:init', () => {
                     }
                 });
             }
+        },
+
+        exportLangkah() {
+            const url = `{{ route('kelompok.prediksi.export-langkah') }}?kelompok_id={{ $kelompok->id }}`;
+            window.location.href = url;
         },
 
         initChart() {

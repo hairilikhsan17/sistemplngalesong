@@ -408,7 +408,12 @@ document.addEventListener('alpine:init', () => {
         },
         
         async hapusKelompok(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus kelompok ini?')) {
+            const result = await SwalHelper.confirmDelete(
+                '⚠️ Hapus Kelompok?',
+                'Apakah Anda yakin ingin menghapus kelompok ini? Semua data karyawan dan laporan dalam kelompok ini juga akan ikut terhapus.'
+            );
+            
+            if (result.isConfirmed) {
                 try {
                     console.log('Deleting kelompok:', id);
                     
@@ -423,15 +428,16 @@ document.addEventListener('alpine:init', () => {
                     console.log('Delete kelompok response:', result);
                     
                     if (response.ok) {
-                        this.showMessage(result.message || 'Kelompok berhasil dihapus!', 'success');
-                        location.reload();
+                        SwalHelper.success('Terhapus! 🗑️', result.message || 'Kelompok berhasil dihapus!').then(() => {
+                            location.reload();
+                        });
                     } else {
                         const errorMessage = result.message || 'Gagal menghapus kelompok';
-                        this.showMessage('Error: ' + errorMessage, 'error');
+                        SwalHelper.error('Gagal ❌', errorMessage);
                     }
                 } catch (error) {
                     console.error('Delete kelompok error:', error);
-                    this.showMessage('Terjadi kesalahan: ' + error.message, 'error');
+                    SwalHelper.error('Gagal ❌', 'Terjadi kesalahan: ' + error.message);
                 }
             }
         },
@@ -512,7 +518,12 @@ document.addEventListener('alpine:init', () => {
         },
         
         async hapusKaryawan(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus karyawan ini?')) {
+            const result = await SwalHelper.confirmDelete(
+                '⚠️ Hapus Karyawan?',
+                'Apakah Anda yakin ingin menghapus karyawan ini?'
+            );
+            
+            if (result.isConfirmed) {
                 try {
                     console.log('Deleting karyawan:', id);
                     
@@ -527,15 +538,16 @@ document.addEventListener('alpine:init', () => {
                     console.log('Delete karyawan response:', result);
                     
                     if (response.ok) {
-                        this.showMessage(result.message || 'Karyawan berhasil dihapus!', 'success');
-                        location.reload();
+                        SwalHelper.success('Terhapus! 🗑️', result.message || 'Karyawan berhasil dihapus!').then(() => {
+                            location.reload();
+                        });
                     } else {
                         const errorMessage = result.message || 'Gagal menghapus karyawan';
-                        this.showMessage('Error: ' + errorMessage, 'error');
+                        SwalHelper.error('Gagal ❌', errorMessage);
                     }
                 } catch (error) {
                     console.error('Delete karyawan error:', error);
-                    this.showMessage('Terjadi kesalahan: ' + error.message, 'error');
+                    SwalHelper.error('Gagal ❌', 'Terjadi kesalahan: ' + error.message);
                 }
             }
         },

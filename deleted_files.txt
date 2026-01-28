@@ -1,0 +1,8 @@
+app/Models/Kegiatan.php
+app/Models/Prediksi.php
+app/Models/PrediksiKegiatan.php
+database/migrations/2019_08_19_000000_create_failed_jobs_table.php
+database/migrations/2025_11_10_182241_create_kegiatans_table.php
+database/migrations/2025_11_10_182247_create_prediksis_table.php
+database/migrations/2025_11_10_202836_fix_prediksis_table_structure.php
+database/migrations/2025_11_26_153917_create_prediksi_kegiatan_table.php

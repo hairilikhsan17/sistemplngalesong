@@ -40,7 +40,7 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-900">{{ $laporan->nama }}</p>
-                            <p class="text-sm text-gray-600">{{ $laporan->alamat_tujuan }}</p>
+                            <p class="text-sm text-gray-600">{{ $laporan->jam_masuk }}</p>
                         </div>
                         <div class="text-right">
                             <p class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($laporan->tanggal)->format('d/m/Y') }}</p>

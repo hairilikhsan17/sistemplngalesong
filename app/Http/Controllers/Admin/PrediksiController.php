@@ -9,6 +9,11 @@ use App\Models\PrediksiKegiatan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class PrediksiController extends Controller
 {
@@ -115,6 +120,61 @@ class PrediksiController extends Controller
     }
 
     /**
+     * Get the next work date for a kelompok based on sequence rotation
+     * Rotation: K1 -> K2 -> K3 -> K1
+     * This logic handles gaps in the dataset by looking at the last actual work record.
+     */
+    private function getNextWorkDate($kelompokId)
+    {
+        // Get absolute last record in the dataset
+        $lastRecord = LaporanKaryawan::orderBy('tanggal', 'desc')->first();
+        if (!$lastRecord) return null;
+
+        $lastKelompokId = $lastRecord->kelompok_id;
+        $lastDate = Carbon::parse($lastRecord->tanggal);
+
+        // Get all groups ordered by name to establish rotation order
+        $allKelompoks = Kelompok::orderBy('nama_kelompok')->pluck('id')->toArray();
+        $numKelompoks = count($allKelompoks);
+        
+        if ($numKelompoks === 0) return null;
+
+        // Find index of last kelompok and target kelompok
+        $lastIndex = array_search($lastKelompokId, $allKelompoks);
+        $targetIndex = array_search($kelompokId, $allKelompoks);
+
+        if ($lastIndex === false || $targetIndex === false) return null;
+
+        // Calculate steps in sequence
+        $steps = ($targetIndex - $lastIndex + $numKelompoks) % $numKelompoks;
+        if ($steps === 0) $steps = $numKelompoks; // Next turn is a full cycle away
+
+        // Prediction date is last_work_date + steps
+        return $lastDate->addDays($steps)->startOfDay();
+    }
+
+    /**
+     * Get the last date of data available for a kelompok
+     */
+    private function getLastDataDate($kelompokId, $jenisKegiatan = 'all')
+    {
+        $query = LaporanKaryawan::where('kelompok_id', $kelompokId);
+
+        if ($jenisKegiatan !== 'all') {
+            $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
+            $query->where(function($q) use ($normalizedJenisKegiatan) {
+                $q->where('jenis_kegiatan', $normalizedJenisKegiatan)
+                  ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
+                  ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
+            });
+        }
+
+        $lastData = $query->orderBy('tanggal', 'desc')->first();
+
+        return $lastData ? Carbon::parse($lastData->tanggal) : null;
+    }
+
+    /**
      * Generate prediksi kegiatan using Triple Exponential Smoothing
      */
     public function generatePrediksiKegiatan(Request $request)
@@ -143,25 +203,45 @@ class PrediksiController extends Controller
             ? array_keys($this->jenisKegiatan) 
             : [$jenisKegiatanFilter];
 
+        // Tanggal prediksi berdasarkan urutan pekerjaan terakhir
+        $tanggalPrediksi = $this->getNextWorkDate($kelompokId);
+        
+        if (!$tanggalPrediksi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menentukan jadwal kerja berikutnya. Pastikan dataset memiliki data historis.'
+            ]);
+        }
+
+        // Get absolute last date for historical reference
+        $absoluteLastData = LaporanKaryawan::orderBy('tanggal', 'desc')->first();
+        $referenceDate = Carbon::parse($absoluteLastData->tanggal);
+
         $results = [];
         
-        // Set timezone ke Makassar (WITA - UTC+8)
-        $now = Carbon::now('Asia/Makassar');
-        $tanggalPrediksi = $now->copy()->addDay()->startOfDay(); // Besok
-
         foreach ($jenisKegiatanList as $jenisKegiatan) {
             // Normalize jenis kegiatan to standard format
             $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
             
             // Get historical data for this jenis kegiatan
-            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan);
+            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan, $referenceDate);
 
             if (count($historicalData) < 1) {
                 continue; // Skip if no data
             }
 
-            // Calculate prediction using Triple Exponential Smoothing
-            $prediction = $this->calculateTripleExponentialSmoothing($historicalData);
+            // Calculate prediction using Triple Exponential Smoothing (Holt-Winters)
+            // Strict academic requirement: 12-month seasonal period
+            $period = 12;
+            $bestParams = $this->findBestParameters($historicalData, $period);
+            
+            $prediction = $this->calculateTripleExponentialSmoothing(
+                $historicalData, 
+                $bestParams['alpha'], 
+                $bestParams['beta'], 
+                $bestParams['gamma'],
+                $period
+            );
 
             // Calculate MAPE
             $mape = $this->calculateMAPE($historicalData, $prediction['forecasts']);
@@ -188,8 +268,9 @@ class PrediksiController extends Controller
                 'mape' => $mape,
                 'waktu_generate' => $waktuGenerate,
                 'params' => [
-                    'alpha' => $this->alpha,
-                    'beta' => $this->beta,
+                    'alpha' => $bestParams['alpha'],
+                    'beta' => $bestParams['beta'],
+                    'gamma' => $bestParams['gamma'],
                     'level' => $prediction['lastLevel'],
                     'trend' => $prediction['lastTrend']
                 ]
@@ -227,31 +308,13 @@ class PrediksiController extends Controller
      * Get historical data for prediction
      * Adaptive: Groups by WEEK if data span <= 90 days, otherwise by MONTH
      */
-    private function getHistoricalData($kelompokId, $jenisKegiatan)
+    private function getHistoricalData($kelompokId, $jenisKegiatan, $lastDate = null)
     {
         // Normalize jenis kegiatan
         $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
         
-        // Cek rentang data yang tersedia
-        $firstData = LaporanKaryawan::where('kelompok_id', $kelompokId)
-            ->where(function($query) use ($normalizedJenisKegiatan) {
-                $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
-                      ->orWhere('jenis_kegiatan', strtolower(str_replace(' ', '_', $normalizedJenisKegiatan)))
-                      ->orWhere('jenis_kegiatan', strtolower($normalizedJenisKegiatan));
-            })
-            ->orderBy('tanggal', 'asc')
-            ->first();
-
-        if (!$firstData) {
-            return [];
-        }
-
-        $daysDiff = Carbon::parse($firstData->tanggal)->diffInDays(Carbon::now());
+        $referenceDate = $lastDate ?: Carbon::now();
         
-        // Jika data kurang dari 90 hari (3 bulan), gunakan grouping MINGGUAN
-        // Jika lebih, gunakan grouping BULANAN
-        $useWeekly = $daysDiff <= 90;
-
         $query = LaporanKaryawan::where('kelompok_id', $kelompokId)
             ->where(function($query) use ($normalizedJenisKegiatan) {
                 $query->where('jenis_kegiatan', $normalizedJenisKegiatan)
@@ -261,29 +324,18 @@ class PrediksiController extends Controller
             ->whereNotNull('durasi_waktu')
             ->where('durasi_waktu', '>', 0);
 
-        if ($useWeekly) {
-            // Group by Year-Week
-            $data = $query->select(
-                    DB::raw('YEAR(tanggal) as year'),
-                    DB::raw('WEEK(tanggal) as period'),
-                    DB::raw('AVG(durasi_waktu) as avg_durasi')
-                )
-                ->groupBy(DB::raw('YEAR(tanggal), WEEK(tanggal)'))
-                ->orderBy(DB::raw('YEAR(tanggal), WEEK(tanggal)'))
-                ->get();
-        } else {
-            // Group by Year-Month (Logic Lama)
-            $startDate = Carbon::now()->subMonths(12)->startOfMonth();
-            $data = $query->where('tanggal', '>=', $startDate)
-                ->select(
-                    DB::raw('YEAR(tanggal) as year'),
-                    DB::raw('MONTH(tanggal) as period'),
-                    DB::raw('AVG(durasi_waktu) as avg_durasi')
-                )
-                ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-                ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
-                ->get();
-        }
+        // Academic requirement: strictly monthly for 12 months if possible
+        $startDate = $referenceDate->copy()->subMonths(12)->startOfMonth();
+        
+        $data = $query->where('tanggal', '>=', $startDate)
+            ->select(
+                DB::raw('YEAR(tanggal) as year'),
+                DB::raw('MONTH(tanggal) as period'),
+                DB::raw('AVG(durasi_waktu) as avg_durasi')
+            )
+            ->groupBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
+            ->orderBy(DB::raw('YEAR(tanggal), MONTH(tanggal)'))
+            ->get();
 
         // Convert to simple array of values
         return $data->pluck('avg_durasi')->toArray();
@@ -293,116 +345,186 @@ class PrediksiController extends Controller
      * Calculate Triple Exponential Smoothing (Holt's Method - Double Exponential Smoothing)
      * Since we don't have clear seasonality, we use Double Exponential Smoothing
      */
-    private function calculateTripleExponentialSmoothing($data)
+    /**
+     * Find the best parameters (alpha, beta, gamma) for the given data
+     * using Grid Search to minimize MAPE.
+     */
+    private function findBestParameters($data, $period = 12)
+    {
+        $bestAlpha = 0.4;
+        $bestBeta = 0.3;
+        $bestGamma = 0.3;
+        $minMAPE = INF;
+
+        $n = count($data);
+        if ($n < 4) return ['alpha' => 0.4, 'beta' => 0.3, 'gamma' => 0.3];
+
+        // Grid search with step 0.2
+        for ($a = 0.1; $a <= 0.9; $a += 0.2) {
+            for ($b = 0.1; $b <= 0.9; $b += 0.2) {
+                // If data is enough for seasonality, search gamma too
+                if ($n >= $period) {
+                    for ($g = 0.1; $g <= 0.9; $g += 0.2) {
+                        $result = $this->calculateTripleExponentialSmoothing($data, $a, $b, $g, $period);
+                        $mape = $this->calculateMAPE($data, $result['forecasts']);
+                        if ($mape < $minMAPE) {
+                            $minMAPE = $mape;
+                            $bestAlpha = $a;
+                            $bestBeta = $b;
+                            $bestGamma = $g;
+                        }
+                    }
+                } else {
+                    $result = $this->calculateTripleExponentialSmoothing($data, $a, $b, 0, $period);
+                    $mape = $this->calculateMAPE($data, $result['forecasts']);
+                    if ($mape < $minMAPE) {
+                        $minMAPE = $mape;
+                        $bestAlpha = $a;
+                        $bestBeta = $b;
+                        $bestGamma = 0;
+                    }
+                }
+            }
+        }
+
+        return ['alpha' => $bestAlpha, 'beta' => $bestBeta, 'gamma' => $bestGamma];
+    }
+
+    /**
+     * Calculate Triple Exponential Smoothing (Holt-Winters)
+     * Fallback to Holt's (Double) if data is insufficient for seasonality.
+     */
+    private function calculateTripleExponentialSmoothing($data, $alpha = null, $beta = null, $gamma = null, $period = 12)
     {
         $n = count($data);
+        $alpha = $alpha ?? $this->alpha;
+        $beta = $beta ?? $this->beta;
+        $gamma = $gamma ?? 0.3;
         
         if ($n < 1) {
             throw new \Exception('Data tidak cukup untuk prediksi');
         }
 
-        // Jika hanya ada 1 data, gunakan itu sebagai prediksi
-        if ($n == 1) {
-            return [
-                'levels' => [$data[0]],
-                'trends' => [0],
-                'forecasts' => [],
-                'lastLevel' => $data[0],
-                'lastTrend' => 0,
-                'nextForecast' => $data[0]
-            ];
+        // Fallback to Double if data < 1 full period or gamma is 0
+        if ($n < $period || $gamma == 0) {
+            return $this->calculateDoubleExponentialSmoothing($data, $alpha, $beta);
         }
 
-        // Jika hanya ada 2 data, gunakan rata-rata atau trend sederhana
-        if ($n == 2) {
-            $lastLevel = $data[1];
-            $lastTrend = $data[1] - $data[0];
-            $nextForecast = $lastLevel + $lastTrend;
-            
-            return [
-                'levels' => [$data[0], $data[1]],
-                'trends' => [0, $lastTrend],
-                'forecasts' => [$data[0]], // Forecast untuk data ke-2 adalah data ke-1 (naive)
-                'lastLevel' => $lastLevel,
-                'lastTrend' => $lastTrend,
-                'nextForecast' => $nextForecast
-            ];
+        // Initialize Seasonality (Additive)
+        $seasonals = [];
+        for ($i = 0; $i < $period; $i++) {
+            $seasonals[$i] = $data[$i] - (array_sum(array_slice($data, 0, $period)) / $period);
         }
 
-        // Initialize level and trend
-        // Level awal = rata-rata dari 3-4 data pertama (atau semua jika < 4)
-        $initialLevel = array_sum(array_slice($data, 0, min(4, $n))) / min(4, $n);
-        
-        // Trend awal = (rata-rata 2 data terakhir - rata-rata 2 data pertama) / jumlah periode tengah
-        $firstHalf = array_slice($data, 0, min(2, floor($n/2)));
-        $lastHalf = array_slice($data, -min(2, floor($n/2)));
-        $avgFirst = array_sum($firstHalf) / count($firstHalf);
-        $avgLast = array_sum($lastHalf) / count($lastHalf);
-        $initialTrend = ($avgLast - $avgFirst) / max(1, $n - 2);
+        // Initialize Level and Trend
+        $level = array_sum(array_slice($data, 0, $period)) / $period;
+        $trend = (array_sum(array_slice($data, $period, $period)) - array_sum(array_slice($data, 0, $period))) / ($period * $period);
 
-        // Initialize arrays
-        $levels = [$initialLevel];
-        $trends = [$initialTrend];
+        $levels = [$level];
+        $trends = [$trend];
         $forecasts = [];
 
-        // Calculate level and trend for each period
         for ($i = 0; $i < $n; $i++) {
-            $currentData = $data[$i];
+            $value = $data[$i];
             $prevLevel = $levels[$i];
             $prevTrend = $trends[$i];
+            $seasonalIdx = $i % $period;
+            $prevSeasonal = $seasonals[$seasonalIdx];
 
-            // Calculate new level: S_t = α * Y_t + (1-α) * (S_{t-1} + b_{t-1})
-            $newLevel = $this->alpha * $currentData + (1 - $this->alpha) * ($prevLevel + $prevTrend);
+            // Forecast for current period (before update)
+            $forecasts[] = $prevLevel + $prevTrend + $prevSeasonal;
+
+            // Update Level: L_t = α(Y_t - S_{t-m}) + (1-α)(L_{t-1} + T_{t-1})
+            $newLevel = $alpha * ($value - $prevSeasonal) + (1 - $alpha) * ($prevLevel + $prevTrend);
             $levels[] = $newLevel;
 
-            // Calculate new trend: b_t = β * (S_t - S_{t-1}) + (1-β) * b_{t-1}
-            $newTrend = $this->beta * ($newLevel - $prevLevel) + (1 - $this->beta) * $prevTrend;
+            // Update Trend: T_t = β(L_t - L_{t-1}) + (1-β)T_{t-1}
+            $newTrend = $beta * ($newLevel - $prevLevel) + (1 - $beta) * $prevTrend;
             $trends[] = $newTrend;
 
-            // Forecast for next period: F_{t+1} = S_t + b_t
-            if ($i < $n - 1) {
-                $forecasts[] = $prevLevel + $prevTrend;
-            }
+            // Update Seasonal: S_t = γ(Y_t - L_t) + (1-γ)S_{t-m}
+            $seasonals[$seasonalIdx] = $gamma * ($value - $newLevel) + (1 - $gamma) * $prevSeasonal;
         }
 
-        // Forecast for next period (besok)
-        $lastLevel = $levels[$n];
-        $lastTrend = $trends[$n];
-        $nextForecast = $lastLevel + $lastTrend;
+        // Next Forecast: F_{n+1} = L_n + T_n + S_{n+1-m}
+        $nextForecast = end($levels) + end($trends) + $seasonals[$n % $period];
 
         return [
             'levels' => $levels,
             'trends' => $trends,
             'forecasts' => $forecasts,
-            'lastLevel' => $lastLevel,
-            'lastTrend' => $lastTrend,
-            'nextForecast' => $nextForecast
+            'lastLevel' => end($levels),
+            'lastTrend' => end($trends),
+            'nextForecast' => max(0, $nextForecast)
+        ];
+    }
+
+    /**
+     * Holt's Linear (Double Exponential Smoothing)
+     */
+    private function calculateDoubleExponentialSmoothing($data, $alpha, $beta)
+    {
+        $n = count($data);
+        
+        // Initialization
+        if ($n == 1) {
+            return [
+                'levels' => [$data[0]], 'trends' => [0], 'forecasts' => [$data[0]],
+                'lastLevel' => $data[0], 'lastTrend' => 0, 'nextForecast' => $data[0]
+            ];
+        }
+
+        $level = $data[0];
+        $trend = $data[1] - $data[0];
+        
+        $levels = [$level];
+        $trends = [$trend];
+        $forecasts = [$level + $trend]; // First forecast
+
+        for ($i = 1; $i < $n; $i++) {
+            $value = $data[$i];
+            $prevLevel = $levels[$i-1];
+            $prevTrend = $trends[$i-1];
+
+            $newLevel = $alpha * $value + (1 - $alpha) * ($prevLevel + $prevTrend);
+            $levels[] = $newLevel;
+
+            $newTrend = $beta * ($newLevel - $prevLevel) + (1 - $beta) * $prevTrend;
+            $trends[] = $newTrend;
+
+            $forecasts[] = $newLevel + $newTrend;
+        }
+
+        return [
+            'levels' => $levels,
+            'trends' => $trends,
+            'forecasts' => $forecasts,
+            'lastLevel' => end($levels),
+            'lastTrend' => end($trends),
+            'nextForecast' => max(0, end($levels) + end($trends))
         ];
     }
 
     /**
      * Calculate MAPE (Mean Absolute Percentage Error)
+     * Calculated on all available periods starting from Month 2
      */
     private function calculateMAPE($actualData, $forecasts)
     {
-        if (count($forecasts) === 0 || count($actualData) <= 1) {
-            return 0;
-        }
+        $n = count($actualData);
+        if ($n < 2) return 0;
 
         $errors = [];
-        // Skip first data point (no forecast for it)
-        for ($i = 1; $i < count($actualData); $i++) {
-            if (isset($forecasts[$i - 1]) && $actualData[$i] > 0) {
-                $error = abs(($actualData[$i] - $forecasts[$i - 1]) / $actualData[$i]) * 100;
+        // Calculate for all months starting from index 1 (Bulan 2)
+        for ($i = 1; $i < $n; $i++) {
+            if ($actualData[$i] > 0 && isset($forecasts[$i-1])) {
+                // forecast[i-1] is the forecast for actualData[i]
+                $error = abs(($actualData[$i] - $forecasts[$i-1]) / $actualData[$i]) * 100;
                 $errors[] = $error;
             }
         }
 
-        if (empty($errors)) {
-            return 0;
-        }
-
-        return array_sum($errors) / count($errors);
+        return empty($errors) ? 0 : array_sum($errors) / count($errors);
     }
 
     /**
@@ -465,8 +587,16 @@ class PrediksiController extends Controller
         }
 
         $kelompok = Kelompok::findOrFail($kelompokId);
-        // Set timezone ke Makassar untuk tanggal prediksi besok
-        $tanggalPrediksi = Carbon::now('Asia/Makassar')->addDay()->startOfDay();
+        
+        // Tanggal prediksi berdasarkan urutan pekerjaan terakhir
+        $tanggalPrediksi = $this->getNextWorkDate($kelompokId);
+        
+        if (!$tanggalPrediksi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menentukan jadwal kerja berikutnya. Pastikan dataset memiliki data historis.'
+            ]);
+        }
 
         // Get latest predictions for this kelompok, grouped by normalized jenis_kegiatan
         $allPredictions = PrediksiKegiatan::where('kelompok_id', $kelompokId)
@@ -477,7 +607,7 @@ class PrediksiController extends Controller
         if ($allPredictions->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada prediksi untuk kelompok ini'
+                'message' => 'Tidak ada prediksi untuk kelompok ini pada jadwal berikutnya (' . $tanggalPrediksi->format('d/m/Y') . ')'
             ]);
         }
 
@@ -534,24 +664,30 @@ class PrediksiController extends Controller
         // Get kelompok from user
         $kelompok = Kelompok::findOrFail($user->kelompok_id);
 
-        // Get latest predictions if any
-        $latestPredictions = PrediksiKegiatan::with('kelompok')
-            ->where('kelompok_id', $user->kelompok_id)
-            ->orderBy('waktu_generate', 'desc')
-            ->get()
-            ->groupBy('kelompok_id')
-            ->map(function ($predictions) {
-                return $predictions->first();
-            });
+        $tanggalPrediksi = $this->getNextWorkDate($user->kelompok_id);
 
         $formattedPredictions = collect();
-        foreach ($latestPredictions as $prediction) {
-            $formattedPredictions->push([
-                'kelompok_id' => $prediction->kelompok_id,
-                'kelompok' => $prediction->kelompok->nama_kelompok ?? 'N/A',
-                'tanggal_prediksi' => $prediction->tanggal_prediksi->format('Y-m-d'),
-                'waktu_generate' => $prediction->waktu_generate->format('H:i'),
-            ]);
+        
+        if ($tanggalPrediksi) {
+            // Get latest predictions if any
+            $latestPredictions = PrediksiKegiatan::with('kelompok')
+                ->where('kelompok_id', $user->kelompok_id)
+                ->where('tanggal_prediksi', $tanggalPrediksi->format('Y-m-d'))
+                ->orderBy('waktu_generate', 'desc')
+                ->get()
+                ->groupBy('kelompok_id')
+                ->map(function ($predictions) {
+                    return $predictions->first();
+                });
+
+            foreach ($latestPredictions as $prediction) {
+                $formattedPredictions->push([
+                    'kelompok_id' => $prediction->kelompok_id,
+                    'kelompok' => $prediction->kelompok->nama_kelompok ?? 'N/A',
+                    'tanggal_prediksi' => $prediction->tanggal_prediksi->format('Y-m-d'),
+                    'waktu_generate' => $prediction->waktu_generate->format('H:i'),
+                ]);
+            }
         }
 
         // Define jenisKegiatan variable for view
@@ -594,25 +730,45 @@ class PrediksiController extends Controller
             ? array_keys($this->jenisKegiatan) 
             : [$jenisKegiatanFilter];
 
+        // Tanggal prediksi berdasarkan urutan sequence
+        $tanggalPrediksi = $this->getNextWorkDate($kelompokId);
+        
+        if (!$tanggalPrediksi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menentukan jadwal kerja berikutnya.'
+            ]);
+        }
+
+        // Get absolute last date for historical reference
+        $absoluteLastData = LaporanKaryawan::orderBy('tanggal', 'desc')->first();
+        $referenceDate = Carbon::parse($absoluteLastData->tanggal);
+
         $results = [];
         
-        // Set timezone ke Makassar (WITA - UTC+8)
-        $now = Carbon::now('Asia/Makassar');
-        $tanggalPrediksi = $now->copy()->addDay()->startOfDay(); // Besok
-
         foreach ($jenisKegiatanList as $jenisKegiatan) {
             // Normalize jenis kegiatan to standard format
             $normalizedJenisKegiatan = $this->normalizeJenisKegiatan($jenisKegiatan);
             
             // Get historical data for this jenis kegiatan
-            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan);
+            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenisKegiatan, $referenceDate);
 
             if (count($historicalData) < 1) {
                 continue; // Skip if no data
             }
 
-            // Calculate prediction using Triple Exponential Smoothing
-            $prediction = $this->calculateTripleExponentialSmoothing($historicalData);
+            // Calculate prediction using Triple Exponential Smoothing (Holt-Winters)
+            // Strict academic requirement: 12-month seasonal period
+            $period = 12;
+            $bestParams = $this->findBestParameters($historicalData, $period);
+            
+            $prediction = $this->calculateTripleExponentialSmoothing(
+                $historicalData, 
+                $bestParams['alpha'], 
+                $bestParams['beta'], 
+                $bestParams['gamma'],
+                $period
+            );
 
             // Calculate MAPE
             $mape = $this->calculateMAPE($historicalData, $prediction['forecasts']);
@@ -639,8 +795,9 @@ class PrediksiController extends Controller
                 'mape' => $mape,
                 'waktu_generate' => $waktuGenerate,
                 'params' => [
-                    'alpha' => $this->alpha,
-                    'beta' => $this->beta,
+                    'alpha' => $bestParams['alpha'],
+                    'beta' => $bestParams['beta'],
+                    'gamma' => $bestParams['gamma'],
                     'level' => $prediction['lastLevel'],
                     'trend' => $prediction['lastTrend']
                 ]
@@ -691,8 +848,16 @@ class PrediksiController extends Controller
         // Use kelompok_id from logged in user
         $kelompokId = $user->kelompok_id;
         $kelompok = Kelompok::findOrFail($kelompokId);
-        // Set timezone ke Makassar untuk tanggal prediksi besok
-        $tanggalPrediksi = Carbon::now('Asia/Makassar')->addDay()->startOfDay();
+        
+        // Tanggal prediksi berdasarkan urutan sequence
+        $tanggalPrediksi = $this->getNextWorkDate($kelompokId);
+        
+        if (!$tanggalPrediksi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menentukan jadwal kerja berikutnya.'
+            ]);
+        }
 
         // Get latest predictions for this kelompok, grouped by normalized jenis_kegiatan
         $allPredictions = PrediksiKegiatan::where('kelompok_id', $kelompokId)
@@ -703,7 +868,7 @@ class PrediksiController extends Controller
         if ($allPredictions->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada prediksi untuk kelompok ini'
+                'message' => 'Tidak ada prediksi untuk kelompok ini pada jadwal berikutnya (' . $tanggalPrediksi->format('d/m/Y') . ')'
             ]);
         }
 
@@ -744,6 +909,173 @@ class PrediksiController extends Controller
             'chart' => $chartData,
             'table' => $results
         ]);
+    }
+
+    /**
+     * Export calculation steps to Excel
+     */
+    public function exportLangkahPerhitungan(Request $request)
+    {
+        $user = auth()->user();
+        $kelompokId = $request->kelompok_id ?? $user->kelompok_id;
+        
+        if (!$kelompokId) {
+            return back()->with('error', 'Kelompok tidak ditemukan');
+        }
+
+        $kelompok = Kelompok::findOrFail($kelompokId);
+        $tanggalPrediksi = $this->getNextWorkDate($kelompokId);
+        
+        if (!$tanggalPrediksi) {
+            return back()->with('error', 'Gagal menentukan jadwal kerja berikutnya.');
+        }
+
+        $absoluteLastData = LaporanKaryawan::orderBy('tanggal', 'desc')->first();
+        $referenceDate = Carbon::parse($absoluteLastData->tanggal);
+
+        $spreadsheet = new Spreadsheet();
+        
+        // --- Sheet 1: Ringkasan Prediksi ---
+        $sheetSummary = $spreadsheet->getActiveSheet();
+        $sheetSummary->setTitle('Ringkasan Prediksi');
+        
+        $headers = ['Kelompok', 'Jenis Kegiatan', 'Prediksi (Jam:Menit)', 'Tanggal Prediksi', 'MAPE (%)', 'Waktu Generate'];
+        $sheetSummary->fromArray($headers, NULL, 'A1');
+        
+        // Styling headers
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F81BD']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+        ];
+        $sheetSummary->getStyle('A1:F1')->applyFromArray($headerStyle);
+
+        $row = 2;
+        $summaryData = [];
+
+        foreach ($this->jenisKegiatan as $jenisKegiatan) {
+            $normalizedJenis = $this->normalizeJenisKegiatan($jenisKegiatan);
+            $historicalData = $this->getHistoricalData($kelompokId, $normalizedJenis, $referenceDate);
+            
+            if (count($historicalData) < 1) continue;
+
+            $period = 12;
+            $bestParams = $this->findBestParameters($historicalData, $period);
+            $prediction = $this->calculateTripleExponentialSmoothing(
+                $historicalData, 
+                $bestParams['alpha'], 
+                $bestParams['beta'], 
+                $bestParams['gamma'],
+                $period
+            );
+            $mape = $this->calculateMAPE($historicalData, $prediction['forecasts']);
+
+            // Convert minutes to Jam:Menit
+            $totalMinutes = round($prediction['nextForecast']);
+            $hours = floor($totalMinutes / 60);
+            $mins = $totalMinutes % 60;
+            $jamMenit = sprintf('%02d:%02d', $hours, $mins);
+
+            $sheetSummary->fromArray([
+                $kelompok->nama_kelompok,
+                $normalizedJenis,
+                $jamMenit,
+                $tanggalPrediksi->format('d/m/Y'),
+                round($mape, 2),
+                Carbon::now('Asia/Makassar')->format('d/m/Y H:i')
+            ], NULL, 'A' . $row);
+            
+            $summaryData[] = [
+                'jenis' => $normalizedJenis,
+                'data' => $historicalData,
+                'prediction' => $prediction,
+                'mape' => $mape,
+                'params' => $bestParams,
+                'period' => $period
+            ];
+            $row++;
+        }
+
+        foreach (range('A', 'F') as $col) {
+            $sheetSummary->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // --- Sheet Perhitungan Detail ---
+        foreach ($summaryData as $item) {
+            $safeTitle = substr(str_replace(['/', '*', '?', '[', ']'], '', $item['jenis']), 0, 30);
+            $sheetDetail = $spreadsheet->createSheet();
+            $sheetDetail->setTitle($safeTitle);
+
+            // Info Header
+            $sheetDetail->setCellValue('A1', 'Langkah Perhitungan: ' . $item['jenis']);
+            $sheetDetail->setCellValue('A2', 'Metode: ' . ($item['params']['gamma'] > 0 ? 'Triple Exponential Smoothing (Holt-Winters)' : 'Double Exponential Smoothing (Holt)'));
+            $sheetDetail->setCellValue('A3', 'Alpha: ' . $item['params']['alpha'] . ' | Beta: ' . $item['params']['beta'] . ' | Gamma: ' . $item['params']['gamma']);
+            $sheetDetail->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheetDetail->getStyle('A1:A3')->getFont()->setItalic(true);
+
+            $detailHeaders = ['Periode', 'Data Aktual (Yt)', 'Level (Lt)', 'Trend (Tt)', 'Seasonal (St)', 'Prediksi (Ft)', 'Error', 'Abs Error', 'APE (%)'];
+            $sheetDetail->fromArray($detailHeaders, NULL, 'A5');
+            $sheetDetail->getStyle('A5:I5')->applyFromArray($headerStyle);
+
+            $detailRow = 6;
+            $data = $item['data'];
+            $levels = $item['prediction']['levels'];
+            $trends = $item['prediction']['trends'];
+            $forecasts = $item['prediction']['forecasts'];
+            $n = count($data);
+
+            // Perhitungan manual untuk ditampilkan di Excel
+            for ($i = 0; $i < $n; $i++) {
+                $actual = $data[$i];
+                $lt = $levels[$i+1] ?? $levels[$i]; // Alignment with algorithm
+                $tt = $trends[$i+1] ?? $trends[$i];
+                $st = '-'; // Placeholder for seasonality if needed
+                $ft = $forecasts[$i] ?? '-';
+                
+                $error = '-';
+                $absError = '-';
+                $ape = '-';
+
+                if ($i > 0 && is_numeric($ft)) {
+                    $error = $actual - $ft;
+                    $absError = abs($error);
+                    $ape = ($actual > 0) ? ($absError / $actual) * 100 : 0;
+                }
+
+                $sheetDetail->fromArray([
+                    'Bulan ' . ($i + 1),
+                    $actual,
+                    round($lt, 4),
+                    round($tt, 4),
+                    $st,
+                    is_numeric($ft) ? round($ft, 4) : $ft,
+                    is_numeric($error) ? round($error, 4) : $error,
+                    is_numeric($absError) ? round($absError, 4) : $absError,
+                    is_numeric($ape) ? round($ape, 2) . '%' : $ape
+                ], NULL, 'A' . $detailRow);
+                $detailRow++;
+            }
+
+            // Final Prediction Row
+            $sheetDetail->setCellValue('A' . ($detailRow + 1), 'HASIL PREDIKSI BERIKUTNYA:');
+            $sheetDetail->setCellValue('B' . ($detailRow + 1), round($item['prediction']['nextForecast'], 2) . ' Menit');
+            $sheetDetail->getStyle('A' . ($detailRow + 1))->getFont()->setBold(true);
+
+            foreach (range('A', 'I') as $col) {
+                $sheetDetail->getColumnDimension($col)->setAutoSize(true);
+            }
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Langkah_Perhitungan_Prediksi_' . $kelompok->nama_kelompok . '_' . date('Ymd_His') . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer->save('php://output');
+        exit;
     }
 }
 

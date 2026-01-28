@@ -294,10 +294,10 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                                @if($laporan->alamat_tujuan)
+                                @if($laporan->jam_masuk)
                                     <div class="flex items-center space-x-2">
                                         <i data-lucide="clock" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
-                                        <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
+                                        <div class="truncate" title="{{ $laporan->jam_masuk }}">{{ Str::limit($laporan->jam_masuk, 50) }}</div>
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>
@@ -345,10 +345,10 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                @if($laporan->lokasi)
+                                @if($laporan->alamat_tujuan)
                                     <div class="flex items-center space-x-2">
                                         <i data-lucide="map-pin" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
-                                        <div class="truncate" title="{{ $laporan->lokasi }}">{{ Str::limit($laporan->lokasi, 50) }}</div>
+                                        <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>
@@ -645,7 +645,7 @@ async function editLaporan(id) {
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Masuk <span class="text-red-500">*</span></label>
-                    <input type="time" name="alamat_tujuan" value="${laporan.alamat_tujuan || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
+                    <input type="time" name="jam_masuk" value="${laporan.jam_masuk || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Kegiatan</label>
@@ -690,7 +690,7 @@ async function editLaporan(id) {
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Alamat Tujuan</label>
-                    <input type="text" name="lokasi" value="${laporan.lokasi || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
+                    <input type="text" name="alamat_tujuan" value="${laporan.alamat_tujuan || ''}" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">File Dokumentasi</label>

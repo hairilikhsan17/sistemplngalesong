@@ -273,10 +273,10 @@
                             Jam Masuk <span class="text-red-500">*</span>
                         </label>
                         <input type="time" 
-                               x-model="formData.alamat_tujuan"
+                               x-model="formData.jam_masuk"
                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
                                required>
-                        <div x-show="errors.alamat_tujuan" class="mt-1 text-sm text-red-600" x-text="errors.alamat_tujuan"></div>
+                        <div x-show="errors.jam_masuk" class="mt-1 text-sm text-red-600" x-text="errors.jam_masuk"></div>
                     </div>
 
                     <!-- Jenis Kegiatan -->
@@ -374,10 +374,10 @@
                             Alamat Tujuan
                         </label>
                         <input type="text" 
-                               x-model="formData.lokasi"
+                               x-model="formData.alamat_tujuan"
                                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white hover:border-gray-400"
                                placeholder="Masukkan alamat tujuan pekerjaan">
-                        <div x-show="errors.lokasi" class="mt-1 text-sm text-red-600" x-text="errors.lokasi"></div>
+                        <div x-show="errors.alamat_tujuan" class="mt-1 text-sm text-red-600" x-text="errors.alamat_tujuan"></div>
                     </div>
                 </div>
 
@@ -518,6 +518,79 @@
             </div>
         </div>
     </div>
+    <!-- Modal Import Excel -->
+    <div x-show="showImportModal" 
+         x-transition
+         x-cloak
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4 backdrop-blur-sm"
+         @click.self="showImportModal = false"
+         @keydown.escape="showImportModal = false">
+        <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-lg transform transition-all">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i data-lucide="file-up" class="w-5 h-5 text-green-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Import Data Laporan</h3>
+                        <p class="text-sm text-gray-500">Unggah file Excel untuk import massal</p>
+                    </div>
+                </div>
+                <button @click="showImportModal = false" 
+                        class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                    <h4 class="text-sm font-bold text-blue-800 mb-2 flex items-center">
+                        <i data-lucide="info" class="w-4 h-4 mr-2"></i>
+                        Ketentuan Format Excel:
+                    </h4>
+                    <ul class="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                        <li>Kolom berurutan: Hari, Tanggal, Nama, Instansi, Jam Masuk, Waktu Mulai, Jenis Kegiatan, Deskripsi, Waktu Selesai, Alamat, Dokumentasi.</li>
+                        <li>Deskripsi wajib diisi jika Jenis Kegiatan = "Jenis Kegiatan lainnya".</li>
+                        <li>Durasi akan dihitung otomatis oleh sistem.</li>
+                    </ul>
+                </div>
+
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih File Excel</label>
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-green-400 hover:bg-green-50 transition-all cursor-pointer"
+                     @click="$refs.importFileInput.click()">
+                    <input type="file" 
+                           x-ref="importFileInput"
+                           @change="importFile = $event.target.files[0]"
+                           accept=".xlsx,.xls,.csv"
+                           class="hidden">
+                    <div x-show="!importFile">
+                        <i data-lucide="upload-cloud" class="w-10 h-10 text-gray-400 mx-auto mb-2"></i>
+                        <p class="text-sm text-gray-600">Klik untuk pilih file (.xlsx, .xls, .csv)</p>
+                    </div>
+                    <div x-show="importFile" class="flex items-center justify-center space-x-2">
+                        <i data-lucide="file-check" class="w-6 h-6 text-green-600"></i>
+                        <span class="text-sm font-medium text-gray-900" x-text="importFile?.name"></span>
+                        <button @click.stop="importFile = null" class="text-red-500 hover:text-red-700">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button @click="showImportModal = false"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all">
+                    Batal
+                </button>
+                <button @click="handleImport()"
+                        :disabled="!importFile || importLoading"
+                        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all disabled:opacity-50 flex items-center">
+                    <i x-show="importLoading" data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i>
+                    <span x-text="importLoading ? 'Memproses...' : 'Proses Import'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Data Table -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -532,11 +605,23 @@
                         <p class="text-xs text-gray-500">Semua laporan kerja yang telah Anda buat</p>
                     </div>
                 </div>
-                <button @click="loadLaporans()" 
-                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2">
-                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Refresh</span>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <a href="/api/laporan-karyawan/template" 
+                       class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center space-x-2 shadow-sm">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Download Template</span>
+                    </a>
+                    <button @click="showImportModal = true" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 shadow-md hover:shadow-lg">
+                        <i data-lucide="file-up" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Import Excel</span>
+                    </button>
+                    <button @click="loadLaporans()" 
+                            class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2 shadow-sm">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Refresh</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -596,10 +681,10 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                                @if($laporan->alamat_tujuan)
+                                @if($laporan->jam_masuk)
                                     <div class="flex items-center space-x-2">
                                         <i data-lucide="clock" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
-                                        <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
+                                        <div class="truncate" title="{{ $laporan->jam_masuk }}">{{ Str::limit($laporan->jam_masuk, 50) }}</div>
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>
@@ -647,10 +732,10 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
-                                @if($laporan->lokasi)
+                                @if($laporan->alamat_tujuan)
                                     <div class="flex items-center space-x-2">
                                         <i data-lucide="map-pin" class="w-4 h-4 text-blue-600 flex-shrink-0"></i>
-                                        <div class="truncate" title="{{ $laporan->lokasi }}">{{ Str::limit($laporan->lokasi, 50) }}</div>
+                                        <div class="truncate" title="{{ $laporan->alamat_tujuan }}">{{ Str::limit($laporan->alamat_tujuan, 50) }}</div>
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>
@@ -854,19 +939,24 @@ document.addEventListener('alpine:init', () => {
             tanggal: new Date().toISOString().split('T')[0],
             nama: '',
             instansi: 'PLN Galesong',
-            alamat_tujuan: '',
+            jam_masuk: '',
             jenis_kegiatan: '',
             deskripsi_kegiatan: '',
             waktu_mulai_kegiatan: '',
             waktu_selesai_kegiatan: '',
             durasi_waktu: 0,
             durasi_waktu_display: '0.00',
-            lokasi: ''
+            alamat_tujuan: ''
         },
         errors: {},
         selectedFile: null,
         currentFile: null,
         previewImage: null,
+        showImportModal: false,
+        importFile: null,
+        importLoading: false,
+        showDeskripsiModal: false,
+        deskripsiGangguan: '',
         
         async init() {
             // Load laporans saat halaman pertama kali dimuat
@@ -932,7 +1022,7 @@ document.addEventListener('alpine:init', () => {
             this.errors = {};
             
             // Validate required fields
-            if (!this.formData.hari || !this.formData.tanggal || !this.formData.nama || !this.formData.instansi || !this.formData.alamat_tujuan) {
+            if (!this.formData.hari || !this.formData.tanggal || !this.formData.nama || !this.formData.instansi || !this.formData.jam_masuk) {
                 this.showMessage('Semua field wajib harus diisi!', 'error');
                 this.loading = false;
                 return;
@@ -953,12 +1043,12 @@ document.addEventListener('alpine:init', () => {
                 formData.append('tanggal', this.formData.tanggal);
                 formData.append('nama', this.formData.nama);
                 formData.append('instansi', this.formData.instansi);
-                formData.append('alamat_tujuan', this.formData.alamat_tujuan);
+                formData.append('jam_masuk', this.formData.jam_masuk);
                 formData.append('jenis_kegiatan', this.formData.jenis_kegiatan || '');
                 formData.append('deskripsi_kegiatan', this.formData.deskripsi_kegiatan || '');
                 formData.append('waktu_mulai_kegiatan', this.formData.waktu_mulai_kegiatan || '');
                 formData.append('waktu_selesai_kegiatan', this.formData.waktu_selesai_kegiatan || '');
-                formData.append('lokasi', this.formData.lokasi || '');
+                formData.append('alamat_tujuan', this.formData.alamat_tujuan || '');
                 
                 if (this.selectedFile) {
                     formData.append('file', this.selectedFile);
@@ -1100,14 +1190,14 @@ document.addEventListener('alpine:init', () => {
                     tanggal: tanggalFormatted || new Date().toISOString().split('T')[0],
                     nama: result.nama || '',
                     instansi: result.instansi || 'PLN Galesong',
-                    alamat_tujuan: result.alamat_tujuan || '',
+                    jam_masuk: result.jam_masuk || '',
                     jenis_kegiatan: result.jenis_kegiatan || '',
                     deskripsi_kegiatan: result.deskripsi_kegiatan || '',
                     waktu_mulai_kegiatan: waktuMulai,
                     waktu_selesai_kegiatan: waktuSelesai,
                     durasi_waktu: result.durasi_waktu !== null && result.durasi_waktu !== undefined ? Number(result.durasi_waktu) : 0,
                     durasi_waktu_display: result.durasi_waktu !== null && result.durasi_waktu !== undefined ? Number(result.durasi_waktu).toFixed(2) : '0.00',
-                    lokasi: result.lokasi || ''
+                    alamat_tujuan: result.alamat_tujuan || ''
                 };
                 
                 // Hitung durasi jika ada waktu
@@ -1166,14 +1256,14 @@ document.addEventListener('alpine:init', () => {
                 tanggal: new Date().toISOString().split('T')[0],
                 nama: '',
                 instansi: 'PLN Galesong',
-                alamat_tujuan: '',
+                jam_masuk: '',
                 jenis_kegiatan: '',
                 deskripsi_kegiatan: '',
                 waktu_mulai_kegiatan: '',
                 waktu_selesai_kegiatan: '',
                 durasi_waktu: 0,
                 durasi_waktu_display: '0.00',
-                lokasi: ''
+                alamat_tujuan: ''
             };
             this.errors = {};
             this.selectedFile = null;
@@ -1242,6 +1332,54 @@ document.addEventListener('alpine:init', () => {
                     lucide.createIcons();
                 }
             }, 100);
+        },
+
+        async handleImport() {
+            if (!this.importFile) return;
+            
+            this.importLoading = true;
+            const formData = new FormData();
+            formData.append('file', this.importFile);
+            
+            try {
+                const response = await fetch('/api/laporan-karyawan/import', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    let errorMessage = result.message || 'Gagal mengimport data';
+                    if (result.errors && Array.isArray(result.errors)) {
+                        errorMessage += ':\n' + result.errors.join('\n');
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                this.showMessage(result.message, 'success');
+                this.showImportModal = false;
+                this.importFile = null;
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                Swal.fire({
+                    title: 'Gagal Import ❌',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            } finally {
+                this.importLoading = false;
+            }
         }
     }));
 });

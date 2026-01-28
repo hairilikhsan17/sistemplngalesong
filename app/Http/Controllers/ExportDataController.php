@@ -272,7 +272,7 @@ class ExportDataController extends Controller
             ->getStartColor()->setRGB('3B82F6');
         
         // Headers
-        $headers = ['No', 'ID Laporan', 'Hari', 'Tanggal', 'Nama', 'Kelompok', 'Instansi', 'Jabatan', 'Jam Masuk', 'Dokumentasi', 'Created At'];
+        $headers = ['No', 'ID Laporan', 'Hari', 'Tanggal', 'Nama', 'Kelompok', 'Instansi', 'Jabatan', 'Jam Masuk', 'Waktu Mulai', 'Jenis Kegiatan', 'Deskripsi', 'Waktu Selesai', 'Durasi', 'Alamat Tujuan', 'Dokumentasi', 'Created At'];
         $col = 'A';
         $row = 3;
         foreach ($headers as $header) {
@@ -298,18 +298,24 @@ class ExportDataController extends Controller
             $sheet->setCellValue('F' . $row, $laporan->kelompok->nama_kelompok ?? '-');
             $sheet->setCellValue('G' . $row, $laporan->instansi);
             $sheet->setCellValue('H' . $row, $laporan->jabatan ?? '-');
-            $sheet->setCellValue('I' . $row, $laporan->alamat_tujuan);
-            $sheet->setCellValue('J' . $row, $laporan->dokumentasi ?? '-');
-            $sheet->setCellValue('K' . $row, $laporan->created_at->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('I' . $row, $laporan->jam_masuk);
+            $sheet->setCellValue('J' . $row, !empty($laporan->waktu_mulai_kegiatan) ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('K' . $row, $laporan->jenis_kegiatan ?? '-');
+            $sheet->setCellValue('L' . $row, $laporan->deskripsi_kegiatan ?? '-');
+            $sheet->setCellValue('M' . $row, !empty($laporan->waktu_selesai_kegiatan) ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('N' . $row, number_format((float)($laporan->durasi_waktu ?? 0), 2) . ' jam');
+            $sheet->setCellValue('O' . $row, $laporan->alamat_tujuan ?? '-');
+            $sheet->setCellValue('P' . $row, $laporan->dokumentasi ?? '-');
+            $sheet->setCellValue('Q' . $row, $laporan->created_at->format('Y-m-d H:i:s'));
             $row++;
             $no++;
         }
         
         // Auto size dan border
-        foreach (range('A', 'K') as $col) {
+        foreach (range('A', 'Q') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-        $this->setTableBorders($sheet, 'A3:K' . ($row - 1));
+        $this->setTableBorders($sheet, 'A3:Q' . ($row - 1));
     }
     
     private function exportJobPekerjaanSheet($spreadsheet, $jobPekerjaans)
@@ -416,13 +422,13 @@ class ExportDataController extends Controller
             $sheet->setCellValue('B' . $row, $laporan->hari . ' / ' . $laporan->tanggal->format('Y-m-d'));
             $sheet->setCellValue('C' . $row, $laporan->nama);
             $sheet->setCellValue('D' . $row, $laporan->instansi);
-            $sheet->setCellValue('E' . $row, $laporan->alamat_tujuan);
-            $sheet->setCellValue('F' . $row, $laporan->waktu_mulai_kegiatan ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('E' . $row, $laporan->jam_masuk);
+            $sheet->setCellValue('F' . $row, !empty($laporan->waktu_mulai_kegiatan) ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
             $sheet->setCellValue('G' . $row, $laporan->jenis_kegiatan ?? '-');
             $sheet->setCellValue('H' . $row, $laporan->deskripsi_kegiatan ?? '-');
-            $sheet->setCellValue('I' . $row, $laporan->waktu_selesai_kegiatan ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
-            $sheet->setCellValue('J' . $row, $laporan->durasi_waktu ? number_format($laporan->durasi_waktu, 2) . ' jam' : '0 jam');
-            $sheet->setCellValue('K' . $row, $laporan->lokasi ?? '-');
+            $sheet->setCellValue('I' . $row, !empty($laporan->waktu_selesai_kegiatan) ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('J' . $row, number_format((float)($laporan->durasi_waktu ?? 0), 2) . ' jam');
+            $sheet->setCellValue('K' . $row, $laporan->alamat_tujuan ?? '-');
             $sheet->setCellValue('L' . $row, $laporan->file_path ? 'Ada File' : '-');
             $row++;
             $no++;
@@ -537,13 +543,13 @@ class ExportDataController extends Controller
                 $sheet->setCellValue('C' . $currentRow, $laporan->hari . ' / ' . $laporan->tanggal->format('Y-m-d'));
                 $sheet->setCellValue('D' . $currentRow, $laporan->nama);
                 $sheet->setCellValue('E' . $currentRow, $laporan->instansi);
-                $sheet->setCellValue('F' . $currentRow, $laporan->alamat_tujuan);
-                $sheet->setCellValue('G' . $currentRow, $laporan->waktu_mulai_kegiatan ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+                $sheet->setCellValue('F' . $currentRow, $laporan->jam_masuk);
+                $sheet->setCellValue('G' . $currentRow, !empty($laporan->waktu_mulai_kegiatan) ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
                 $sheet->setCellValue('H' . $currentRow, $laporan->jenis_kegiatan ?? '-');
                 $sheet->setCellValue('I' . $currentRow, $laporan->deskripsi_kegiatan ?? '-');
-                $sheet->setCellValue('J' . $currentRow, $laporan->waktu_selesai_kegiatan ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
-                $sheet->setCellValue('K' . $currentRow, $laporan->durasi_waktu ? number_format($laporan->durasi_waktu, 2) . ' jam' : '0 jam');
-                $sheet->setCellValue('L' . $currentRow, $laporan->lokasi ?? '-');
+                $sheet->setCellValue('J' . $currentRow, !empty($laporan->waktu_selesai_kegiatan) ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+                $sheet->setCellValue('K' . $currentRow, number_format((float)($laporan->durasi_waktu ?? 0), 2) . ' jam');
+                $sheet->setCellValue('L' . $currentRow, $laporan->alamat_tujuan ?? '-');
                 $sheet->setCellValue('M' . $currentRow, $laporan->file_path ? 'Ada File' : '-');
                 $currentRow++;
                 $no++;

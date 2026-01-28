@@ -79,7 +79,7 @@ class Desember2025Seeder extends Seeder
         'Jl. Tamalate No. 67, Galesong'
     ];
 
-    // Jam masuk realistis (untuk field alamat_tujuan)
+    // Jam masuk realistis (untuk field jam_masuk)
     private $jamMasukList = [
         '07:00', '07:15', '07:30', '07:45', '08:00', '08:15', '08:30'
     ];
@@ -261,13 +261,13 @@ class Desember2025Seeder extends Seeder
                         'tanggal' => $currentDate->format('Y-m-d'),
                         'nama' => $karyawan->nama,
                         'instansi' => $this->instansiList[array_rand($this->instansiList)],
-                        'alamat_tujuan' => $this->jamMasukList[array_rand($this->jamMasukList)], // Sekarang Jam Masuk
+                        'jam_masuk' => $this->jamMasukList[array_rand($this->jamMasukList)],
                         'jenis_kegiatan' => $jenisKegiatan,
                         'deskripsi_kegiatan' => $deskripsi,
                         'waktu_mulai_kegiatan' => $waktuMulai->format('H:i:s'),
                         'waktu_selesai_kegiatan' => $waktuSelesai->format('H:i:s'),
                         'durasi_waktu' => round($durasi, 2),
-                        'lokasi' => $this->alamatList[array_rand($this->alamatList)], // Sekarang Alamat Tujuan
+                        'alamat_tujuan' => $this->alamatList[array_rand($this->alamatList)],
                         'file_path' => null,
                         'kelompok_id' => $kelompok->id,
                     ]);

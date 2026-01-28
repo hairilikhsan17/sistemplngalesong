@@ -153,7 +153,7 @@ class ExportController extends Controller
         $sheet->setTitle('Laporan Karyawan');
         
         // Headers
-        $headers = ['ID', 'Hari', 'Tanggal', 'Nama', 'Instansi', 'Jabatan', 'Jam Masuk', 'Dokumentasi', 'Kelompok', 'Created At'];
+        $headers = ['ID', 'Hari', 'Tanggal', 'Nama', 'Instansi', 'Jabatan', 'Jam Masuk', 'Alamat Tujuan', 'Dokumentasi', 'Kelompok', 'Created At'];
         $col = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($col . '1', $header);
@@ -176,15 +176,16 @@ class ExportController extends Controller
             $sheet->setCellValue('D' . $row, $laporan->nama);
             $sheet->setCellValue('E' . $row, $laporan->instansi);
             $sheet->setCellValue('F' . $row, $laporan->jabatan);
-            $sheet->setCellValue('G' . $row, $laporan->alamat_tujuan);
-            $sheet->setCellValue('H' . $row, $laporan->dokumentasi ?? '-');
-            $sheet->setCellValue('I' . $row, $laporan->kelompok->nama_kelompok);
-            $sheet->setCellValue('J' . $row, $laporan->created_at->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('G' . $row, $laporan->jam_masuk);
+            $sheet->setCellValue('H' . $row, $laporan->alamat_tujuan ?? '-');
+            $sheet->setCellValue('I' . $row, $laporan->dokumentasi ?? '-');
+            $sheet->setCellValue('J' . $row, $laporan->kelompok->nama_kelompok);
+            $sheet->setCellValue('K' . $row, $laporan->created_at->format('Y-m-d H:i:s'));
             $row++;
         }
         
         // Auto size columns
-        foreach (range('A', 'J') as $col) {
+        foreach (range('A', 'K') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
     }
@@ -282,13 +283,13 @@ class ExportController extends Controller
             $sheet->setCellValue('B' . $row, $laporan->hari . ' / ' . $laporan->tanggal->format('Y-m-d'));
             $sheet->setCellValue('C' . $row, $laporan->nama);
             $sheet->setCellValue('D' . $row, $laporan->instansi);
-            $sheet->setCellValue('E' . $row, $laporan->alamat_tujuan);
-            $sheet->setCellValue('F' . $row, $laporan->waktu_mulai_kegiatan ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('E' . $row, $laporan->jam_masuk);
+            $sheet->setCellValue('F' . $row, !empty($laporan->waktu_mulai_kegiatan) ? Carbon::parse($laporan->waktu_mulai_kegiatan)->format('H:i') : '-');
             $sheet->setCellValue('G' . $row, $laporan->jenis_kegiatan ?? '-');
             $sheet->setCellValue('H' . $row, $laporan->deskripsi_kegiatan ?? '-');
-            $sheet->setCellValue('I' . $row, $laporan->waktu_selesai_kegiatan ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
-            $sheet->setCellValue('J' . $row, $laporan->durasi_waktu ? number_format($laporan->durasi_waktu, 2) . ' jam' : '0 jam');
-            $sheet->setCellValue('K' . $row, $laporan->lokasi ?? '-');
+            $sheet->setCellValue('I' . $row, !empty($laporan->waktu_selesai_kegiatan) ? Carbon::parse($laporan->waktu_selesai_kegiatan)->format('H:i') : '-');
+            $sheet->setCellValue('J' . $row, number_format((float)($laporan->durasi_waktu ?? 0), 2) . ' jam');
+            $sheet->setCellValue('K' . $row, $laporan->alamat_tujuan ?? '-');
             $sheet->setCellValue('L' . $row, $laporan->file_path ? 'Ada File' : '-');
             $row++;
             $no++;

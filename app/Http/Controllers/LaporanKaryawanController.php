@@ -90,12 +90,12 @@ class LaporanKaryawanController extends Controller
             'tanggal' => 'required|date',
             'nama' => 'required|string|max:255',
             'instansi' => 'required|string|max:255',
-            'alamat_tujuan' => 'required|string|max:255',
+            'jam_masuk' => 'required|string|max:255',
             'jenis_kegiatan' => 'nullable|in:Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan lainnya',
             'deskripsi_kegiatan' => 'nullable|string|required_if:jenis_kegiatan,Jenis Kegiatan lainnya',
             'waktu_mulai_kegiatan' => 'nullable|date_format:H:i',
             'waktu_selesai_kegiatan' => 'nullable|date_format:H:i',
-            'lokasi' => 'nullable|string|max:255',
+            'alamat_tujuan' => 'nullable|string|max:255',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
             'deskripsi_kegiatan.required_if' => 'Deskripsi Jenis Kegiatan lainnya wajib diisi ketika jenis kegiatan adalah Jenis Kegiatan lainnya.',
@@ -142,13 +142,13 @@ class LaporanKaryawanController extends Controller
             'tanggal' => $request->tanggal,
             'nama' => $request->nama,
             'instansi' => $request->instansi,
-            'alamat_tujuan' => $request->alamat_tujuan,
+            'jam_masuk' => $request->jam_masuk,
             'jenis_kegiatan' => $request->jenis_kegiatan,
             'deskripsi_kegiatan' => $request->deskripsi_kegiatan,
             'waktu_mulai_kegiatan' => $request->waktu_mulai_kegiatan,
             'waktu_selesai_kegiatan' => $request->waktu_selesai_kegiatan,
             'durasi_waktu' => $durasiWaktu,
-            'lokasi' => $request->lokasi,
+            'alamat_tujuan' => $request->alamat_tujuan,
             'file_path' => $filePath,
             'kelompok_id' => $user->kelompok_id,
         ]);
@@ -169,12 +169,12 @@ class LaporanKaryawanController extends Controller
             'tanggal' => 'required|date',
             'nama' => 'required|string|max:255',
             'instansi' => 'required|string|max:255',
-            'alamat_tujuan' => 'required|string|max:255',
+            'jam_masuk' => 'required|string|max:255',
             'jenis_kegiatan' => 'nullable|in:Perbaikan Meteran,Perbaikan Sambungan Rumah,Pemeriksaan Gardu,Jenis Kegiatan lainnya',
             'deskripsi_kegiatan' => 'nullable|string',
             'waktu_mulai_kegiatan' => 'nullable|date_format:H:i',
             'waktu_selesai_kegiatan' => 'nullable|date_format:H:i',
-            'lokasi' => 'nullable|string|max:255',
+            'alamat_tujuan' => 'nullable|string|max:255',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
         
@@ -215,13 +215,13 @@ class LaporanKaryawanController extends Controller
             'tanggal' => $request->tanggal,
             'nama' => $request->nama,
             'instansi' => $request->instansi,
-            'alamat_tujuan' => $request->alamat_tujuan,
+            'jam_masuk' => $request->jam_masuk,
             'jenis_kegiatan' => $request->jenis_kegiatan,
             'deskripsi_kegiatan' => $request->deskripsi_kegiatan,
             'waktu_mulai_kegiatan' => $request->waktu_mulai_kegiatan,
             'waktu_selesai_kegiatan' => $request->waktu_selesai_kegiatan,
             'durasi_waktu' => $durasiWaktu,
-            'lokasi' => $request->lokasi,
+            'alamat_tujuan' => $request->alamat_tujuan,
         ];
         
         // Handle file upload
@@ -270,5 +270,213 @@ class LaporanKaryawanController extends Controller
         }
         
         return Storage::disk('public')->download($laporan->file_path);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $user = Auth::user();
+        if ($user->isKaryawan() && !$user->kelompok_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum terdaftar dalam kelompok'
+            ], 400);
+        }
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            // Skip header row
+            array_shift($rows);
+
+            $importedCount = 0;
+            $errors = [];
+
+            foreach ($rows as $index => $row) {
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                // Structure: Hari, Tanggal, Nama, Instansi, Jam Masuk, Waktu Mulai, Jenis Kegiatan, Deskripsi, Waktu Selesai, Alamat, Dokumentasi
+                // Index: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+                
+                $data = [
+                    'hari' => trim($row[0] ?? ''),
+                    'tanggal' => trim($row[1] ?? ''),
+                    'nama' => trim($row[2] ?? ''),
+                    'instansi' => trim($row[3] ?? ''),
+                    'jam_masuk' => trim($row[4] ?? ''),
+                    'waktu_mulai_kegiatan' => trim($row[5] ?? ''),
+                    'jenis_kegiatan' => trim($row[6] ?? ''),
+                    'deskripsi_kegiatan' => trim($row[7] ?? ''),
+                    'waktu_selesai_kegiatan' => trim($row[8] ?? ''),
+                    'alamat_tujuan' => trim($row[9] ?? ''),
+                ];
+
+                // Basic validation
+                if (!$data['hari'] || !$data['tanggal'] || !$data['nama'] || !$data['instansi'] || !$data['jam_masuk']) {
+                    $errors[] = "Baris " . ($index + 2) . ": Data wajib (Hari, Tanggal, Nama, Instansi, Jam Masuk) tidak lengkap.";
+                    continue;
+                }
+
+                // Normalize Jenis Kegiatan for comparison
+                $jenisKegiatanLower = strtolower($data['jenis_kegiatan']);
+                $isLainnya = ($jenisKegiatanLower === 'jenis kegiatan lainnya');
+
+                // Validation for Deskripsi Kegiatan
+                if ($isLainnya && empty($data['deskripsi_kegiatan'])) {
+                    $errors[] = "Baris " . ($index + 2) . ": Deskripsi Kegiatan wajib diisi jika Jenis Kegiatan adalah 'Jenis Kegiatan lainnya'.";
+                    continue;
+                }
+
+                // Map to exact enum values if possible
+                $validJenis = [
+                    'perbaikan meteran' => 'Perbaikan Meteran',
+                    'perbaikan sambungan rumah' => 'Perbaikan Sambungan Rumah',
+                    'pemeriksaan gardu' => 'Pemeriksaan Gardu',
+                    'jenis kegiatan lainnya' => 'Jenis Kegiatan lainnya'
+                ];
+                
+                if (isset($validJenis[$jenisKegiatanLower])) {
+                    $data['jenis_kegiatan'] = $validJenis[$jenisKegiatanLower];
+                }
+
+                // Calculate Duration
+                $durasiWaktu = 0;
+                if ($data['waktu_mulai_kegiatan'] && $data['waktu_selesai_kegiatan']) {
+                    try {
+                        // Handle Excel time format or string format
+                        $waktuMulai = \Carbon\Carbon::parse($data['waktu_mulai_kegiatan']);
+                        $waktuSelesai = \Carbon\Carbon::parse($data['waktu_selesai_kegiatan']);
+                        
+                        if ($waktuSelesai->lt($waktuMulai)) {
+                            $waktuSelesai->addDay();
+                        }
+                        
+                        $diffInMinutes = $waktuMulai->diffInMinutes($waktuSelesai);
+                        $durasiWaktu = round($diffInMinutes / 60, 2);
+                    } catch (\Exception $e) {
+                        $durasiWaktu = 0;
+                    }
+                }
+
+                // Format times and dates for database
+                try {
+                    if ($data['waktu_mulai_kegiatan']) {
+                        $data['waktu_mulai_kegiatan'] = \Carbon\Carbon::parse($data['waktu_mulai_kegiatan'])->format('H:i');
+                    }
+                    if ($data['waktu_selesai_kegiatan']) {
+                        $data['waktu_selesai_kegiatan'] = \Carbon\Carbon::parse($data['waktu_selesai_kegiatan'])->format('H:i');
+                    }
+                    if ($data['tanggal']) {
+                        // Try to parse various date formats (e.g., 01-01-2025 or 2025-01-01)
+                        $data['tanggal'] = \Carbon\Carbon::parse($data['tanggal'])->format('Y-m-d');
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Baris " . ($index + 2) . ": Format Tanggal atau Waktu tidak valid (" . $e->getMessage() . ").";
+                    continue;
+                }
+
+                LaporanKaryawan::create([
+                    'id' => Str::uuid(),
+                    'hari' => $data['hari'],
+                    'tanggal' => $data['tanggal'],
+                    'nama' => $data['nama'],
+                    'instansi' => $data['instansi'],
+                    'jam_masuk' => $data['jam_masuk'],
+                    'jenis_kegiatan' => $data['jenis_kegiatan'],
+                    'deskripsi_kegiatan' => $data['deskripsi_kegiatan'],
+                    'waktu_mulai_kegiatan' => $data['waktu_mulai_kegiatan'],
+                    'waktu_selesai_kegiatan' => $data['waktu_selesai_kegiatan'],
+                    'durasi_waktu' => $durasiWaktu,
+                    'alamat_tujuan' => $data['alamat_tujuan'],
+                    'kelompok_id' => $user->kelompok_id,
+                ]);
+
+                $importedCount++;
+            }
+
+            if ($importedCount === 0 && !empty($errors)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengimport data.',
+                    'errors' => $errors
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil mengimport $importedCount data laporan.",
+                'errors' => $errors // Include warnings if any
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memproses file: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $headers = [
+            'Hari',
+            'Tanggal',
+            'Nama',
+            'Instansi',
+            'Jam Masuk',
+            'Waktu Mulai Kegiatan',
+            'Jenis Kegiatan',
+            'Deskripsi Kegiatan',
+            'Waktu Selesai Kegiatan',
+            'Alamat Tujuan',
+            'Dokumentasi'
+        ];
+
+        foreach ($headers as $index => $header) {
+            $sheet->setCellValue([$index + 1, 1], $header);
+        }
+
+        // Add example row
+        $example = [
+            'Senin',
+            '2025-01-01',
+            'Nama Karyawan',
+            'PLN Galesong',
+            '08:00:00',
+            '08:30:00',
+            'Perbaikan Meteran',
+            '',
+            '09:30:00',
+            'Alamat Contoh',
+            ''
+        ];
+        foreach ($example as $index => $value) {
+            $sheet->setCellValue([$index + 1, 2], $value);
+        }
+
+        // Auto-size columns
+        foreach (range('A', 'K') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        
+        $fileName = 'Template_Import_Laporan.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
 }

@@ -526,7 +526,12 @@ document.addEventListener('alpine:init', () => {
         },
         
         async deleteFile(fileName) {
-            if (!confirm('Yakin ingin menghapus file ini?')) {
+            const result = await SwalHelper.confirmDelete(
+                '⚠️ Hapus File Excel?',
+                `Apakah Anda yakin ingin menghapus file "${fileName}"?`
+            );
+            
+            if (!result.isConfirmed) {
                 return;
             }
             
