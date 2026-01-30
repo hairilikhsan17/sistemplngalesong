@@ -121,11 +121,18 @@ class ExportLangkahPerhitunganController extends Controller
 
                 $mape = $this->calculateAcademicMAPE($historicalData, $result['forecasts']);
                 
-                $totalMinutes = round($result['nextForecast']);
+                $totalMinutes = $result['nextForecast'] > 0 ? max(1, round($result['nextForecast'] * 60)) : 0;
                 $hours = floor($totalMinutes / 60);
                 $mins = $totalMinutes % 60;
-                $jamMenit = $totalMinutes > 0 ? sprintf('%d jam %d menit', $hours, $mins) : '0 menit';
-                if ($hours == 0 && $totalMinutes > 0) $jamMenit = $totalMinutes . ' menit';
+                
+                $jamMenit = '0 menit';
+                if ($totalMinutes > 0) {
+                    if ($hours > 0) {
+                        $jamMenit = $hours . ' jam' . ($mins > 0 ? ' ' . $mins . ' menit' : '');
+                    } else {
+                        $jamMenit = $mins . ' menit';
+                    }
+                }
 
                 $sheet->fromArray([
                     $normalizedJenis,
@@ -354,19 +361,30 @@ class ExportLangkahPerhitunganController extends Controller
             }
 
             // Summary for this activity
-            $sheet->setCellValue('A' . $currentRow, 'MAPE (Bulan 2 - Selesai):');
+            $sheet->setCellValue('A' . $currentRow, 'MAPE (Berdasarkan Periode Hari/Shift Terakhir):');
             $sheet->setCellValue('B' . $currentRow, round($mape, 2) . '%');
             $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true);
             $currentRow++;
 
-            // Prediksi Bulan Berikutnya Forecast Row
-            $totalMinutes = round($result['nextForecast']);
+            // Prediksi Hari Berikutnya Forecast Row
+            $totalMinutes = $result['nextForecast'] > 0 ? max(1, round($result['nextForecast'] * 60)) : 0;
             $hours = floor($totalMinutes / 60);
             $mins = $totalMinutes % 60;
-            $jamMenit = sprintf('%02d:%02d', $hours, $mins);
+            
+            $jamMenit = '0 menit';
+            if ($totalMinutes > 0) {
+                if ($hours > 0) {
+                    $jamMenit = $hours . ' jam' . ($mins > 0 ? ' ' . $mins . ' menit' : '');
+                } else {
+                    $jamMenit = $mins . ' menit';
+                }
+            }
+
+            $tanggalPrediksi = $this->getNextWorkDate($kelompok->id);
+            $labelPrediksi = 'Prediksi Hari Berikutnya (' . ($tanggalPrediksi ? $tanggalPrediksi->format('d M') : 't+1') . ', Shift ' . $kelompok->nama_kelompok . ')';
 
             $sheet->fromArray([
-                'Prediksi Bulan Berikutnya (t+1)',
+                $labelPrediksi,
                 '-',
                 '-',
                 '-',
@@ -383,8 +401,8 @@ class ExportLangkahPerhitunganController extends Controller
                 ->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FDE9D9');
             $currentRow++;
 
-            $sheet->setCellValue('A' . $currentRow, 'PREDIKSI BULAN BERIKUTNYA:');
-            $sheet->setCellValue('B' . $currentRow, $jamMenit . ' (' . $totalMinutes . ' Menit)');
+            $sheet->setCellValue('A' . $currentRow, 'PREDIKSI HARI BERIKUTNYA:');
+            $sheet->setCellValue('B' . $currentRow, $jamMenit . ' (' . round($result['nextForecast'], 4) . ' Jam / ' . $totalMinutes . ' Menit)');
             $sheet->getStyle('A' . $currentRow . ':B' . $currentRow)->getFont()->setBold(true)->getColor()->setRGB('C00000');
             $currentRow += 2;
 
@@ -396,10 +414,11 @@ class ExportLangkahPerhitunganController extends Controller
             $notes = [
                 "1. Metode Holt-Winters Additive dipilih karena variasi musiman pada data durasi kegiatan cenderung konstan dan tidak berfluktuasi secara proporsional terhadap level data.",
                 "2. Data Aktual (Yt) merupakan durasi waktu penyelesaian kegiatan dalam satuan menit (skala rasio).",
-                "3. Error pada Bulan 1 tidak dihitung karena data periode awal digunakan sebagai basis inisialisasi nilai Level (L0), Trend (T0), dan Seasonal (S0).",
-                "4. MAPE dihitung berdasarkan rata-rata persentase kesalahan (APE) dari seluruh periode yang tersedia (mulai Bulan 2).",
-                "5. Baris 'Prediksi Bulan Berikutnya (t+1)' merupakan hasil peramalan satu periode ke depan sehingga tidak memiliki data aktual dan tidak dihitung nilai error maupun APE.",
-                "6. Jika nilai Seasonal (St) terlihat ekstrim, hal ini dikarenakan data belum stabil (belum mencapai 2 siklus/24 bulan), namun tetap valid untuk studi kasus terbatas.",
+                "3. Meskipun label dataset menggunakan urutan 'Bulan' untuk kepentingan historis, perhitungan ini merepresentasikan durasi per hari/shift sesuai giliran kerja kelompok.",
+                "4. Error pada Bulan 1 tidak dihitung karena data periode awal digunakan sebagai basis inisialisasi nilai Level (L0), Trend (T0), dan Seasonal (S0).",
+                "5. MAPE dihitung berdasarkan rata-rata persentase kesalahan (APE) dari seluruh periode hari/shift yang tersedia (mulai Bulan 2).",
+                "6. Baris 'Prediksi Hari Berikutnya' merupakan hasil peramalan untuk shift kerja mendatang sehingga tidak memiliki data aktual dan tidak dihitung nilai error maupun APE.",
+                "7. Jika nilai Seasonal (St) terlihat ekstrim, hal ini dikarenakan data belum stabil (belum mencapai 2 siklus/24 bulan), namun tetap valid untuk studi kasus terbatas.",
             ];
 
             if ($mape == 0) {
